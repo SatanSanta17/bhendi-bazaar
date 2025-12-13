@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import type { Product } from "@/domain/product";
-
+import Image from "next/image";
 interface ProductGalleryProps {
   product: Product;
 }
@@ -18,7 +18,14 @@ export function ProductGallery({ product }: ProductGalleryProps) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,250,249,0.12),transparent_55%)]" />
         <div className="relative flex h-full items-center justify-center px-6 text-center text-xs font-medium uppercase tracking-[0.24em] text-emerald-50/80">
           {/* Placeholder visual in lieu of real product photography */}
-          {product.name}
+          <Image
+            src={product.thumbnail}
+            alt={product.name}
+            fill
+            className="object-cover"
+            loading="eager"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
         </div>
       </div>
       {images.length > 1 && (

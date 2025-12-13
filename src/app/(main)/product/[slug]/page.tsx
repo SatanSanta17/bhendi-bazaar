@@ -7,17 +7,18 @@ import { SimilarProducts } from "@/components/product/similar-products";
 import { productService } from "@/services/productService";
 
 interface ProductPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await productService.findBySlug(params.slug);
+  const { slug } = await params;
+  const product = await productService.findBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const similar = await productService.findSimilar(params.slug, 4);
+  const similar = await productService.findSimilar(slug, 4);
 
   return (
     <div className="space-y-8">

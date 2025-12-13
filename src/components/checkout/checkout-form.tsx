@@ -17,7 +17,9 @@ type CheckoutFormValues = OrderAddress & {
 export function CheckoutForm() {
   const router = useRouter();
   const items = useCartStore((state) => state.items);
-  const totals = useCartStore((state) => state.totals());
+  const subtotal = useCartStore((state) => state.subtotal);
+  const discount = useCartStore((state) => state.discount);
+  const total = useCartStore((state) => state.total);
   const clear = useCartStore((state) => state.clear);
 
   const {
@@ -34,7 +36,7 @@ export function CheckoutForm() {
     if (!items.length) return;
     const order = await orderService.createFromCart({
       items,
-      totals,
+      totals: { subtotal, discount, total },
       address: {
         fullName: values.fullName,
         phone: values.phone,

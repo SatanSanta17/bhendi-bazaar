@@ -19,7 +19,14 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-b from-emerald-900/30 via-emerald-800/10 to-background">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,250,249,0.18),transparent_55%)]" />
           {/* Placeholder image area; real images can plug into next/image later */}
-          <Image src={product.thumbnail} alt={product.name} fill className="object-cover" />
+          <Image
+            src={product.thumbnail}
+            alt={product.name}
+            fill
+            className="object-cover"
+            loading="eager"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
           {hasOffer && (
             <div className="absolute left-3 top-3">
               <Badge className="bg-emerald-800/90 text-[0.65rem] uppercase tracking-[0.2em]">

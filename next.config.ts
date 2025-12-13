@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "", //my cdn url
+        hostname: "yzhlfxyfv2essy5i.public.blob.vercel-storage.com",
       },
     ],
   },

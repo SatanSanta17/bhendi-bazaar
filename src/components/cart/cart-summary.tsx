@@ -7,8 +7,11 @@ import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
 export function CartSummary() {
-  const totals = useCartStore((state) => state.totals());
-  const hasItems = useCartStore((state) => state.items.length > 0);
+  const items = useCartStore((state) => state.items);
+  const subtotal = useCartStore((state) => state.subtotal);
+  const discount = useCartStore((state) => state.discount);
+  const total = useCartStore((state) => state.total);
+  const hasItems = items.length > 0;
 
   return (
     <aside className="space-y-3 rounded-xl border border-border/70 bg-card/80 p-4 text-sm">
@@ -20,17 +23,15 @@ export function CartSummary() {
       <div className="space-y-1 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(totals.subtotal)}</span>
+          <span>{formatCurrency(subtotal)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Savings</span>
-          <span className="text-emerald-700">
-            −{formatCurrency(totals.discount)}
-          </span>
+          <span className="text-emerald-700">−{formatCurrency(discount)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-dashed border-border/70 pt-2 text-sm font-semibold">
           <span>Total</span>
-          <span>{formatCurrency(totals.total)}</span>
+          <span>{formatCurrency(total)}</span>
         </div>
       </div>
       <Button

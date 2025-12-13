@@ -1,11 +1,12 @@
 import { OrderClient } from "@/components/order/order-client";
 
 interface OrderPageProps {
-  params: { orderId: string };
+  params: Promise<{ orderId: string }>;
 }
 
-export default function OrderPage({ params }: OrderPageProps) {
-  return <OrderClient orderId={params.orderId} />;
+export default async function OrderPage({ params }: OrderPageProps) {
+  const { orderId } = await params;
+  return <OrderClient orderId={orderId} />;
 }
 
 

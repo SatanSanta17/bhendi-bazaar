@@ -1,5 +1,7 @@
 import type { Product } from "@/domain/product";
 
+const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL;
+
 export const products: Product[] = [
   {
     id: "p-emerald-madina-abaya",
@@ -17,11 +19,8 @@ export const products: Product[] = [
     isOnOffer: true,
     rating: 4.8,
     reviewsCount: 128,
-    images: [
-      "/images/products/old-quarter-black-jilbab-thumb.jpg",
-      "/images/products/old-quarter-black-jilbab-thumb.jpg",
-    ],
-    thumbnail: "/images/products/old-quarter-black-jilbab-thumb.jpg",
+    images: [`${assetsUrl}/mockImg3.png`, `${assetsUrl}/mockImg3.png`],
+    thumbnail: `${assetsUrl}/mockImg3.png`,
     options: {
       sizes: ["S", "M", "L", "XL"],
       colors: ["Emerald", "Midnight Black"],
@@ -40,8 +39,8 @@ export const products: Product[] = [
     isFeatured: true,
     rating: 4.6,
     reviewsCount: 64,
-    images: ["/images/products/old-quarter-black-jilbab-1.jpg"],
-    thumbnail: "/images/products/old-quarter-black-jilbab-thumb.jpg",
+    images: [`${assetsUrl}/mockImg2.jpeg`, `${assetsUrl}/mockImg2.jpeg`],
+    thumbnail: `${assetsUrl}/mockImg2.jpeg`,
     options: {
       sizes: ["S", "M", "L"],
       colors: ["Black"],
@@ -62,8 +61,8 @@ export const products: Product[] = [
     isOnOffer: true,
     rating: 4.9,
     reviewsCount: 210,
-    images: ["/images/products/oud-lanes-attar-1.jpg"],
-    thumbnail: "/images/products/oud-lanes-attar-thumb.jpg",
+    images: [`${assetsUrl}/mockImg3.png`, `${assetsUrl}/mockImg3.png`],
+    thumbnail: `${assetsUrl}/mockImg3.png`,
   },
   {
     id: "p-noor-filigree-bangle",
@@ -77,8 +76,8 @@ export const products: Product[] = [
     tags: ["jewellery", "bangle", "festive"],
     rating: 4.7,
     reviewsCount: 43,
-    images: ["/images/products/noor-filigree-bangle-1.jpg"],
-    thumbnail: "/images/products/noor-filigree-bangle-thumb.jpg",
+    images: [`${assetsUrl}/mockImg4.avif`, `${assetsUrl}/mockImg4.avif`],
+    thumbnail: `${assetsUrl}/mockImg4.avif`,
   },
 ];
 

@@ -5,13 +5,14 @@ import { formatCurrency } from "@/lib/format";
 
 export function CheckoutSummary() {
   const items = useCartStore((state) => state.items);
-  const totals = useCartStore((state) => state.totals());
+  const subtotal = useCartStore((state) => state.subtotal);
+  const discount = useCartStore((state) => state.discount);
+  const total = useCartStore((state) => state.total);
 
   if (!items.length) {
     return (
       <p className="text-sm text-muted-foreground">
-        Your basket is empty. Return to the bazaar to add a few treasures
-        first.
+        Your basket is empty. Return to the bazaar to add a few treasures first.
       </p>
     );
   }
@@ -33,9 +34,7 @@ export function CheckoutSummary() {
               {item.name} × {item.quantity}
             </span>
             <span>
-              {formatCurrency(
-                (item.salePrice ?? item.price) * item.quantity,
-              )}
+              {formatCurrency((item.salePrice ?? item.price) * item.quantity)}
             </span>
           </div>
         ))}
@@ -43,17 +42,15 @@ export function CheckoutSummary() {
       <div className="mt-2 space-y-1 border-t border-dashed border-border/70 pt-2 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(totals.subtotal)}</span>
+          <span>{formatCurrency(subtotal)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Savings</span>
-          <span className="text-emerald-700">
-            −{formatCurrency(totals.discount)}
-          </span>
+          <span className="text-emerald-700">−{formatCurrency(discount)}</span>
         </div>
         <div className="mt-1 flex items-center justify-between text-sm font-semibold">
           <span>Total</span>
-          <span>{formatCurrency(totals.total)}</span>
+          <span>{formatCurrency(total)}</span>
         </div>
       </div>
       <p className="pt-1 text-[0.65rem] text-muted-foreground">

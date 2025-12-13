@@ -72,15 +72,21 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         className="mt-4 w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
         disabled={isPending}
         onClick={() =>
-          startTransition(() =>
-            addItem({
-              productId: product.id,
-              name: product.name,
-              thumbnail: product.thumbnail,
-              price: product.price,
-              salePrice: product.salePrice,
-              quantity: 1,
-            }),
+          startTransition(
+            () =>
+              new Promise((resolve) => {
+                setTimeout(() => {
+                  addItem({
+                    productId: product.id,
+                    name: product.name,
+                    thumbnail: product.thumbnail,
+                    price: product.price,
+                    salePrice: product.salePrice,
+                    quantity: 1,
+                  });
+                  resolve(undefined);
+                }, 1000);
+              })
           )
         }
       >

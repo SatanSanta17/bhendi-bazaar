@@ -1,9 +1,12 @@
 import { CartLineItems } from "@/components/cart/cart-line-items";
 import { CartSummary } from "@/components/cart/cart-summary";
+import { CartHydrator } from "@/components/cart/cart-hydrator";
 
 export default function CartPage() {
   return (
     <div className="space-y-6">
+      <CartHydrator />
+
       <header className="space-y-1">
         <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
           Cart

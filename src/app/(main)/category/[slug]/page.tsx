@@ -7,23 +7,25 @@ import { categoryService } from "@/services/categoryService";
 import { productService } from "@/services/productService";
 
 interface CategoryPageProps {
-  params: { slug: string };
-  searchParams: { q?: string };
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string }>;
 }
 
 export default async function CategoryPage({
   params,
   searchParams,
 }: CategoryPageProps) {
-  const category = await categoryService.findBySlug(params.slug);
+  const { slug } = await params;
+  const { q } = await searchParams;
+  const category = await categoryService.findBySlug(slug);
 
   if (!category) {
     notFound();
   }
 
   const products = await productService.list({
-    categorySlug: params.slug,
-    search: searchParams.q,
+    categorySlug: slug,
+    search: q,
   });
 
   return (
