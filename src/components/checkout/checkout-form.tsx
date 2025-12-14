@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
@@ -32,8 +33,21 @@ export function CheckoutForm() {
     },
   });
 
+  useEffect(() => {
+    const scriptId = "razorpay-checkout-js";
+    if (document.getElementById(scriptId)) return;
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   const onSubmit = async (values: CheckoutFormValues) => {
     if (!items.length) return;
+
+    const gateway = "razorpay";
+
     const order = await orderService.createFromCart({
       items,
       totals: { subtotal, discount, total },
@@ -49,9 +63,100 @@ export function CheckoutForm() {
         country: values.country,
       },
       notes: values.notes,
+      paymentMethod: gateway,
+      paymentStatus: "pending",
     });
-    clear();
-    router.push(`/order/${order.id}`);
+
+    const amountInMinorUnit = Math.round(total * 100);
+    if (amountInMinorUnit <= 0) {
+      clear();
+      router.push(`/order/${order.id}`);
+      return;
+    }
+
+    if (gateway === "razorpay") {
+      if (typeof window === "undefined" || !(window as any).Razorpay) {
+        // Fallback: treat as mock payment if Razorpay JS is not loaded.
+        clear();
+        router.push(`/order/${order.id}`);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/payments/razorpay/create-order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: amountInMinorUnit,
+            currency: "INR",
+            localOrderId: order.id,
+            customer: {
+              name: values.fullName,
+              email: values.email,
+              contact: values.phone,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          // eslint-disable-next-line no-console
+          console.error("Failed to create Razorpay order");
+          clear();
+          router.push(`/order/${order.id}`);
+          return;
+        }
+
+        const data: {
+          orderId: string;
+          amount: number;
+          currency: string;
+        } = await response.json();
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: data.amount,
+          currency: data.currency,
+          name: "Bhendi Bazaar",
+          description: `Order ${order.code}`,
+          order_id: data.orderId,
+          prefill: {
+            name: values.fullName,
+            email: values.email,
+            contact: values.phone,
+          },
+          notes: {
+            localOrderId: order.id,
+          },
+          handler: async (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) => {
+            await orderService.update(order.id, {
+              paymentStatus: "paid",
+              paymentMethod: "razorpay",
+              paymentId: response.razorpay_payment_id,
+            });
+            clear();
+            router.push(`/order/${order.id}`);
+          },
+          theme: {
+            color: "#0f766e",
+          },
+        };
+
+        const razorpay = new (window as any).Razorpay(options);
+        razorpay.open();
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Razorpay checkout error", error);
+        clear();
+        router.push(`/order/${order.id}`);
+      }
+      return;
+    }
   };
 
   return (
@@ -125,10 +230,8 @@ export function CheckoutForm() {
         disabled={!items.length || isSubmitting}
         className="mt-2 w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
       >
-        {isSubmitting ? "Placing order..." : "Place order (mock payment)"}
+        {isSubmitting ? "Processing checkout..." : "Place order & pay"}
       </Button>
     </form>
   );
 }
-
-

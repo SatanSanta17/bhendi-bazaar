@@ -6,6 +6,17 @@ interface OrderSummaryProps {
 }
 
 export function OrderSummary({ order }: OrderSummaryProps) {
+  const paymentLabel =
+    order.paymentMethod && order.paymentStatus
+      ? `${order.paymentMethod === "razorpay" ? "Razorpay" : "Stripe"} · ${
+          order.paymentStatus === "paid"
+            ? "Paid"
+            : order.paymentStatus === "failed"
+            ? "Failed"
+            : "Pending"
+        }`
+      : null;
+
   return (
     <section className="space-y-3 rounded-xl border border-border/70 bg-card/80 p-4 text-sm">
       <header className="flex items-baseline justify-between gap-2">
@@ -17,6 +28,11 @@ export function OrderSummary({ order }: OrderSummaryProps) {
             Order {order.code}
           </h2>
         </div>
+        {paymentLabel && (
+          <p className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-emerald-700">
+            {paymentLabel}
+          </p>
+        )}
       </header>
       <div className="space-y-1 text-xs">
         {order.items.map((item) => (
@@ -28,9 +44,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               {item.name} × {item.quantity}
             </span>
             <span>
-              {formatCurrency(
-                (item.salePrice ?? item.price) * item.quantity,
-              )}
+              {formatCurrency((item.salePrice ?? item.price) * item.quantity)}
             </span>
           </div>
         ))}

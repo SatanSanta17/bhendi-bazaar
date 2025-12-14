@@ -2,6 +2,10 @@ import type { CartItem, CartTotals } from "./cart";
 
 export type OrderStatus = "processing" | "packed" | "shipped" | "delivered";
 
+export type PaymentMethod = "razorpay";
+
+export type PaymentStatus = "pending" | "paid" | "failed";
+
 export interface OrderAddress {
   fullName: string;
   phone: string;
@@ -24,6 +28,13 @@ export interface Order {
   notes?: string;
   placedAt: string;
   estimatedDelivery?: string;
+  /**
+   * Basic payment metadata for the mock checkout flow.
+   * For a real backend you would persist richer transaction details.
+   */
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  paymentId?: string;
 }
 
 export interface OrderRepository {
@@ -34,7 +45,16 @@ export interface OrderRepository {
     totals: CartTotals;
     address: OrderAddress;
     notes?: string;
+    paymentMethod?: PaymentMethod;
+    paymentStatus?: PaymentStatus;
+    paymentId?: string;
   }): Promise<Order>;
+  update(
+    id: string,
+    update: Partial<
+      Pick<Order, "status" | "paymentMethod" | "paymentStatus" | "paymentId">
+    >
+  ): Promise<Order | undefined>;
 }
 
 

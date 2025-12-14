@@ -3,6 +3,8 @@ import type {
   Order,
   OrderAddress,
   OrderRepository,
+  PaymentMethod,
+  PaymentStatus,
 } from "@/domain/order";
 import { seedOrders } from "@/data/orders";
 
@@ -52,6 +54,9 @@ class LocalStorageOrderRepository implements OrderRepository {
     totals: CartTotals;
     address: OrderAddress;
     notes?: string;
+    paymentMethod?: PaymentMethod;
+    paymentStatus?: PaymentStatus;
+    paymentId?: string;
   }): Promise<Order> {
     const existing = this.loadFromStorage();
     const id = `${Date.now()}-${existing.length + 1}`;
@@ -65,11 +70,30 @@ class LocalStorageOrderRepository implements OrderRepository {
       notes: input.notes,
       placedAt: nowIso(),
       estimatedDelivery: new Date(
-        Date.now() + 3 * 24 * 60 * 60 * 1000,
+        Date.now() + 3 * 24 * 60 * 60 * 1000
       ).toISOString(),
+      paymentMethod: input.paymentMethod,
+      paymentStatus: input.paymentStatus,
+      paymentId: input.paymentId,
     };
     this.persist([...existing, order]);
     return order;
+  }
+  async update(
+    id: string,
+    update: {
+      status?: Order["status"];
+      paymentMethod?: PaymentMethod;
+      paymentStatus?: PaymentStatus;
+      paymentId?: string;
+    }
+  ): Promise<Order | undefined> {
+    const existing = this.loadFromStorage();
+    const next = existing.map((order) =>
+      order.id === id ? { ...order, ...update } : order
+    );
+    this.persist(next);
+    return next.find((order) => order.id === id);
   }
 }
 
@@ -83,7 +107,19 @@ export const orderService = {
     totals: CartTotals;
     address: OrderAddress;
     notes?: string;
+    paymentMethod?: PaymentMethod;
+    paymentStatus?: PaymentStatus;
+    paymentId?: string;
   }) => repository.createFromCart(input),
+  update: (
+    id: string,
+    update: {
+      status?: Order["status"];
+      paymentMethod?: PaymentMethod;
+      paymentStatus?: PaymentStatus;
+      paymentId?: string;
+    }
+  ) => repository.update(id, update),
 };
 
 
