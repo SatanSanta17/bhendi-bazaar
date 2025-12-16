@@ -16,7 +16,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/product/${product.slug}`} className="group h-full">
       <Card className="flex h-full flex-col overflow-hidden border-border/60 bg-card/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-        <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-b from-emerald-900/30 via-emerald-800/10 to-background">
+        <div className="relative aspect-[19/16] overflow-hidden bg-gradient-to-b from-emerald-900/30 via-emerald-800/10 to-background">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,250,249,0.18),transparent_55%)]" />
           {/* Placeholder image area; real images can plug into next/image later */}
           <Image

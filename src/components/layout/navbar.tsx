@@ -211,6 +211,9 @@ function ProfileMenu({ user }: ProfileMenuProps) {
           </div>
           <Link
             href="/orders"
+            onClick={() => {
+              setOpen(false);
+            }}
             className="block rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             Orders

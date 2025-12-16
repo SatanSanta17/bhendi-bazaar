@@ -6,9 +6,9 @@ export const products: Product[] = [
   {
     id: "p-emerald-madina-abaya",
     slug: "emerald-madina-abaya",
-    name: "Emerald Madina Abaya",
+    name: "White Satin Cotton Abaya",
     description:
-      "A full-length emerald abaya with subtle geometric jaali embroidery inspired by Bhendi Bazaar balconies.",
+      "Satin Cotton fabric. Soft and Luxurious feel with authentic Kutchhi belt.\n First wash dry cleaning.\n No machine wash.",
     price: 4200,
     salePrice: 3690,
     currency: "INR",
@@ -19,8 +19,11 @@ export const products: Product[] = [
     isOnOffer: true,
     rating: 4.8,
     reviewsCount: 128,
-    images: [`${assetsUrl}/mockImg3.png`, `${assetsUrl}/mockImg3.png`],
-    thumbnail: `${assetsUrl}/mockImg3.png`,
+    images: [
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+    ],
+    thumbnail: `${assetsUrl}/IMG_20251010_120119.jpg`,
     options: {
       sizes: ["S", "M", "L", "XL"],
       colors: ["Emerald", "Midnight Black"],
@@ -39,8 +42,11 @@ export const products: Product[] = [
     isFeatured: true,
     rating: 4.6,
     reviewsCount: 64,
-    images: [`${assetsUrl}/mockImg2.jpeg`, `${assetsUrl}/mockImg2.jpeg`],
-    thumbnail: `${assetsUrl}/mockImg2.jpeg`,
+    images: [
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+    ],
+    thumbnail: `${assetsUrl}/IMG_20251010_120119.jpg`,
     options: {
       sizes: ["S", "M", "L"],
       colors: ["Black"],
@@ -61,8 +67,11 @@ export const products: Product[] = [
     isOnOffer: true,
     rating: 4.9,
     reviewsCount: 210,
-    images: [`${assetsUrl}/mockImg3.png`, `${assetsUrl}/mockImg3.png`],
-    thumbnail: `${assetsUrl}/mockImg3.png`,
+    images: [
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+    ],
+    thumbnail: `${assetsUrl}/IMG_20251010_120119.jpg`,
   },
   {
     id: "p-noor-filigree-bangle",
@@ -76,8 +85,11 @@ export const products: Product[] = [
     tags: ["jewellery", "bangle", "festive"],
     rating: 4.7,
     reviewsCount: 43,
-    images: [`${assetsUrl}/mockImg4.avif`, `${assetsUrl}/mockImg4.avif`],
-    thumbnail: `${assetsUrl}/mockImg4.avif`,
+    images: [
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+      `${assetsUrl}/IMG_20251010_120119.jpg`,
+    ],
+    thumbnail: `${assetsUrl}/IMG_20251010_120119.jpg`,
   },
 ];
 
