@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { categories } from "@/data/categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { signOut } from "next-auth/react";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -72,11 +73,16 @@ export function Navbar() {
             <ProfileMenu user={{ name: user.name, email: user.email }} />
           ) : (
             <Button
-              asChild
+              asChild={status !== "loading"}
+              disabled={status === "loading"}
               variant="outline"
               className="hidden rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] sm:inline-flex"
             >
-              <Link href="/signin">Login</Link>
+              {status === "loading" ? (
+                <span>Checking…</span> // simple loader text; replace with spinner if you like
+              ) : (
+                <Link href="/signin">Login</Link>
+              )}
             </Button>
           )}
 
@@ -171,13 +177,24 @@ interface ProfileMenuProps {
  */
 function ProfileMenu({ user }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
+  const router = useRouter(); // add this
+
+  async function handleLogout() {
+    console.log("Logout clicked");
+    // Clear session without navigating to the NextAuth signout page
+    await signOut({ redirect: false });
+    console.log("Session cleared");
+    // Close the menu and refresh UI
+    setOpen(false);
+    router.push("/"); // optional: send them home
+    router.refresh(); // ensures any session-dependent UI re-renders
+  }
 
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        onBlur={() => setOpen(false)}
         className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/80 text-xs font-semibold uppercase tracking-[0.15em]"
       >
         {user.name?.charAt(0)?.toUpperCase() ?? "B"}
@@ -201,10 +218,7 @@ function ProfileMenu({ user }: ProfileMenuProps) {
           <button
             type="button"
             className="mt-1 block w-full rounded-lg px-3 py-2 text-left text-muted-foreground hover:bg-muted hover:text-foreground"
-            // TODO: wire real logout when auth is implemented
-            onClick={() => {
-              console.log("Logout clicked (stub)");
-            }}
+            onClick={handleLogout}
           >
             Logout
           </button>
