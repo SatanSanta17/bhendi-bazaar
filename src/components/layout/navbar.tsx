@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Search, ShoppingBag } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import { categories } from "@/data/categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signOut } from "next-auth/react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -138,9 +139,13 @@ export function Navbar() {
  */
 function CategoriesDropdown() {
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useClickOutside(dropdownRef as React.RefObject<HTMLElement>, () =>
+    setOpen(false)
+  );
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -179,6 +184,12 @@ function ProfileMenu({ user }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter(); // add this
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(dropdownRef as React.RefObject<HTMLElement>, () =>
+    setOpen(false)
+  );
+
   async function handleLogout() {
     console.log("Logout clicked");
     // Clear session without navigating to the NextAuth signout page
@@ -191,7 +202,7 @@ function ProfileMenu({ user }: ProfileMenuProps) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -201,14 +212,20 @@ function ProfileMenu({ user }: ProfileMenuProps) {
       </button>
       {open && (
         <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-border/70 bg-popover/95 p-2 text-xs shadow-lg">
-          <div className="mb-2 border-b border-border/70 pb-2">
+          <Link
+            href="/profile"
+            onClick={() => {
+              setOpen(false);
+            }}
+            className="mb-2 border-b border-border/70 pb-2 block rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
             <p className="font-semibold">{user.name}</p>
             {user.email && (
               <p className="text-[0.7rem] text-muted-foreground">
                 {user.email}
               </p>
             )}
-          </div>
+          </Link>
           <Link
             href="/orders"
             onClick={() => {

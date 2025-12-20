@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { orderService } from "@/services/orderService";
+import { orderRepository } from "@/server/repositories/orderRepository";
 import type { Order } from "@/domain/order";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,9 @@ export function OrderLookup() {
     setOrder(null);
 
     try {
-      const orders = await orderService.list(); // localStorage for now
+      const orders = await orderRepository.list(); // localStorage for now
       const found = orders.find(
-        (o) => o.code.toLowerCase() === trimmed.toLowerCase(),
+        (o) => o.code.toLowerCase() === trimmed.toLowerCase()
       );
       if (!found) {
         setError("We couldn’t find an order with that ID in this browser.");

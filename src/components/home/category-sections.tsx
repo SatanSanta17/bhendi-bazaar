@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { categoryService } from "@/services/categoryService";
+import { categoryRepository } from "@/server/repositories/categoryRepository";
 import { Card } from "@/components/ui/card";
 
 export async function CategorySections() {
-  const categories = await categoryService.list();
+  const categories = await categoryRepository.list();
 
   if (!categories.length) return null;
 

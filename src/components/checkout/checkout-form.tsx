@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 
 import type { OrderAddress } from "@/domain/order";
 import { useCartStore } from "@/store/cartStore";
-import { orderService } from "@/services/orderService";
+import { orderRepository } from "@/server/repositories/orderRepository";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,7 +48,7 @@ export function CheckoutForm() {
 
     const gateway = "razorpay";
 
-    const order = await orderService.createFromCart({
+    const order = await orderRepository.createFromCart({
       items,
       totals: { subtotal, discount, total },
       address: {
@@ -134,7 +134,7 @@ export function CheckoutForm() {
             razorpay_order_id: string;
             razorpay_signature: string;
           }) => {
-            await orderService.update(order.id, {
+            await orderRepository.update(order.id, {
               paymentStatus: "paid",
               paymentMethod: "razorpay",
               paymentId: response.razorpay_payment_id,

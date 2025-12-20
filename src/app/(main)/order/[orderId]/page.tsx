@@ -8,5 +8,3 @@ export default async function OrderPage({ params }: OrderPageProps) {
   const { orderId } = await params;
   return <OrderClient orderId={orderId} />;
 }
-
-

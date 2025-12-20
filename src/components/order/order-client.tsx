@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import type { Order } from "@/domain/order";
-import { orderService } from "@/services/orderService";
+import { orderRepository } from "@/server/repositories/orderRepository";
 import { OrderSummary } from "@/components/order/order-summary";
 import { OrderTracking } from "@/components/order/order-tracking";
 
@@ -16,7 +16,7 @@ export function OrderClient({ orderId }: OrderClientProps) {
 
   useEffect(() => {
     let mounted = true;
-    orderService.findById(orderId).then((found) => {
+    orderRepository.findById(orderId).then((found) => {
       if (mounted) setOrder(found ?? null);
     });
     return () => {
@@ -27,8 +27,8 @@ export function OrderClient({ orderId }: OrderClientProps) {
   if (!order) {
     return (
       <p className="text-sm text-muted-foreground">
-        We could not locate this order in the browser storage yet. Try placing
-        a fresh order in this session.
+        We could not locate this order in the browser storage yet. Try placing a
+        fresh order in this session.
       </p>
     );
   }

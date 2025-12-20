@@ -8,6 +8,8 @@ import type {
 } from "@/domain/order";
 import { seedOrders } from "@/data/orders";
 
+const USE_MOCK = true;
+
 const STORAGE_KEY = "bhendi-bazaar-orders";
 
 function generateOrderCode(index: number) {
@@ -79,6 +81,7 @@ class LocalStorageOrderRepository implements OrderRepository {
     this.persist([...existing, order]);
     return order;
   }
+
   async update(
     id: string,
     update: {
@@ -97,12 +100,18 @@ class LocalStorageOrderRepository implements OrderRepository {
   }
 }
 
-const repository: OrderRepository = new LocalStorageOrderRepository();
+class PrismaOrderRepository implements OrderRepository {
+  async list(): Promise<Order[]> {
+    // TODO: Implement with Prisma
+    return [];
+  }
 
-export const orderService = {
-  list: () => repository.list(),
-  findById: (id: string) => repository.findById(id),
-  createFromCart: (input: {
+  async findById(id: string): Promise<Order | undefined> {
+    // TODO: Implement with Prisma
+    return undefined;
+  }
+
+  async createFromCart(input: {
     items: CartItem[];
     totals: CartTotals;
     address: OrderAddress;
@@ -110,8 +119,12 @@ export const orderService = {
     paymentMethod?: PaymentMethod;
     paymentStatus?: PaymentStatus;
     paymentId?: string;
-  }) => repository.createFromCart(input),
-  update: (
+  }): Promise<Order> {
+    // TODO: Implement with Prisma
+    throw new Error("Not implemented");
+  }
+
+  async update(
     id: string,
     update: {
       status?: Order["status"];
@@ -119,7 +132,12 @@ export const orderService = {
       paymentStatus?: PaymentStatus;
       paymentId?: string;
     }
-  ) => repository.update(id, update),
-};
+  ): Promise<Order | undefined> {
+    // TODO: Implement with Prisma
+    return undefined;
+  }
+}
 
-
+export const orderRepository = USE_MOCK
+  ? new LocalStorageOrderRepository()
+  : new PrismaOrderRepository();

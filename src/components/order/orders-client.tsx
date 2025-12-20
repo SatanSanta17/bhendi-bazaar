@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { Order } from "@/domain/order";
-import { orderService } from "@/services/orderService";
+import { orderRepository } from "@/server/repositories/orderRepository";
 import { formatCurrency } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 
@@ -12,7 +12,7 @@ export function OrdersClient() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    orderService.list().then(setOrders);
+    orderRepository.list().then(setOrders);
   }, []);
 
   const filtered = useMemo(() => {
@@ -21,7 +21,7 @@ export function OrdersClient() {
     return orders.filter(
       (order) =>
         order.code.toLowerCase().includes(q) ||
-        order.address.fullName.toLowerCase().includes(q),
+        order.address.fullName.toLowerCase().includes(q)
     );
   }, [orders, query]);
 

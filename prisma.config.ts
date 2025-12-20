@@ -9,6 +9,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("BHENDI_BAZAAR_PRISMA_DATABASE_URL"),
   },
 });
