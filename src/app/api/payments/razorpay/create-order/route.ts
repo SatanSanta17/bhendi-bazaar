@@ -1,71 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
-
-const keyId = process.env.RAZORPAY_KEY_ID;
-const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-const razorpay =
-  keyId && keySecret
-    ? new Razorpay({
-        key_id: keyId,
-        key_secret: keySecret,
-      })
-    : null;
+import { paymentGateway } from "@/server/repositories/razorpayGateway";
+import type { CreatePaymentOrderInput } from "@/domain/payment";
 
 export async function POST(req: NextRequest) {
   try {
-    if (!razorpay) {
+    const body = await req.json();
+    const { amount, currency, localOrderId, customer } =
+      body as Partial<CreatePaymentOrderInput>;
+
+    // Validation
+    if (!amount || !currency || !localOrderId) {
       return NextResponse.json(
-        { error: "Razorpay is not configured on the server." },
-        { status: 500 },
+        { error: "Missing required fields: amount, currency, or localOrderId" },
+        { status: 400 }
       );
     }
 
-    const body = await req.json();
-    const {
+    // Use repository to create order
+    const order = await paymentGateway.createOrder({
       amount,
       currency,
       localOrderId,
-    }: {
-      amount?: number;
-      currency?: string;
-      localOrderId?: string;
-      customer?: {
-        name?: string;
-        email?: string;
-        contact?: string;
-      };
-    } = body;
-
-    if (!amount || !currency || !localOrderId) {
-      return NextResponse.json(
-        { error: "Missing required fields for Razorpay order." },
-        { status: 400 },
-      );
-    }
-
-    const order = await razorpay.orders.create({
-      amount,
-      currency,
-      receipt: localOrderId,
-      notes: {
-        localOrderId,
-      },
+      customer,
     });
 
     return NextResponse.json({
-      orderId: order.id,
+      orderId: order.gatewayOrderId,
       amount: order.amount,
       currency: order.currency,
+      provider: order.provider,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("Razorpay order creation failed", error);
-    return NextResponse.json(
-      { error: "Failed to create Razorpay order." },
-      { status: 500 },
-    );
+    console.error("Payment order creation failed:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to create payment order";
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
-

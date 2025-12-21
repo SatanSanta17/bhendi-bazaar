@@ -1,47 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-
-const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+import { paymentGateway } from "@/server/repositories/razorpayGateway";
+import { orderRepository } from "@/server/repositories/orderRepository";
 
 export async function POST(req: NextRequest) {
   try {
     const signature = req.headers.get("x-razorpay-signature") ?? "";
-    const body = await req.text();
+    const rawBody = await req.text();
 
-    if (webhookSecret) {
-      const expected = crypto
-        .createHmac("sha256", webhookSecret)
-        .update(body)
-        .digest("hex");
+    // Verify webhook using repository
+    const verification = await paymentGateway.verifyWebhook(signature, rawBody);
 
-      if (expected !== signature) {
-        return NextResponse.json(
-          { error: "Invalid Razorpay signature" },
-          { status: 400 },
-        );
-      }
+    if (!verification.isValid) {
+      console.error("Webhook verification failed:", verification.error);
+      return NextResponse.json(
+        { error: "Invalid webhook signature" },
+        { status: 400 }
+      );
     }
 
-    const event = JSON.parse(body) as {
-      event?: string;
-      payload?: unknown;
-    };
+    const { event } = verification;
+    if (!event) {
+      return NextResponse.json({ error: "No event data" }, { status: 400 });
+    }
 
-    // For this demo store, we only verify the event and log it.
-    // In a real backend, you would look up the order by notes.localOrderId
-    // and update its payment status in your database.
-    // eslint-disable-next-line no-console
-    console.log("Razorpay webhook received", event.event);
+    console.log(`Webhook received: ${event.eventType}`, event.provider);
 
-    return NextResponse.json({ received: true });
+    // Handle different event types
+    switch (event.eventType) {
+      case "payment.captured":
+      case "payment.success":
+        await handlePaymentSuccess(event);
+        break;
+
+      case "payment.failed":
+        await handlePaymentFailed(event);
+        break;
+
+      default:
+        console.log(`Unhandled event type: ${event.eventType}`);
+    }
+
+    return NextResponse.json({ received: true, event: event.eventType });
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("Error handling Razorpay webhook", error);
+    console.error("Error handling webhook:", error);
     return NextResponse.json(
-      { error: "Error handling webhook" },
-      { status: 500 },
+      { error: "Error processing webhook" },
+      { status: 500 }
     );
   }
 }
 
+async function handlePaymentSuccess(event: any) {
+  // Extract order ID from payload and update order status
+  const payload = event.payload as any;
+  const localOrderId = payload?.payment?.entity?.notes?.localOrderId;
 
+  if (localOrderId) {
+    await orderRepository.update(localOrderId, {
+      paymentStatus: "paid",
+      paymentId: payload?.payment?.entity?.id,
+    });
+    console.log(`Order ${localOrderId} marked as paid`);
+  }
+}
+
+async function handlePaymentFailed(event: any) {
+  const payload = event.payload as any;
+  const localOrderId = payload?.payment?.entity?.notes?.localOrderId;
+
+  if (localOrderId) {
+    await orderRepository.update(localOrderId, {
+      paymentStatus: "failed",
+    });
+    console.log(`Order ${localOrderId} marked as failed`);
+  }
+}

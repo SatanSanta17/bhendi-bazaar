@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Search, ShoppingBag } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -86,7 +86,6 @@ export function Navbar() {
               )}
             </Button>
           )}
-
           {/* Orders link only for guests; moves into profile when logged in */}
           {status !== "authenticated" && (
             <Link
@@ -99,33 +98,31 @@ export function Navbar() {
               Orders
             </Link>
           )}
-
           {/* Cart button */}
           <Button
-            asChild={hasCartItems}
+            asChild={true} // Always use asChild
             variant={hasCartItems ? "default" : "outline"}
+            disabled={!hasCartItems} // Disable if empty
             className={cn(
               "relative flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]",
               !hasCartItems &&
-                "cursor-default border-border/80 bg-muted text-muted-foreground"
+                "cursor-not-allowed border-border/80 bg-muted text-muted-foreground"
             )}
           >
-            {hasCartItems ? (
-              <Link href="/cart">
-                <ShoppingBag className="mr-1 h-4 w-4" />
-                Cart
-                {cartCount > 0 && (
-                  <span className="ml-2 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[0.65rem] font-semibold leading-none text-white">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-            ) : (
-              <span className="inline-flex items-center">
-                <ShoppingBag className="mr-1 h-4 w-4" />
-                Cart
-              </span>
-            )}
+            <Link
+              href="/cart"
+              onClick={(e) => {
+                if (!hasCartItems) e.preventDefault(); // Block navigation if empty
+              }}
+            >
+              <ShoppingBag className="mr-1 h-4 w-4" />
+              Cart
+              {cartCount > 0 && (
+                <span className="ml-2 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[0.65rem] font-semibold leading-none text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
           </Button>
         </div>
       </div>
