@@ -34,6 +34,14 @@ export function CartSummary() {
           <span>{formatCurrency(total)}</span>
         </div>
       </div>
+
+      <Button
+        asChild
+        variant="outline"
+        className="w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
+      >
+        <Link href="/">Add More</Link>
+      </Button>
       <Button
         asChild
         disabled={!hasItems}
