@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cartStore";
+import { useRouter } from "next/navigation";
 
 interface ProductDetailsProps {
   product: Product;
@@ -13,8 +14,54 @@ interface ProductDetailsProps {
 
 export function ProductDetails({ product }: ProductDetailsProps) {
   const addItem = useCartStore((state) => state.addItem);
+  const setBuyNowItem = useCartStore((state) => state.setBuyNowItem);
   const [isPending, startTransition] = useTransition();
-  const hasOffer = Boolean(product.salePrice && product.salePrice < product.price);
+  const [isBuyNowPending, startBuyNowTransition] = useTransition();
+  const router = useRouter();
+  const hasOffer = Boolean(
+    product.salePrice && product.salePrice < product.price
+  );
+
+  const handleBuyNow = () => {
+    const item = {
+      productId: product.id,
+      name: product.name,
+      thumbnail: product.thumbnail,
+      price: product.price,
+      salePrice: product.salePrice,
+      quantity: 1,
+    };
+    console.log("Setting buyNowItem:", item);
+
+    setBuyNowItem(item);
+
+    // Add a small delay to ensure state is set before navigation
+    setTimeout(() => {
+      console.log("Navigating to checkout");
+      startBuyNowTransition(() => {
+        router.push("/checkout");
+      });
+    }, 50);
+  };
+
+  const handleAddToCart = () => {
+    startTransition(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => {
+            addItem({
+              productId: product.id,
+              name: product.name,
+              thumbnail: product.thumbnail,
+              price: product.price,
+              salePrice: product.salePrice,
+              quantity: 1,
+            });
+            resolve(undefined);
+          }, 1000);
+        })
+    );
+  };
 
   return (
     <section className="space-y-4">
@@ -67,33 +114,23 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
         </div>
       )}
-
-      <Button
-        className="mt-4 w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
-        disabled={isPending}
-        onClick={() =>
-          startTransition(
-            () =>
-              new Promise((resolve) => {
-                setTimeout(() => {
-                  addItem({
-                    productId: product.id,
-                    name: product.name,
-                    thumbnail: product.thumbnail,
-                    price: product.price,
-                    salePrice: product.salePrice,
-                    quantity: 1,
-                  });
-                  resolve(undefined);
-                }, 1000);
-              })
-          )
-        }
-      >
-        {isPending ? "Adding..." : "Add to cart"}
-      </Button>
+      <div className="mt-4 flex gap-2">
+        <Button
+          className="cursor-pointer flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
+          variant="outline"
+          disabled={isPending}
+          onClick={handleAddToCart}
+        >
+          {isPending ? "Adding..." : "Add to cart"}
+        </Button>
+        <Button
+          className="cursor-pointer flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
+          disabled={isBuyNowPending}
+          onClick={handleBuyNow}
+        >
+          {isBuyNowPending ? "Loading..." : "Buy Now"}
+        </Button>
+      </div>
     </section>
   );
 }
-
-

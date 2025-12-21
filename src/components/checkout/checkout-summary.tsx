@@ -2,14 +2,37 @@
 
 import { useCartStore } from "@/store/cartStore";
 import { formatCurrency } from "@/lib/format";
+import { useEffect } from "react";
 
 export function CheckoutSummary() {
   const items = useCartStore((state) => state.items);
+  const buyNowItem = useCartStore((state) => state.buyNowItem);
+  const clearBuyNow = useCartStore((state) => state.clearBuyNow);
   const subtotal = useCartStore((state) => state.subtotal);
   const discount = useCartStore((state) => state.discount);
   const total = useCartStore((state) => state.total);
 
-  if (!items.length) {
+  // Debug logging
+  console.log("CheckoutSummary render:", {
+    buyNowItem,
+    items,
+    itemsLength: items.length,
+  });
+
+  const displayItems = buyNowItem ? [buyNowItem] : items;
+
+  const displaySubtotal = buyNowItem
+    ? buyNowItem.price * buyNowItem.quantity
+    : subtotal;
+  const displayDiscount =
+    buyNowItem && buyNowItem.salePrice
+      ? (buyNowItem.price - buyNowItem.salePrice) * buyNowItem.quantity
+      : discount;
+  const displayTotal = buyNowItem
+    ? (buyNowItem.salePrice ?? buyNowItem.price) * buyNowItem.quantity
+    : total;
+
+  if (!displayItems.length) {
     return (
       <p className="text-sm text-muted-foreground">
         Your basket is empty. Return to the bazaar to add a few treasures first.
@@ -25,7 +48,7 @@ export function CheckoutSummary() {
         </p>
       </header>
       <div className="space-y-1 text-xs">
-        {items.map((item) => (
+        {displayItems.map((item) => (
           <div
             key={item.id}
             className="flex items-baseline justify-between gap-2"
@@ -42,15 +65,17 @@ export function CheckoutSummary() {
       <div className="mt-2 space-y-1 border-t border-dashed border-border/70 pt-2 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(subtotal)}</span>
+          <span>{formatCurrency(displaySubtotal)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Savings</span>
-          <span className="text-emerald-700">−{formatCurrency(discount)}</span>
+          <span className="text-emerald-700">
+            −{formatCurrency(displayDiscount)}
+          </span>
         </div>
         <div className="mt-1 flex items-center justify-between text-sm font-semibold">
           <span>Total</span>
-          <span>{formatCurrency(total)}</span>
+          <span>{formatCurrency(displayTotal)}</span>
         </div>
       </div>
       <p className="pt-1 text-[0.65rem] text-muted-foreground">
@@ -59,5 +84,3 @@ export function CheckoutSummary() {
     </div>
   );
 }
-
-

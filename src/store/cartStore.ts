@@ -7,10 +7,13 @@ type CartStoreState = CartState & {
   subtotal: number;
   discount: number;
   total: number;
+  buyNowItem: CartItem | null;
   addItem: (item: Omit<CartItem, "id">) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clear: () => void;
+  setBuyNowItem: (item: Omit<CartItem, "id"> | null) => void;
+  clearBuyNow: () => void;
 };
 
 function computeTotals(items: CartItem[]) {
@@ -34,7 +37,7 @@ export const useCartStore = create<CartStoreState>()(
       subtotal: 0,
       discount: 0,
       total: 0,
-
+      buyNowItem: null,
       addItem: (itemInput) => {
         set((state) => {
           const existing = state.items.find(
@@ -105,6 +108,19 @@ export const useCartStore = create<CartStoreState>()(
           discount: 0,
           total: 0,
         });
+      },
+
+      setBuyNowItem: (itemInput) => {
+        if (!itemInput) {
+          set({ buyNowItem: null });
+          return;
+        }
+        const id = `buynow-${itemInput.productId}-${Date.now()}`;
+        set({ buyNowItem: { ...itemInput, id } });
+      },
+
+      clearBuyNow: () => {
+        set({ buyNowItem: null });
       },
     }),
     {

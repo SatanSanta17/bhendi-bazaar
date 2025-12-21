@@ -38,11 +38,29 @@ export function CheckoutForm() {
   const router = useRouter();
   const { data: session } = useSession();
   const items = useCartStore((state) => state.items);
+  const buyNowItem = useCartStore((state) => state.buyNowItem);
+
   const subtotal = useCartStore((state) => state.subtotal);
   const discount = useCartStore((state) => state.discount);
   const total = useCartStore((state) => state.total);
+  const clearBuyNow = useCartStore((state) => state.clearBuyNow);
+
   const clear = useCartStore((state) => state.clear);
 
+  const clearCart = buyNowItem ? clearBuyNow : clear;
+
+  // Add computed values for display
+  const displayItems = buyNowItem ? [buyNowItem] : items;
+  const displaySubtotal = buyNowItem
+    ? buyNowItem.price * buyNowItem.quantity
+    : subtotal;
+  const displayDiscount =
+    buyNowItem && buyNowItem.salePrice
+      ? (buyNowItem.price - buyNowItem.salePrice) * buyNowItem.quantity
+      : discount;
+  const displayTotal = buyNowItem
+    ? (buyNowItem.salePrice ?? buyNowItem.price) * buyNowItem.quantity
+    : total;
   const { profile, user, updateAddresses } = useProfile(!!session?.user);
 
   const [selectedAddress, setSelectedAddress] = useState<ProfileAddress | null>(
@@ -112,11 +130,11 @@ export function CheckoutForm() {
       // Step 1: Create local order
       const order = await orderRepository.createFromCart({ ...orderData });
 
-      const amountInMinorUnit = Math.round(total * 100);
+      const amountInMinorUnit = Math.round(orderData.totals.total * 100);
 
       if (amountInMinorUnit <= 0) {
         await orderRepository.update(order.id, { paymentStatus: "paid" });
-        clear();
+        clearCart();
         router.push(`/order/${order.id}`);
         return;
       }
@@ -168,14 +186,12 @@ export function CheckoutForm() {
               paymentMethod: "razorpay",
               paymentId: response.razorpay_payment_id,
             });
-
-            // Clear cart and redirect
-            clear();
+            clearCart();
             router.push(`/order/${order.id}`);
           } catch (error) {
             console.error("Failed to update order after payment:", error);
             // Still redirect since payment succeeded
-            clear();
+            clearCart();
             router.push(`/order/${order.id}`);
           }
         },
@@ -217,13 +233,17 @@ export function CheckoutForm() {
 
   // Authenticated user checkout
   const handleAuthenticatedCheckout = async () => {
-    if (!selectedAddress || !items.length) return;
+    if (!selectedAddress || !displayItems.length) return;
 
     setIsProcessing(true);
     try {
       await processPayment({
-        items,
-        totals: { subtotal, discount, total },
+        items: displayItems,
+        totals: {
+          subtotal: displaySubtotal,
+          discount: displayDiscount,
+          total: displayTotal,
+        },
         address: {
           fullName: selectedAddress.name,
           phone: selectedAddress.phone,
@@ -246,11 +266,15 @@ export function CheckoutForm() {
 
   // Guest checkout
   const onGuestSubmit = async (values: GuestCheckoutFormValues) => {
-    if (!items.length) return;
+    if (!displayItems.length) return;
 
     await processPayment({
-      items,
-      totals: { subtotal, discount, total },
+      items: displayItems,
+      totals: {
+        subtotal: displaySubtotal,
+        discount: displayDiscount,
+        total: displayTotal,
+      },
       address: {
         fullName: values.fullName,
         phone: values.phone,
@@ -266,6 +290,11 @@ export function CheckoutForm() {
       paymentMethod: "razorpay",
       paymentStatus: "pending",
     });
+
+    // Clear buy now item after successful checkout
+    if (buyNowItem) {
+      clearBuyNow();
+    }
   };
 
   // Authenticated user view
@@ -418,7 +447,7 @@ export function CheckoutForm() {
         <Button
           type="button"
           onClick={handleAuthenticatedCheckout}
-          disabled={!items.length || !selectedAddress || isProcessing}
+          disabled={!displayItems.length || !selectedAddress || isProcessing}
           className="w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
           size="lg"
         >
@@ -522,7 +551,7 @@ export function CheckoutForm() {
       </div>
       <Button
         type="submit"
-        disabled={!items.length || isSubmitting}
+        disabled={!displayItems.length || isSubmitting}
         className="mt-2 w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
       >
         {isSubmitting ? "Processing checkout..." : "Place order & pay"}
