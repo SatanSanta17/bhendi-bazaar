@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { User } from "@/domain/profile";
+import { ProfilePicUpload } from "./profile-pic-upload";
 
 interface ProfileCardProps {
   user: User | null;
@@ -13,7 +14,11 @@ interface ProfileCardProps {
   loading?: boolean;
   saving?: boolean;
   fallbackName?: string;
-  onUpdate: (data: { name?: string; email?: string; mobile?: string }) => Promise<void>;
+  onUpdate: (data: {
+    name?: string;
+    email?: string;
+    mobile?: string;
+  }) => Promise<void>;
   onUpdateProfilePic: (profilePic: string) => Promise<void>;
 }
 
@@ -100,7 +105,7 @@ export function ProfileCard({
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-      {!isEditing && !isEditingPic ? (
+        {!isEditing && !isEditingPic ? (
           <div className="flex items-center gap-4">
             {/* Profile Picture with Edit Button */}
             <div className="relative">
@@ -130,69 +135,29 @@ export function ProfileCard({
               <p className="font-medium">
                 {loading && !name ? "Loading…" : name || "Your name"}
               </p>
-              {email && <p className="text-xs text-muted-foreground">{email}</p>}
+              {email && (
+                <p className="text-xs text-muted-foreground">{email}</p>
+              )}
               {mobile && (
                 <p className="text-xs text-muted-foreground">+91 {mobile}</p>
               )}
             </div>
           </div>
         ) : isEditingPic ? (
-          // Profile Picture Edit Form
-          <div className="space-y-3 text-xs">
-            <div className="flex flex-col items-center gap-3">
-              {picUrl ? (
-                <img
-                  src={picUrl}
-                  alt="Preview"
-                  className="h-20 w-20 rounded-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-2xl font-semibold">
-                  {initial}
-                </div>
-              )}
-            </div>
-            <div className="space-y-1">
-              <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                Profile Picture URL
-              </label>
-              <Input
-                type="url"
-                value={picUrl}
-                onChange={(e) => setPicUrl(e.target.value)}
-                placeholder="https://example.com/photo.jpg"
-              />
-              <p className="text-[0.65rem] text-muted-foreground">
-                Enter a URL to an image (JPEG, PNG, etc.)
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={saving}
-                onClick={handleCancelPic}
-                className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={saving || !picUrl.trim()}
-                onClick={handleSavePic}
-                className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
-              >
-                {saving ? "Saving…" : "Save"}
-              </Button>
-            </div>
-          </div>
-        ) :
-        (
+          <ProfilePicUpload
+            currentPic={profilePic ?? ""}
+            userName={name}
+            onUploadComplete={async (url) => {
+              await onUpdateProfilePic(url);
+              setIsEditingPic(false);
+            }}
+            onCancel={handleCancelPic}
+            onRemove={async () => {
+              await onUpdateProfilePic("");
+              setIsEditingPic(false);
+            }}
+          />
+        ) : (
           <form className="space-y-3 text-xs">
             <div className="space-y-1">
               <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
