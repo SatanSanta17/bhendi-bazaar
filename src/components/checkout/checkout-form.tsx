@@ -260,11 +260,6 @@ export function CheckoutForm() {
       paymentMethod: "razorpay",
       paymentStatus: "pending",
     });
-
-    // Clear buy now item after successful checkout
-    if (buyNowItem) {
-      clearBuyNow();
-    }
   };
 
   // Authenticated user view

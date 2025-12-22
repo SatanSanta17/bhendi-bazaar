@@ -4,17 +4,27 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import { Search, ShoppingBag } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
-import { useAuth } from "@/lib/auth";
-import { categories } from "@/data/categories";
+import { AuthUser, useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signOut } from "next-auth/react";
 import { useClickOutside } from "@/hooks/useClickOutside";
-
+import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import { categoryService } from "@/services/categoryService";
+import type { Category } from "@/domain/category";
 export function Navbar() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    categoryService
+      .getCategories()
+      .then(setCategories)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
   const pathname = usePathname();
   const router = useRouter();
 
@@ -26,16 +36,26 @@ export function Navbar() {
 
   const [search, setSearch] = useState("");
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const { suggestions, loading: suggestionsLoading } =
+    useSearchSuggestions(search);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(searchRef as React.RefObject<HTMLElement>, () =>
+    setShowSuggestions(false)
+  );
+
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
     const q = search.trim();
     if (!q) return;
 
-    // For now, route to the first category with the query param.
-    const firstCategory = categories[0]?.slug ?? "abayas";
-    router.push(`/category/${firstCategory}?q=${encodeURIComponent(q)}`);
-  }
+    // Navigate to dedicated search results page
+    router.push(`/s?q=${encodeURIComponent(q)}`);
 
+    // Clear search input after submission (optional)
+    setSearch("");
+  }
   return (
     <header className="border-b border-border/60 bg-background/80 backdrop-blur z-10">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 lg:px-8">
@@ -53,25 +73,107 @@ export function Navbar() {
 
         {/* Middle: categories dropdown + search */}
         <div className="hidden flex-1 items-center gap-4 md:flex">
-          <CategoriesDropdown />
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex flex-1 items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1.5"
-          >
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search the bazaar…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-7 border-0 bg-transparent p-0 text-xs focus-visible:ring-0"
-            />
-          </form>
+          <CategoriesDropdown categories={categories} />
+          <div className="relative flex-1" ref={searchRef}>
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1.5"
+            >
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search the bazaar…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                className="h-7 border-0 bg-transparent p-0 text-xs focus-visible:ring-0"
+              />
+            </form>
+
+            {/* Suggestions Dropdown */}
+            {showSuggestions && search.length >= 2 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border/70 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+                {suggestionsLoading ? (
+                  <div className="p-4 text-sm text-muted-foreground">
+                    Loading...
+                  </div>
+                ) : (
+                  <>
+                    {suggestions.products.length > 0 && (
+                      <div className="p-2">
+                        <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Products
+                        </p>
+                        {suggestions.products.map((product) => (
+                          <Link
+                            key={product.id}
+                            href={`/product/${product.slug}`}
+                            onClick={() => {
+                              setShowSuggestions(false);
+                              setSearch("");
+                            }}
+                            className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg"
+                          >
+                            <img
+                              src={product.thumbnail}
+                              alt={product.name}
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {product.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {product.currency} {product.price}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
+                    {suggestions.categories.length > 0 && (
+                      <div className="p-2 border-t border-border/70">
+                        <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Categories
+                        </p>
+                        {suggestions.categories.map((category) => (
+                          <Link
+                            key={category.slug}
+                            href={`/category/${category.slug}`}
+                            onClick={() => {
+                              setShowSuggestions(false);
+                              setSearch("");
+                            }}
+                            className="block px-3 py-2 hover:bg-muted rounded-lg text-sm"
+                          >
+                            {category.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="p-2 border-t border-border/70">
+                      <button
+                        onClick={handleSearchSubmit}
+                        className="w-full px-3 py-2 text-sm text-primary hover:bg-muted rounded-lg text-left"
+                      >
+                        See all results for "{search}"
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right side: auth + cart */}
         <div className="flex items-center gap-3">
           {status === "authenticated" && user ? (
-            <ProfileMenu user={{ name: user.name, email: user.email }} />
+            <ProfileMenu user={user} />
           ) : (
             <Button
               asChild={status !== "loading"}
@@ -134,7 +236,7 @@ export function Navbar() {
  * Categories dropdown in the header.
  * Uses static categories data for now.
  */
-function CategoriesDropdown() {
+function CategoriesDropdown({ categories }: { categories: Category[] }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   useClickOutside(dropdownRef as React.RefObject<HTMLElement>, () =>
@@ -169,15 +271,11 @@ function CategoriesDropdown() {
   );
 }
 
-interface ProfileMenuProps {
-  user: { name: string; email?: string | null };
-}
-
 /**
  * Simple profile dropdown for authenticated users.
  * In Phase 1, logout can just be a placeholder action.
  */
-function ProfileMenu({ user }: ProfileMenuProps) {
+function ProfileMenu({ user }: { user: AuthUser }) {
   const [open, setOpen] = useState(false);
   const router = useRouter(); // add this
 

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { CategoryHero } from "@/components/category/category-hero";
-import { CategoryFilterBar } from "@/components/category/filter-bar";
 import { CategoryProductGrid } from "@/components/category/product-grid";
 import { categoryService } from "@/services/categoryService"; // Client service
 import { productService } from "@/services/productService";
@@ -61,7 +60,6 @@ export default function CategoryPage({
   return (
     <div className="space-y-4">
       <CategoryHero category={category} />
-      <CategoryFilterBar />
       <CategoryProductGrid products={products} />
     </div>
   );
