@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { CategoryHero } from "@/components/category/category-hero";
 import { CategoryFilterBar } from "@/components/category/filter-bar";
 import { CategoryProductGrid } from "@/components/category/product-grid";
-import { categoryRepository } from "@/server/repositories/categoryRepository";
-import { productRepository } from "@/server/repositories/productRepository";
+import { categoryService } from "@/server/services/categoryService";
+import { productService } from "@/server/services/productService";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -17,13 +17,13 @@ export default async function CategoryPage({
 }: CategoryPageProps) {
   const { slug } = await params;
   const { q } = await searchParams;
-  const category = await categoryRepository.findBySlug(slug);
+  const category = await categoryService.getCategoryBySlug(slug);
 
   if (!category) {
     notFound();
   }
 
-  const products = await productRepository.list({
+  const products = await productService.getProducts({
     categorySlug: slug,
     search: q,
   });

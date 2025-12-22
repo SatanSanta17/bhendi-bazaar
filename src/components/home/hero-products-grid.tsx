@@ -1,8 +1,8 @@
-import { productRepository } from "@/server/repositories/productRepository";
+import { productService } from "@/server/services/productService";
 import { ProductCard } from "@/components/shared/product-card";
 
 export async function HeroProductsGrid() {
-  const heroes = await productRepository.heroProducts();
+  const heroes = await productService.getHeroProducts();
 
   if (!heroes.length) return null;
 

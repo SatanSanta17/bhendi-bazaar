@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { MapPin, ChevronRight } from "lucide-react";
-import { paymentRepository } from "@/server/repositories/paymentRepository";
+import { paymentGatewayService } from "@/services/paymentGatewayService";
 import type {
   OrderAddress,
   PaymentMethod,
   PaymentStatus,
+  Order,
 } from "@/domain/order";
 import type { ProfileAddress } from "@/domain/profile";
 import { useCartStore } from "@/store/cartStore";
-import { orderRepository } from "@/server/repositories/orderRepository";
+import { orderService } from "@/services/orderService";
+import { cartService } from "@/services/cartService";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,12 +26,6 @@ import { AddressModal } from "@/components/profile/address-modal";
 import { cn } from "@/lib/utils";
 import type { CartItem, CartTotals } from "@/domain/cart";
 
-// Extend Window interface to include Razorpay
-declare global {
-  interface Window {
-    Razorpay?: any;
-  }
-}
 type GuestCheckoutFormValues = OrderAddress & {
   notes?: string;
 };
@@ -47,7 +43,17 @@ export function CheckoutForm() {
 
   const clear = useCartStore((state) => state.clear);
 
-  const clearCart = buyNowItem ? clearBuyNow : clear;
+  const handleClearCart = useCallback(async () => {
+    if (buyNowItem) {
+      clearBuyNow();
+    } else {
+      clear();
+    }
+    // Clear server-side cart if authenticated
+    if (session?.user) {
+      await cartService.clearCart();
+    }
+  }, [buyNowItem, clearBuyNow, clear, session]);
 
   // Add computed values for display
   const displayItems = buyNowItem ? [buyNowItem] : items;
@@ -83,13 +89,10 @@ export function CheckoutForm() {
   });
 
   useEffect(() => {
-    const scriptId = "razorpay-checkout-js";
-    if (document.getElementById(scriptId)) return;
-    const script = document.createElement("script");
-    script.id = scriptId;
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
+    // Preload Razorpay SDK
+    paymentGatewayService.loadSDK().catch((error) => {
+      console.error("Failed to load payment SDK:", error);
+    });
   }, []);
 
   // Auto-select default address for authenticated users
@@ -127,26 +130,21 @@ export function CheckoutForm() {
     setError(null);
 
     try {
-      // Step 1: Create local order
-      const order = await orderRepository.createFromCart({ ...orderData });
+      // Step 1: Create order via service
+      const order = await orderService.createOrder(orderData);
 
       const amountInMinorUnit = Math.round(orderData.totals.total * 100);
 
       if (amountInMinorUnit <= 0) {
-        await orderRepository.update(order.id, { paymentStatus: "paid" });
-        clearCart();
+        // Free order - mark as paid and redirect
+        await orderService.updateOrder(order.id, { paymentStatus: "paid" });
+        await handleClearCart();
         router.push(`/order/${order.id}`);
         return;
       }
 
-      if (!window.Razorpay) {
-        throw new Error(
-          "Payment system not loaded. Please refresh and try again."
-        );
-      }
-
-      // Step 2: Create payment gateway order via REPOSITORY
-      const paymentOrder = await paymentRepository.createOrder({
+      // Step 2: Create payment gateway order via service
+      const paymentOrder = await paymentGatewayService.createPaymentOrder({
         amount: amountInMinorUnit,
         currency: "INR",
         localOrderId: order.id,
@@ -157,73 +155,45 @@ export function CheckoutForm() {
         },
       });
 
-      // Step 3: Open Razorpay checkout with COMPLETE options
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: paymentOrder.amount,
-        currency: paymentOrder.currency,
-        name: "Bhendi Bazaar",
-        description: `Order ${order.code}`,
-        order_id: paymentOrder.gatewayOrderId,
-        prefill: {
-          name: orderData.address.fullName,
-          email: orderData.address.email || "",
-          contact: orderData.address.phone,
-        },
-        notes: {
-          localOrderId: order.id,
-        },
-        // SUCCESS HANDLER - This is what was missing!
-        handler: async (response: {
-          razorpay_payment_id: string;
-          razorpay_order_id: string;
-          razorpay_signature: string;
-        }) => {
+      // Step 3: Open Razorpay checkout via gateway service
+      await paymentGatewayService.openCheckout(paymentOrder, {
+        onSuccess: async (response) => {
           try {
-            // Update order status to paid
-            await orderRepository.update(order.id, {
+            // Update order with payment info
+            await orderService.updateOrder(order.id, {
               paymentStatus: "paid",
               paymentMethod: "razorpay",
-              paymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
             });
-            clearCart();
+
+            // Clear cart
+            await handleClearCart();
+
+            // Redirect to order page
             router.push(`/order/${order.id}`);
           } catch (error) {
             console.error("Failed to update order after payment:", error);
-            // Still redirect since payment succeeded
-            clearCart();
-            router.push(`/order/${order.id}`);
+            setError(
+              "Payment succeeded but order update failed. Please contact support."
+            );
           }
         },
-        modal: {
-          // Handle when user closes the payment modal
-          ondismiss: () => {
-            setError(
-              "Payment cancelled. Your order is saved, you can complete payment later."
-            );
-            setIsProcessing(false);
-          },
+        onFailure: async (error) => {
+          console.error("Payment failed:", error);
+          await orderService.updateOrder(order.id, {
+            paymentStatus: "failed",
+          });
+          setError(
+            error?.error?.description || "Payment failed. Please try again."
+          );
+          setIsProcessing(false);
         },
-        theme: {
-          color: "#0f766e",
+        onDismiss: () => {
+          setIsProcessing(false);
         },
-      };
-
-      const razorpay = new window.Razorpay(options);
-
-      // Handle payment failures
-      razorpay.on("payment.failed", async (response: any) => {
-        console.error("Payment failed:", response.error);
-        await orderRepository.update(order.id, {
-          paymentStatus: "failed",
-        });
-        setError(
-          `Payment failed: ${response.error.description || "Please try again"}`
-        );
-        setIsProcessing(false);
       });
-
-      razorpay.open();
     } catch (error) {
       console.error("Checkout error:", error);
       setError(error instanceof Error ? error.message : "Checkout failed");

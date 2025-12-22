@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import type { Order } from "@/domain/order";
-import { orderRepository } from "@/server/repositories/orderRepository";
+import { orderService } from "@/services/orderService";
 import { OrderSummary } from "@/components/order/order-summary";
 import { OrderTracking } from "@/components/order/order-tracking";
 
@@ -13,22 +13,49 @@ interface OrderClientProps {
 
 export function OrderClient({ orderId }: OrderClientProps) {
   const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    orderRepository.findById(orderId).then((found) => {
-      if (mounted) setOrder(found ?? null);
-    });
+
+    async function fetchOrder() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await orderService.getOrderById(orderId);
+        if (mounted) {
+          setOrder(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch order:", err);
+        if (mounted) {
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch order"
+          );
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchOrder();
+
     return () => {
       mounted = false;
     };
   }, [orderId]);
 
-  if (!order) {
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Loading order...</p>;
+  }
+
+  if (error || !order) {
     return (
       <p className="text-sm text-muted-foreground">
-        We could not locate this order in the browser storage yet. Try placing a
-        fresh order in this session.
+        {error || "We could not locate this order."}
       </p>
     );
   }
@@ -43,8 +70,7 @@ export function OrderClient({ orderId }: OrderClientProps) {
           Thank you for shopping at Bhendi Bazaar
         </h1>
         <p className="text-xs text-muted-foreground">
-          This is a mock order for the guest flow. Details are kept in your
-          browser for this device.
+          Your order has been placed successfully.
         </p>
       </header>
       <div className="grid gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">

@@ -4,7 +4,8 @@ export const categories: Category[] = [
   {
     slug: "abayas",
     name: "Abayas & Jilbabs",
-    description: "Flowing silhouettes in deep emeralds, maroons, and midnight blacks.",
+    description:
+      "Flowing silhouettes in deep emeralds, maroons, and midnight blacks.",
     heroImage: "/images/categories/abayas-hero.jpg",
     accentColorClass: "from-emerald-900/80 via-emerald-800/60 to-black/80",
     order: 1,
@@ -20,7 +21,8 @@ export const categories: Category[] = [
   {
     slug: "jewellery",
     name: "Jewellery",
-    description: "Filigree, stones, and gold-toned details for elevated evenings.",
+    description:
+      "Filigree, stones, and gold-toned details for elevated evenings.",
     heroImage: "/images/categories/jewellery-hero.jpg",
     accentColorClass: "from-yellow-900/80 via-yellow-800/60 to-black/80",
     order: 3,
@@ -34,5 +36,3 @@ export const categories: Category[] = [
     order: 4,
   },
 ];
-
-

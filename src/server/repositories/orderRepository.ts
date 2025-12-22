@@ -1,143 +1,233 @@
-import type { CartItem, CartTotals } from "@/domain/cart";
+/**
+ * Server-side Order Repository
+ *
+ * This repository handles all database operations for orders.
+ * It uses Prisma to interact with the PostgreSQL database.
+ */
+
+import { prisma } from "@/lib/prisma";
 import type {
-  Order,
+  ServerOrder,
+  CreateOrderInput,
+  UpdateOrderInput,
+  OrderItem,
+  OrderTotals,
   OrderAddress,
-  OrderRepository,
+  OrderStatus,
   PaymentMethod,
   PaymentStatus,
-} from "@/domain/order";
-import { seedOrders } from "@/data/orders";
+} from "@/server/domain/order";
 
-const USE_MOCK = true;
-
-const STORAGE_KEY = "bhendi-bazaar-orders";
-
-function generateOrderCode(index: number) {
-  const base = 1000 + index;
+/**
+ * Helper to generate order code
+ */
+function generateOrderCode(count: number): string {
+  const base = 1000 + count;
   return `BB-${base}`;
 }
 
-function nowIso() {
-  return new Date().toISOString();
+/**
+ * Helper to calculate estimated delivery date
+ */
+function calculateEstimatedDelivery(): string {
+  const deliveryDate = new Date();
+  deliveryDate.setDate(deliveryDate.getDate() + 3); // 3 days from now
+  return deliveryDate.toISOString();
 }
 
-class LocalStorageOrderRepository implements OrderRepository {
-  private memory: Order[] = [...seedOrders];
+/**
+ * Normalize JSON fields from database
+ */
+function normalizeItems(items: unknown): OrderItem[] {
+  if (!items) return [];
+  if (Array.isArray(items)) {
+    return items as OrderItem[];
+  }
+  return [];
+}
 
-  private loadFromStorage(): Order[] {
-    if (typeof window === "undefined") return this.memory;
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return this.memory;
-    try {
-      const parsed = JSON.parse(raw) as Order[];
-      this.memory = parsed;
-    } catch {
-      // ignore parse errors
+function normalizeTotals(totals: unknown): OrderTotals {
+  if (totals && typeof totals === "object") {
+    return totals as OrderTotals;
+  }
+  return { subtotal: 0, discount: 0, total: 0 };
+}
+
+function normalizeAddress(address: unknown): OrderAddress {
+  if (address && typeof address === "object") {
+    return address as OrderAddress;
+  }
+  throw new Error("Invalid address data");
+}
+
+export class OrderRepository {
+  /**
+   * List all orders for a user
+   */
+  async listByUserId(userId: string): Promise<ServerOrder[]> {
+    const orders = await prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return orders.map((order) => ({
+      id: order.id,
+      code: order.code,
+      userId: order.userId ?? undefined,
+      items: normalizeItems(order.items),
+      totals: normalizeTotals(order.totals),
+      status: order.status as OrderStatus,
+      address: normalizeAddress(order.address),
+      notes: order.notes ?? undefined,
+      placedAt: order.createdAt.toISOString(),
+      estimatedDelivery: order.estimatedDelivery?.toISOString(),
+      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
+      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
+      paymentId: order.paymentId ?? undefined,
+    }));
+  }
+
+  /**
+   * Find order by ID
+   */
+  async findById(orderId: string): Promise<ServerOrder | null> {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      return null;
     }
-    return this.memory;
-  }
 
-  private persist(orders: Order[]) {
-    this.memory = orders;
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-  }
-
-  async list(): Promise<Order[]> {
-    return this.loadFromStorage().slice().reverse();
-  }
-
-  async findById(id: string): Promise<Order | undefined> {
-    return this.loadFromStorage().find((o) => o.id === id);
-  }
-
-  async createFromCart(input: {
-    items: CartItem[];
-    totals: CartTotals;
-    address: OrderAddress;
-    notes?: string;
-    paymentMethod?: PaymentMethod;
-    paymentStatus?: PaymentStatus;
-    paymentId?: string;
-  }): Promise<Order> {
-    const existing = this.loadFromStorage();
-    const id = `${Date.now()}-${existing.length + 1}`;
-    const order: Order = {
-      id,
-      code: generateOrderCode(existing.length),
-      items: input.items,
-      totals: input.totals,
-      status: "processing",
-      address: input.address,
-      notes: input.notes,
-      placedAt: nowIso(),
-      estimatedDelivery: new Date(
-        Date.now() + 3 * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      paymentMethod: input.paymentMethod,
-      paymentStatus: input.paymentStatus,
-      paymentId: input.paymentId,
+    return {
+      id: order.id,
+      code: order.code,
+      userId: order.userId ?? undefined,
+      items: normalizeItems(order.items),
+      totals: normalizeTotals(order.totals),
+      status: order.status as OrderStatus,
+      address: normalizeAddress(order.address),
+      notes: order.notes ?? undefined,
+      placedAt: order.createdAt.toISOString(),
+      estimatedDelivery: order.estimatedDelivery?.toISOString(),
+      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
+      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
+      paymentId: order.paymentId ?? undefined,
     };
-    this.persist([...existing, order]);
-    return order;
   }
 
-  async update(
-    id: string,
-    update: {
-      status?: Order["status"];
-      paymentMethod?: PaymentMethod;
-      paymentStatus?: PaymentStatus;
-      paymentId?: string;
+  /**
+   * Find order by code (for guest lookup)
+   */
+  async findByCode(code: string): Promise<ServerOrder | null> {
+    const order = await prisma.order.findUnique({
+      where: { code },
+    });
+
+    if (!order) {
+      return null;
     }
-  ): Promise<Order | undefined> {
-    const existing = this.loadFromStorage();
-    const next = existing.map((order) =>
-      order.id === id ? { ...order, ...update } : order
-    );
-    this.persist(next);
-    return next.find((order) => order.id === id);
+
+    return {
+      id: order.id,
+      code: order.code,
+      userId: order.userId ?? undefined,
+      items: normalizeItems(order.items),
+      totals: normalizeTotals(order.totals),
+      status: order.status as OrderStatus,
+      address: normalizeAddress(order.address),
+      notes: order.notes ?? undefined,
+      placedAt: order.createdAt.toISOString(),
+      estimatedDelivery: order.estimatedDelivery?.toISOString(),
+      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
+      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
+      paymentId: order.paymentId ?? undefined,
+    };
+  }
+
+  /**
+   * Create a new order
+   */
+  async create(input: CreateOrderInput): Promise<ServerOrder> {
+    // Get the count of orders to generate the next order code
+    const orderCount = await prisma.order.count();
+    const code = generateOrderCode(orderCount);
+
+    const order = await prisma.order.create({
+      data: {
+        code,
+        userId: input.userId ?? null,
+        items: input.items as any,
+        totals: input.totals as any,
+        status: "processing",
+        address: input.address as any,
+        notes: input.notes ?? null,
+        paymentMethod: input.paymentMethod ?? null,
+        paymentStatus: input.paymentStatus ?? "pending",
+        paymentId: input.paymentId ?? null,
+        estimatedDelivery: calculateEstimatedDelivery(),
+      },
+    });
+
+    return {
+      id: order.id,
+      code: order.code,
+      userId: order.userId ?? undefined,
+      items: normalizeItems(order.items),
+      totals: normalizeTotals(order.totals),
+      status: order.status as OrderStatus,
+      address: normalizeAddress(order.address),
+      notes: order.notes ?? undefined,
+      placedAt: order.createdAt.toISOString(),
+      estimatedDelivery: order.estimatedDelivery?.toISOString(),
+      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
+      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
+      paymentId: order.paymentId ?? undefined,
+    };
+  }
+
+  /**
+   * Update an existing order
+   */
+  async update(
+    orderId: string,
+    input: UpdateOrderInput
+  ): Promise<ServerOrder | null> {
+    const order = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        ...(input.status && { status: input.status }),
+        ...(input.paymentMethod && { paymentMethod: input.paymentMethod }),
+        ...(input.paymentStatus && { paymentStatus: input.paymentStatus }),
+        ...(input.paymentId && { paymentId: input.paymentId }),
+      },
+    });
+
+    return {
+      id: order.id,
+      code: order.code,
+      userId: order.userId ?? undefined,
+      items: normalizeItems(order.items),
+      totals: normalizeTotals(order.totals),
+      status: order.status as OrderStatus,
+      address: normalizeAddress(order.address),
+      notes: order.notes ?? undefined,
+      placedAt: order.createdAt.toISOString(),
+      estimatedDelivery: order.estimatedDelivery?.toISOString(),
+      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
+      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
+      paymentId: order.paymentId ?? undefined,
+    };
+  }
+
+  /**
+   * Delete an order (admin only)
+   */
+  async delete(orderId: string): Promise<void> {
+    await prisma.order.delete({
+      where: { id: orderId },
+    });
   }
 }
 
-class PrismaOrderRepository implements OrderRepository {
-  async list(): Promise<Order[]> {
-    // TODO: Implement with Prisma
-    return [];
-  }
-
-  async findById(id: string): Promise<Order | undefined> {
-    // TODO: Implement with Prisma
-    return undefined;
-  }
-
-  async createFromCart(input: {
-    items: CartItem[];
-    totals: CartTotals;
-    address: OrderAddress;
-    notes?: string;
-    paymentMethod?: PaymentMethod;
-    paymentStatus?: PaymentStatus;
-    paymentId?: string;
-  }): Promise<Order> {
-    // TODO: Implement with Prisma
-    throw new Error("Not implemented");
-  }
-
-  async update(
-    id: string,
-    update: {
-      status?: Order["status"];
-      paymentMethod?: PaymentMethod;
-      paymentStatus?: PaymentStatus;
-      paymentId?: string;
-    }
-  ): Promise<Order | undefined> {
-    // TODO: Implement with Prisma
-    return undefined;
-  }
-}
-
-export const orderRepository = USE_MOCK
-  ? new LocalStorageOrderRepository()
-  : new PrismaOrderRepository();
+export const orderRepository = new OrderRepository();

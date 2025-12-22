@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { paymentGateway } from "@/server/repositories/razorpayGateway";
-import { orderRepository } from "@/server/repositories/orderRepository";
+import { paymentService } from "@/server/services/paymentService";
+import { orderService } from "@/server/services/orderService";
 
 export async function POST(req: NextRequest) {
   try {
     const signature = req.headers.get("x-razorpay-signature") ?? "";
     const rawBody = await req.text();
 
-    // Verify webhook using repository
-    const verification = await paymentGateway.verifyWebhook(signature, rawBody);
+    // Verify webhook using service
+    const verification = await paymentService.verifyWebhook(signature, rawBody);
 
     if (!verification.isValid) {
       console.error("Webhook verification failed:", verification.error);
@@ -56,7 +56,7 @@ async function handlePaymentSuccess(event: any) {
   const localOrderId = payload?.payment?.entity?.notes?.localOrderId;
 
   if (localOrderId) {
-    await orderRepository.update(localOrderId, {
+    await orderService.updateOrder(localOrderId, {
       paymentStatus: "paid",
       paymentId: payload?.payment?.entity?.id,
     });
@@ -69,7 +69,7 @@ async function handlePaymentFailed(event: any) {
   const localOrderId = payload?.payment?.entity?.notes?.localOrderId;
 
   if (localOrderId) {
-    await orderRepository.update(localOrderId, {
+    await orderService.updateOrder(localOrderId, {
       paymentStatus: "failed",
     });
     console.log(`Order ${localOrderId} marked as failed`);

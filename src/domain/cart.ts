@@ -1,3 +1,5 @@
+// src/domain/cart.ts
+
 import type { ProductId } from "./product";
 
 export interface CartItem {
@@ -22,9 +24,10 @@ export interface CartState {
   items: CartItem[];
 }
 
-export interface CartRepository {
-  load(): Promise<CartState>;
-  save(state: CartState): Promise<void>;
+// NEW: Service interface for client-side operations
+export interface CartService {
+  getCart(): Promise<CartItem[]>;
+  syncCart(localItems: CartItem[]): Promise<CartItem[]>;
+  updateCart(items: CartItem[]): Promise<void>;
+  clearCart(): Promise<void>;
 }
-
-

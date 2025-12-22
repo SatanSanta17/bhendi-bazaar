@@ -92,5 +92,3 @@ export const products: Product[] = [
     thumbnail: `${assetsUrl}/IMG_20251010_120119.jpg`,
   },
 ];
-
-

@@ -12,15 +12,98 @@ datasource db {
   provider = "postgresql"
 }
 
+model Category {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  name             String
+  description      String    @db.Text
+  heroImage        String // URL to hero image
+  accentColorClass String // Tailwind color class
+  order            Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  products         Product[]
+
+  @@index([slug])
+  @@index([order])
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  description  String   @db.Text
+  price        Float
+  salePrice    Float?
+  currency     String   @default("INR")
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags         String[] // Array of tags
+  isFeatured   Boolean  @default(false)
+  isHero       Boolean  @default(false)
+  isOnOffer    Boolean  @default(false)
+  rating       Float    @default(0)
+  reviewsCount Int      @default(0)
+  images       String[] // Array of image URLs
+  thumbnail    String // Main product image URL
+  sizes        String[] // Available sizes
+  colors       String[] // Available colors
+  stock        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  reviews      Review[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isFeatured])
+  @@index([isHero])
+  @@index([isOnOffer])
+  @@index([createdAt])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rating     Int // 1-5
+  title      String?
+  comment    String?  @db.Text
+  userName   String // Store name in case user is deleted
+  isVerified Boolean  @default(false) // Verified purchase
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     Json // CartItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
 model User {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String?
-  email        String?   @unique
-  mobile       String?   @unique
-  passwordHash String?   // for credentials-based auth
+  email        String?  @unique
+  mobile       String?  @unique
+  passwordHash String? // for credentials-based auth
   profile      Profile?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  cart         Cart?
+  orders       Order[]
+  reviews      Review[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   accounts Account[]
   sessions Session[]
@@ -30,7 +113,7 @@ model Profile {
   id         String  @id @default(cuid())
   user       User    @relation(fields: [userId], references: [id])
   userId     String  @unique
-  addresses  Json?   // address[] as JSON block
+  addresses  Json? // address[] as JSON block
   profilePic String? // URL to avatar image
 }
 
@@ -68,4 +151,26 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Order {
+  id                String    @id @default(cuid())
+  code              String    @unique // e.g., BB-1001
+  userId            String? // null for guest orders
+  user              User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items             Json // CartItem[]
+  totals            Json // CartTotals { subtotal, discount, total }
+  status            String    @default("processing") // processing, packed, shipped, delivered
+  address           Json // OrderAddress
+  notes             String?   @db.Text
+  paymentMethod     String? // razorpay
+  paymentStatus     String?   @default("pending") // pending, paid, failed
+  paymentId         String? // Razorpay payment ID
+  estimatedDelivery DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([code])
+  @@index([createdAt])
 }

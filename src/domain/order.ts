@@ -1,3 +1,10 @@
+/**
+ * Client-side domain types for Order
+ *
+ * These types are used on the client-side (components, hooks).
+ * They mirror the API response structure and are used for type safety.
+ */
+
 import type { CartItem, CartTotals } from "./cart";
 
 export type OrderStatus = "processing" | "packed" | "shipped" | "delivered";
@@ -21,6 +28,7 @@ export interface OrderAddress {
 export interface Order {
   id: string;
   code: string;
+  userId?: string; // Optional for guest orders
   items: CartItem[];
   totals: CartTotals;
   status: OrderStatus;
@@ -28,33 +36,7 @@ export interface Order {
   notes?: string;
   placedAt: string;
   estimatedDelivery?: string;
-  /**
-   * Basic payment metadata for the mock checkout flow.
-   * For a real backend you would persist richer transaction details.
-   */
   paymentMethod?: PaymentMethod;
   paymentStatus?: PaymentStatus;
   paymentId?: string;
 }
-
-export interface OrderRepository {
-  list(): Promise<Order[]>;
-  findById(id: string): Promise<Order | undefined>;
-  createFromCart(input: {
-    items: CartItem[];
-    totals: CartTotals;
-    address: OrderAddress;
-    notes?: string;
-    paymentMethod?: PaymentMethod;
-    paymentStatus?: PaymentStatus;
-    paymentId?: string;
-  }): Promise<Order>;
-  update(
-    id: string,
-    update: Partial<
-      Pick<Order, "status" | "paymentMethod" | "paymentStatus" | "paymentId">
-    >
-  ): Promise<Order | undefined>;
-}
-
-

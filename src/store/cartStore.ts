@@ -8,12 +8,18 @@ type CartStoreState = CartState & {
   discount: number;
   total: number;
   buyNowItem: CartItem | null;
+  isSyncing: boolean;
+  lastSyncError: string | null;
+
   addItem: (item: Omit<CartItem, "id">) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clear: () => void;
   setBuyNowItem: (item: Omit<CartItem, "id"> | null) => void;
   clearBuyNow: () => void;
+  setItems: (items: CartItem[]) => void;
+  setSyncing: (syncing: boolean) => void;
+  setSyncError: (error: string | null) => void;
 };
 
 function computeTotals(items: CartItem[]) {
@@ -38,6 +44,9 @@ export const useCartStore = create<CartStoreState>()(
       discount: 0,
       total: 0,
       buyNowItem: null,
+      isSyncing: false,
+      lastSyncError: null,
+
       addItem: (itemInput) => {
         set((state) => {
           const existing = state.items.find(
@@ -64,9 +73,7 @@ export const useCartStore = create<CartStoreState>()(
 
           return {
             items: nextItems,
-            subtotal: totals.subtotal,
-            discount: totals.discount,
-            total: totals.total,
+            ...totals,
           };
         });
       },
@@ -78,9 +85,7 @@ export const useCartStore = create<CartStoreState>()(
 
           return {
             items: nextItems,
-            subtotal: totals.subtotal,
-            discount: totals.discount,
-            total: totals.total,
+            ...totals,
           };
         });
       },
@@ -94,9 +99,7 @@ export const useCartStore = create<CartStoreState>()(
 
           return {
             items: nextItems,
-            subtotal: totals.subtotal,
-            discount: totals.discount,
-            total: totals.total,
+            ...totals,
           };
         });
       },
@@ -121,6 +124,19 @@ export const useCartStore = create<CartStoreState>()(
 
       clearBuyNow: () => {
         set({ buyNowItem: null });
+      },
+
+      setItems: (items) => {
+        const totals = computeTotals(items);
+        set({ items, ...totals });
+      },
+
+      setSyncing: (syncing) => {
+        set({ isSyncing: syncing });
+      },
+
+      setSyncError: (error) => {
+        set({ lastSyncError: error });
       },
     }),
     {

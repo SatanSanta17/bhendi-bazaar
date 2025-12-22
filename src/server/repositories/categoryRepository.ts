@@ -1,30 +1,28 @@
-import type { Category, CategoryRepository } from "@/domain/category";
+/**
+ * Server-side Category Repository
+ *
+ * This repository handles all database operations for categories.
+ * Currently uses mock data, will be replaced with Prisma once schema is ready.
+ */
+
 import { categories } from "@/data/categories";
+import type { ServerCategory } from "@/server/domain/category";
 
-const USE_MOCK = true;
-
-class InMemoryCategoryRepository implements CategoryRepository {
-  async list(): Promise<Category[]> {
+export class CategoryRepository {
+  /**
+   * List all categories sorted by order
+   */
+  async list(): Promise<ServerCategory[]> {
     return [...categories].sort((a, b) => a.order - b.order);
   }
 
-  async findBySlug(slug: string): Promise<Category | undefined> {
-    return categories.find((c) => c.slug === slug);
+  /**
+   * Find category by slug
+   */
+  async findBySlug(slug: string): Promise<ServerCategory | null> {
+    const category = categories.find((c) => c.slug === slug);
+    return category ?? null;
   }
 }
 
-class PrismaCategoryRepository implements CategoryRepository {
-  async list(): Promise<Category[]> {
-    // TODO: Implement with Prisma
-    return [];
-  }
-
-  async findBySlug(slug: string): Promise<Category | undefined> {
-    // TODO: Implement with Prisma
-    return undefined;
-  }
-}
-
-export const categoryRepository = USE_MOCK
-  ? new InMemoryCategoryRepository()
-  : new PrismaCategoryRepository();
+export const categoryRepository = new CategoryRepository();

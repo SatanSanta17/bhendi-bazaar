@@ -8,26 +8,35 @@ import type {
   User,
   UserProfile,
 } from "@/domain/profile";
-import { profileRepository } from "@/server/repositories/profileRepository";
 
 interface UseProfileReturn {
   // Data
   user: User | null;
   profile: UserProfile | null;
-  
+
   // State
   loading: boolean;
   error: string | null;
   saving: boolean;
-  
+
   // Actions
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
   updateAddresses: (addresses: ProfileAddress[]) => Promise<void>;
-  updateUserInfo: (input: { name?: string; email?: string; mobile?: string }) => Promise<void>;
+  updateUserInfo: (input: {
+    name?: string;
+    email?: string;
+    mobile?: string;
+  }) => Promise<void>;
   updateProfilePic: (profilePic: string) => Promise<void>;
   refetch: () => Promise<void>;
 }
 
+/**
+ * Client-side hook for managing user profile
+ *
+ * This hook communicates with the server through API routes (/api/profile)
+ * and does NOT directly access any server-side code.
+ */
 export function useProfile(isAuthenticated: boolean): UseProfileReturn {
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,13 +52,25 @@ export function useProfile(isAuthenticated: boolean): UseProfileReturn {
     try {
       setLoading(true);
       setError(null);
-      const profileData = await profileRepository.getProfile();
+
+      const response = await fetch("/api/profile", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Unauthorized - please sign in");
+        }
+        throw new Error(`Failed to load profile: ${response.statusText}`);
+      }
+
+      const profileData = await response.json();
       setData(profileData);
     } catch (err) {
       console.error("Failed to fetch profile:", err);
       setError(
-        err instanceof Error 
-          ? err.message 
+        err instanceof Error
+          ? err.message
           : "Unable to load your profile right now."
       );
     } finally {
@@ -87,7 +108,25 @@ export function useProfile(isAuthenticated: boolean): UseProfileReturn {
       try {
         setSaving(true);
         setError(null);
-        const updated = await profileRepository.updateProfile(input);
+
+        const response = await fetch("/api/profile", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(input),
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Unauthorized - please sign in");
+          }
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update profile");
+        }
+
+        const updated = await response.json();
         setData(updated);
       } catch (err) {
         console.error("Failed to update profile:", err);

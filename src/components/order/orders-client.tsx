@@ -3,16 +3,32 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { Order } from "@/domain/order";
-import { orderRepository } from "@/server/repositories/orderRepository";
+import { orderService } from "@/services/orderService";
 import { formatCurrency } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 
 export function OrdersClient() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    orderRepository.list().then(setOrders);
+    async function fetchOrders() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await orderService.getOrders();
+        setOrders(data);
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch orders");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchOrders();
   }, []);
 
   const filtered = useMemo(() => {
@@ -25,6 +41,22 @@ export function OrdersClient() {
     );
   }, [orders, query]);
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Loading your orders...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-destructive">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -33,7 +65,7 @@ export function OrdersClient() {
             Orders
           </p>
           <p className="text-xs text-muted-foreground">
-            For Phase 1, these are guest orders stored in your browser only.
+            Your order history with Bhendi Bazaar.
           </p>
         </div>
         <div className="w-full max-w-xs">
@@ -47,8 +79,9 @@ export function OrdersClient() {
       </div>
       {filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No orders yet. Once you place an order in this browser, it will show
-          up here.
+          {query.trim()
+            ? "No orders match your search."
+            : "No orders yet. Once you place an order, it will show up here."}
         </p>
       ) : (
         <div className="space-y-3">

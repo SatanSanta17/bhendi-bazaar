@@ -1,3 +1,10 @@
+/**
+ * Client-side domain types for Profile
+ *
+ * These types are used on the client-side (components, hooks).
+ * They mirror the API response structure and are used for type safety.
+ */
+
 export interface ProfileAddress {
   id: string;
   label: string;
@@ -33,7 +40,7 @@ export interface ProfileData {
   profile: UserProfile;
 }
 
-// Update inputs
+// Update inputs for client-side forms
 export interface UpdateProfileInput {
   // User fields
   name?: string;
@@ -42,10 +49,4 @@ export interface UpdateProfileInput {
   // Profile fields
   addresses?: ProfileAddress[];
   profilePic?: string | null;
-}
-
-// Repository interface for profile management
-export interface ProfileRepository {
-  getProfile(): Promise<ProfileData>;
-  updateProfile(input: UpdateProfileInput): Promise<ProfileData>;
 }

@@ -1,3 +1,9 @@
+/**
+ * Client-side domain types for Category
+ *
+ * These types are used on the client-side (components, hooks).
+ */
+
 export interface Category {
   slug: string;
   name: string;
@@ -5,11 +11,6 @@ export interface Category {
   heroImage: string;
   accentColorClass: string;
   order: number;
-}
-
-export interface CategoryRepository {
-  list(): Promise<Category[]>;
-  findBySlug(slug: string): Promise<Category | undefined>;
 }
 
 

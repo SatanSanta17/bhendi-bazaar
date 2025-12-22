@@ -2,8 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { orderRepository } from "@/server/repositories/orderRepository";
 import type { Order } from "@/domain/order";
+import { orderService } from "@/services/orderService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OrderSummary } from "./order-summary";
@@ -25,15 +25,11 @@ export function OrderLookup() {
     setOrder(null);
 
     try {
-      const orders = await orderRepository.list(); // localStorage for now
-      const found = orders.find(
-        (o) => o.code.toLowerCase() === trimmed.toLowerCase()
-      );
-      if (!found) {
-        setError("We couldn’t find an order with that ID in this browser.");
-      } else {
-        setOrder(found);
-      }
+      const found = await orderService.lookupOrderByCode(trimmed);
+      setOrder(found);
+    } catch (err) {
+      console.error("Failed to lookup order:", err);
+      setError(err instanceof Error ? err.message : "Failed to lookup order");
     } finally {
       setLoading(false);
     }
@@ -50,8 +46,7 @@ export function OrderLookup() {
             Track order
           </p>
           <p className="text-xs text-muted-foreground">
-            Enter your Bhendi Bazaar order ID (for now, tracked in this
-            browser’s history).
+            Enter your Bhendi Bazaar order ID to track your order.
           </p>
         </header>
         <div className="space-y-2">
@@ -72,11 +67,7 @@ export function OrderLookup() {
         >
           {loading ? "Searching…" : "Find order"}
         </Button>
-        {error && (
-          <p className="text-[0.7rem] text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <p className="text-[0.7rem] text-destructive">{error}</p>}
       </form>
 
       {order && (

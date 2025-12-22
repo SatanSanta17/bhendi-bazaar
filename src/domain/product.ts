@@ -1,3 +1,10 @@
+/**
+ * Client-side domain types for Product
+ *
+ * These types are used on the client-side (components, hooks).
+ * They mirror the API response structure and are used for type safety.
+ */
+
 export type ProductId = string;
 export type CategorySlug = string;
 
@@ -31,14 +38,6 @@ export interface ProductFilter {
   maxPrice?: number;
   offerOnly?: boolean;
   featuredOnly?: boolean;
-}
-
-export interface ProductRepository {
-  list(filter?: ProductFilter): Promise<Product[]>;
-  findBySlug(slug: string): Promise<Product | undefined>;
-  findSimilar(slug: string, limit?: number): Promise<Product[]>;
-  heroProducts(): Promise<Product[]>;
-  offerProducts(): Promise<Product[]>;
 }
 
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import type { ProfileAddress } from "@/domain/profile";
 import type { Order } from "@/domain/order";
-import { orderRepository } from "@/server/repositories/orderRepository";
+import { orderService } from "@/services/orderService";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { AddressesSection } from "@/components/profile/addresses-section";
@@ -28,13 +28,25 @@ export default function ProfilePage() {
   } = useProfile(isAuthenticated);
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   // Load recent orders
   useEffect(() => {
     if (!isAuthenticated) return;
-    orderRepository.list().then((all) => {
-      setOrders(all.slice(0, 3));
-    });
+
+    async function fetchOrders() {
+      try {
+        setOrdersLoading(true);
+        const data = await orderService.getOrders();
+        setOrders(data.slice(0, 3)); // Show only 3 recent orders
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+      } finally {
+        setOrdersLoading(false);
+      }
+    }
+
+    fetchOrders();
   }, [isAuthenticated]);
 
   // Handle saving an address (add or update)

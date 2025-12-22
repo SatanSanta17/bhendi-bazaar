@@ -1,8 +1,8 @@
-import { productRepository } from "@/server/repositories/productRepository";
+import { productService } from "@/server/services/productService";
 import { formatCurrency } from "@/lib/format";
 
 export async function OffersStrip() {
-  const offers = await productRepository.offerProducts();
+  const offers = await productService.getOfferProducts();
 
   if (!offers.length) return null;
 
