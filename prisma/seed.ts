@@ -9,11 +9,23 @@
  * Run with: npx prisma db seed
  */
 
+
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { categories } from "../src/data/categories";
 import { products } from "../src/data/products";
 
-const prisma = new PrismaClient();
+// Use the same adapter configuration as the main app
+const pool = new Pool({
+  connectionString: process.env.BHENDI_BAZAAR_DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({
+  adapter,
+});
 
 async function main() {
   console.log("🌱 Starting database seed...\n");

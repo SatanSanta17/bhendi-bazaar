@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
-export async function HomeHero() {
+export function HomeHero() {
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-emerald-950 via-emerald-900 to-black px-6 py-10 text-emerald-50 sm:px-10 sm:py-16">
       <div className="pointer-events-none absolute -left-10 -top-20 h-64 w-64 rounded-full border border-emerald-500/15" />

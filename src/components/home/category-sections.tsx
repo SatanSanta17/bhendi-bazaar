@@ -1,10 +1,27 @@
+"use client";
 import Link from "next/link";
 
-import { categoryService } from "@/server/services/categoryService";
+import { categoryService } from "@/services/categoryService";
 import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { useEffect } from "react";
+import type { Category } from "@/domain/category";
 
-export async function CategorySections() {
-  const categories = await categoryService.getCategories();
+export function CategorySections() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    categoryService
+      .getCategories()
+      .then(setCategories)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!categories.length) return null;
 
@@ -45,5 +62,3 @@ export async function CategorySections() {
     </section>
   );
 }
-
-

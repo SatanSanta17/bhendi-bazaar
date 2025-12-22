@@ -2,22 +2,13 @@
 
 import { useCartStore } from "@/store/cartStore";
 import { formatCurrency } from "@/lib/format";
-import { useEffect } from "react";
 
 export function CheckoutSummary() {
   const items = useCartStore((state) => state.items);
   const buyNowItem = useCartStore((state) => state.buyNowItem);
-  const clearBuyNow = useCartStore((state) => state.clearBuyNow);
   const subtotal = useCartStore((state) => state.subtotal);
   const discount = useCartStore((state) => state.discount);
   const total = useCartStore((state) => state.total);
-
-  // Debug logging
-  console.log("CheckoutSummary render:", {
-    buyNowItem,
-    items,
-    itemsLength: items.length,
-  });
 
   const displayItems = buyNowItem ? [buyNowItem] : items;
 

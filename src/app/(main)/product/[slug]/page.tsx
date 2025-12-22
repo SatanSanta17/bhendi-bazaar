@@ -4,7 +4,7 @@ import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductDetails } from "@/components/product/product-details";
 import { Reviews } from "@/components/product/reviews";
 import { SimilarProducts } from "@/components/product/similar-products";
-import { productService } from "@/server/services/productService";
+import { productService } from "@/services/productService";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;

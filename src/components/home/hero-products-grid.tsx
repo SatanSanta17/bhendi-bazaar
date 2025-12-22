@@ -1,8 +1,25 @@
-import { productService } from "@/server/services/productService";
-import { ProductCard } from "@/components/shared/product-card";
+"use client";
 
-export async function HeroProductsGrid() {
-  const heroes = await productService.getHeroProducts();
+import { useEffect, useState } from "react";
+import { productService } from "@/services/productService";
+import { ProductCard } from "@/components/shared/product-card";
+import type { Product } from "@/domain/product";
+
+export function HeroProductsGrid() {
+  const [heroes, setHeroes] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    productService
+      .getFeaturedProducts(6)
+      .then(setHeroes)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!heroes.length) return null;
 

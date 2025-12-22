@@ -1,8 +1,24 @@
-import { productService } from "@/server/services/productService";
+"use client";
+import { productService } from "@/services/productService";
 import { formatCurrency } from "@/lib/format";
+import { useEffect, useState } from "react";
+import type { Product } from "@/domain/product";
 
-export async function OffersStrip() {
-  const offers = await productService.getOfferProducts();
+export function OffersStrip() {
+  const [offers, setOffers] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    productService
+      .getOfferProducts()
+      .then(setOffers)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!offers.length) return null;
 
