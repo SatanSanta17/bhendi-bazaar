@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Product } from "@/domain/product";
 import { productService } from "@/services/productService";
 import { CategoryProductGrid } from "@/components/category/product-grid";
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const [products, setProducts] = useState<Product[]>([]);
@@ -74,5 +74,19 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-6xl mx-auto px-4 py-12 text-center">
+          <div className="h-64 bg-muted animate-pulse rounded-lg" />
+        </div>
+      }
+    >
+      <SearchContent />
+    </Suspense>
   );
 }

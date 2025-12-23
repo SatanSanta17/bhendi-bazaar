@@ -11,13 +11,9 @@ import type { Product } from "@/domain/product";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ q?: string }>;
 }
 
-export default function CategoryPage({
-  params,
-  searchParams,
-}: CategoryPageProps) {
+export default function CategoryPage({ params }: CategoryPageProps) {
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,12 +21,11 @@ export default function CategoryPage({
   useEffect(() => {
     const loadData = async () => {
       const { slug } = await params;
-      const { q } = await searchParams;
 
       try {
         const [categoryData, productsData] = await Promise.all([
           categoryService.getCategoryBySlug(slug),
-          productService.getProducts({ categorySlug: slug, search: q }),
+          productService.getProducts({ categorySlug: slug }),
         ]);
 
         if (!categoryData) {
@@ -47,7 +42,7 @@ export default function CategoryPage({
     };
 
     loadData();
-  }, [params, searchParams]);
+  }, [params]);
 
   if (loading) {
     return <div>Loading...</div>;
