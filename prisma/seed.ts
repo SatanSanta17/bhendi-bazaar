@@ -15,6 +15,7 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { categories } from "../src/data/categories";
 import { products } from "../src/data/products";
+import { hash } from "bcryptjs";
 
 // Use the same adapter configuration as the main app
 const pool = new Pool({
@@ -154,6 +155,25 @@ async function main() {
     }
   }
   console.log(`✅ ${reviewCount} reviews seeded\n`);
+
+  // Create admin user
+  const hashedPassword = await hash("admin123", 10);
+
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@bhendibazaar.com" },
+    update: {
+      role: "ADMIN",
+      name: "Admin User",
+    },
+    create: {
+      email: "admin@bhendibazaar.com",
+      name: "Admin User",
+      role: "ADMIN",
+      passwordHash: hashedPassword,
+    },
+  });
+
+  console.log("✅ Admin user created:", admin.email);
 
   console.log("🎉 Database seed completed successfully!");
 }
