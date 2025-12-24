@@ -25,6 +25,8 @@ export interface Product {
   reviewsCount: number;
   images: string[];
   thumbnail: string;
+  stock: number;
+  lowStockThreshold: number;
   options?: {
     sizes?: string[];
     colors?: string[];

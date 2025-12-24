@@ -6,8 +6,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { DataTable, Column } from "@/components/admin/data-table";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Edit, Trash2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { adminProductService } from "@/services/admin/productService";
 import type { AdminProduct, ProductListFilters } from "@/domain/admin";
@@ -20,6 +21,7 @@ export default function AdminProductsPage() {
   });
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -34,8 +36,23 @@ export default function AdminProductsPage() {
       setTotalPages(result.totalPages);
     } catch (error) {
       console.error("Failed to load products:", error);
+      toast.error("Failed to load products");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      toast.info("Refreshing products...");
+      await loadProducts();
+      toast.success("Products refreshed successfully!");
+    } catch (error) {
+      console.error("Failed to refresh products:", error);
+      toast.error("Failed to refresh products");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -49,6 +66,25 @@ export default function AdminProductsPage() {
       currency: "INR",
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleDelete = async (productId: string, productName: string) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${productName}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await adminProductService.deleteProduct(productId);
+      alert("Product deleted successfully!");
+      loadProducts(); // Reload the list
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      alert("Failed to delete product");
+    }
   };
 
   const columns: Column<AdminProduct>[] = [
@@ -132,6 +168,28 @@ export default function AdminProductsPage() {
         </div>
       ),
     },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (product) => (
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/products/${product.id}/edit`}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Edit product"
+          >
+            <Edit className="w-4 h-4" />
+          </Link>
+          <button
+            onClick={() => handleDelete(product.id, product.name)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete product"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -143,13 +201,25 @@ export default function AdminProductsPage() {
           </h1>
           <p className="text-gray-600 mt-1">Manage your product catalog</p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </button>
+          <Link
+            href="/admin/products/new"
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

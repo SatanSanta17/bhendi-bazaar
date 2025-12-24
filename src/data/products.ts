@@ -19,6 +19,8 @@ export const products: Product[] = [
     isOnOffer: true,
     rating: 4.8,
     reviewsCount: 128,
+    stock: 25,
+    lowStockThreshold: 10,
     images: [
       `${assetsUrl}/IMG_20251010_120119.jpg`,
       `${assetsUrl}/IMG_20251010_120119.jpg`,
@@ -42,6 +44,8 @@ export const products: Product[] = [
     isFeatured: true,
     rating: 4.6,
     reviewsCount: 64,
+    stock: 15,
+    lowStockThreshold: 10,
     images: [
       `${assetsUrl}/IMG_20251010_120119.jpg`,
       `${assetsUrl}/IMG_20251010_120119.jpg`,
@@ -67,6 +71,8 @@ export const products: Product[] = [
     isOnOffer: true,
     rating: 4.9,
     reviewsCount: 210,
+    stock: 50,
+    lowStockThreshold: 10,
     images: [
       `${assetsUrl}/IMG_20251010_120119.jpg`,
       `${assetsUrl}/IMG_20251010_120119.jpg`,
@@ -85,6 +91,8 @@ export const products: Product[] = [
     tags: ["jewellery", "bangle", "festive"],
     rating: 4.7,
     reviewsCount: 43,
+    stock: 30,
+    lowStockThreshold: 10,
     images: [
       `${assetsUrl}/IMG_20251010_120119.jpg`,
       `${assetsUrl}/IMG_20251010_120119.jpg`,

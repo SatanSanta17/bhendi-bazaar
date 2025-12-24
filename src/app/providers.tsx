@@ -2,6 +2,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { Toaster } from "sonner";
 import { useCartSync } from "@/hooks/useCartSync";
 
 function CartSyncProvider({ children }: { children: React.ReactNode }) {
@@ -12,7 +13,10 @@ function CartSyncProvider({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <CartSyncProvider>{children}</CartSyncProvider>
+      <CartSyncProvider>
+        {children}
+        <Toaster position="top-right" richColors />
+      </CartSyncProvider>
     </SessionProvider>
   );
 }

@@ -2,6 +2,7 @@
 
 import type { Product } from "@/domain/product";
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { formatCurrency } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ interface ProductDetailsProps {
 
 export function ProductDetails({ product }: ProductDetailsProps) {
   const addItem = useCartStore((state) => state.addItem);
+  const items = useCartStore((state) => state.items);
   const setBuyNowItem = useCartStore((state) => state.setBuyNowItem);
   const [isPending, startTransition] = useTransition();
   const [isBuyNowPending, startBuyNowTransition] = useTransition();
@@ -21,8 +23,27 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const hasOffer = Boolean(
     product.salePrice && product.salePrice < product.price
   );
+  const isOutOfStock = product.stock === 0;
+  const isLowStock = product.stock > 0 && product.stock <= product.lowStockThreshold;
+
+  // Get current quantity in cart for this product
+  const currentCartQty =
+    items.find((item) => item.productId === product.id)?.quantity || 0;
+  const remainingStock = product.stock - currentCartQty;
 
   const handleBuyNow = () => {
+    if (isOutOfStock) {
+      toast.error("This item is out of stock");
+      return;
+    }
+
+    if (currentCartQty >= product.stock) {
+      toast.error(
+        `You already have ${currentCartQty} in your cart (maximum available)`
+      );
+      return;
+    }
+
     const item = {
       productId: product.id,
       name: product.name,
@@ -31,13 +52,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       salePrice: product.salePrice,
       quantity: 1,
     };
-    console.log("Setting buyNowItem:", item);
 
     setBuyNowItem(item);
 
     // Add a small delay to ensure state is set before navigation
     setTimeout(() => {
-      console.log("Navigating to checkout");
       startBuyNowTransition(() => {
         router.push("/checkout");
       });
@@ -45,6 +64,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   };
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error("This item is out of stock");
+      return;
+    }
+
+    // Check if adding 1 more exceeds stock
+    if (currentCartQty + 1 > product.stock) {
+      toast.error(
+        `Cannot add more. Maximum ${product.stock} available (${currentCartQty} already in cart)`
+      );
+      return;
+    }
+
     startTransition(
       () =>
         new Promise((resolve) => {
@@ -57,8 +89,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               salePrice: product.salePrice,
               quantity: 1,
             });
+            toast.success("Added to cart");
             resolve(undefined);
-          }, 1000);
+          }, 300);
         })
     );
   };
@@ -95,6 +128,40 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         )}
       </div>
 
+      {/* Stock Status */}
+      <div className="space-y-1">
+        {isOutOfStock ? (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="inline-block h-2 w-2 rounded-full bg-red-500"></span>
+            <span className="font-medium text-red-600">Out of Stock</span>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 text-sm">
+              <span
+                className={`inline-block h-2 w-2 rounded-full ${
+                  isLowStock ? "bg-orange-500" : "bg-green-500"
+                }`}
+              ></span>
+              <span
+                className={`font-medium ${
+                  isLowStock ? "text-orange-600" : "text-green-600"
+                }`}
+              >
+                {isLowStock
+                  ? `Only ${product.stock} left in stock!`
+                  : "In Stock"}
+              </span>
+            </div>
+            {currentCartQty > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {currentCartQty} in cart • {remainingStock} more available
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
       <p className="text-sm text-muted-foreground">{product.description}</p>
 
       {product.options?.sizes && (
@@ -118,17 +185,25 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         <Button
           className="cursor-pointer flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
           variant="outline"
-          disabled={isPending}
+          disabled={isPending || isOutOfStock}
           onClick={handleAddToCart}
         >
-          {isPending ? "Adding..." : "Add to cart"}
+          {isOutOfStock
+            ? "Out of Stock"
+            : isPending
+            ? "Adding..."
+            : "Add to cart"}
         </Button>
         <Button
           className="cursor-pointer flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
-          disabled={isBuyNowPending}
+          disabled={isBuyNowPending || isOutOfStock}
           onClick={handleBuyNow}
         >
-          {isBuyNowPending ? "Loading..." : "Buy Now"}
+          {isOutOfStock
+            ? "Unavailable"
+            : isBuyNowPending
+            ? "Loading..."
+            : "Buy Now"}
         </Button>
       </div>
     </section>

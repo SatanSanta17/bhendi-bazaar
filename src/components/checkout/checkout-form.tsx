@@ -206,7 +206,23 @@ export function CheckoutForm() {
     if (!selectedAddress || !displayItems.length) return;
 
     setIsProcessing(true);
+    setError(null);
+
     try {
+      // Check stock availability before proceeding
+      const checkStockAvailability = useCartStore.getState()
+        .checkStockAvailability;
+      const stockCheck = await checkStockAvailability();
+
+      if (!stockCheck.available) {
+        const messages = stockCheck.issues.map((i) => i.message).join("\n");
+        setError(
+          `Some items are no longer available:\n\n${messages}\n\nPlease update your cart.`
+        );
+        setIsProcessing(false);
+        return;
+      }
+
       await processPayment({
         items: displayItems,
         totals: {
@@ -229,7 +245,9 @@ export function CheckoutForm() {
         paymentMethod: "razorpay",
         paymentStatus: "pending",
       });
-    } finally {
+    } catch (error) {
+      console.error("Checkout error:", error);
+      setError(error instanceof Error ? error.message : "Checkout failed");
       setIsProcessing(false);
     }
   };
@@ -238,28 +256,48 @@ export function CheckoutForm() {
   const onGuestSubmit = async (values: GuestCheckoutFormValues) => {
     if (!displayItems.length) return;
 
-    await processPayment({
-      items: displayItems,
-      totals: {
-        subtotal: displaySubtotal,
-        discount: displayDiscount,
-        total: displayTotal,
-      },
-      address: {
-        fullName: values.fullName,
-        phone: values.phone,
-        email: values.email,
-        line1: values.line1,
-        line2: values.line2,
-        city: values.city,
-        state: values.state,
-        postalCode: values.postalCode,
-        country: values.country,
-      },
-      notes: values.notes,
-      paymentMethod: "razorpay",
-      paymentStatus: "pending",
-    });
+    setError(null);
+
+    try {
+      // Check stock availability before proceeding
+      const checkStockAvailability = useCartStore.getState()
+        .checkStockAvailability;
+      const stockCheck = await checkStockAvailability();
+
+      if (!stockCheck.available) {
+        const messages = stockCheck.issues.map((i) => i.message).join("\n");
+        setError(
+          `Some items are no longer available:\n\n${messages}\n\nPlease update your cart.`
+        );
+        return;
+      }
+
+      await processPayment({
+        items: displayItems,
+        totals: {
+          subtotal: displaySubtotal,
+          discount: displayDiscount,
+          total: displayTotal,
+        },
+        address: {
+          fullName: values.fullName,
+          phone: values.phone,
+          email: values.email,
+          line1: values.line1,
+          line2: values.line2,
+          city: values.city,
+          state: values.state,
+          postalCode: values.postalCode,
+          country: values.country,
+        },
+        notes: values.notes,
+        paymentMethod: "razorpay",
+        paymentStatus: "pending",
+      });
+    } catch (error) {
+      console.error("Guest checkout error:", error);
+      setError(error instanceof Error ? error.message : "Checkout failed");
+    }
   };
 
   // Authenticated user view

@@ -6,8 +6,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { DataTable, Column } from "@/components/admin/data-table";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, RefreshCw } from "lucide-react";
 import { adminOrderService } from "@/services/admin/orderService";
 import type { AdminOrder, OrderListFilters } from "@/domain/admin";
 
@@ -19,6 +20,7 @@ export default function AdminOrdersPage() {
   });
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -33,8 +35,23 @@ export default function AdminOrdersPage() {
       setTotalPages(result.totalPages);
     } catch (error) {
       console.error("Failed to load orders:", error);
+      toast.error("Failed to load orders");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      toast.info("Refreshing orders...");
+      await loadOrders();
+      toast.success("Orders refreshed successfully!");
+    } catch (error) {
+      console.error("Failed to refresh orders:", error);
+      toast.error("Failed to refresh orders");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -148,6 +165,16 @@ export default function AdminOrdersPage() {
           </h1>
           <p className="text-gray-600 mt-1">Manage customer orders</p>
         </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          <RefreshCw
+            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+          {isRefreshing ? "Refreshing..." : "Refresh"}
+        </button>
       </div>
 
       {/* Filters */}

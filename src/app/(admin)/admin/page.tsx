@@ -6,6 +6,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { StatsCard } from "@/components/admin/stats-card";
 import {
   DollarSign,
@@ -14,6 +15,7 @@ import {
   Users,
   TrendingUp,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 import { adminDashboardService } from "@/services/admin/dashboardService";
 import type { DashboardStats, RecentActivity } from "@/domain/admin";
@@ -22,6 +24,7 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -38,8 +41,23 @@ export default function AdminDashboardPage() {
       setActivities(activitiesData);
     } catch (error) {
       console.error("Failed to load dashboard:", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      toast.info("Refreshing dashboard...");
+      await loadDashboardData();
+      toast.success("Dashboard refreshed successfully!");
+    } catch (error) {
+      console.error("Failed to refresh dashboard:", error);
+      toast.error("Failed to refresh dashboard");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -61,13 +79,25 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">
-          Dashboard
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Welcome to Bhendi Bazaar Admin Panel
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-heading font-bold text-gray-900">
+            Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Welcome to Bhendi Bazaar Admin Panel
+          </p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          <RefreshCw
+            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+          {isRefreshing ? "Refreshing..." : "Refresh"}
+        </button>
       </div>
 
       {/* Revenue Stats */}

@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     // 6. Upload new file to Vercel Blob
-    const filename = `profile-pictures/${userId}-${Date.now()}.${file.type.split("/")[1]}`;
+    const filename = `profile/${userId}-${Date.now()}.${file.type.split("/")[1]}`;
     
     const blob = await put(filename, file, {
       access: "public",

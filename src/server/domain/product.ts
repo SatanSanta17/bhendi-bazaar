@@ -27,6 +27,7 @@ export interface ServerProduct {
   sizes: string[];
   colors: string[];
   stock: number;
+  lowStockThreshold: number;
   createdAt: Date;
   updatedAt: Date;
 }

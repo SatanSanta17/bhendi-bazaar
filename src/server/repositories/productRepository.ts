@@ -2,39 +2,39 @@
  * Server-side Product Repository
  *
  * This repository handles all database operations for products.
- * Currently uses mock data, will be replaced with Prisma once schema is ready.
  */
 
-import { products } from "@/data/products";
+import { prisma } from "@/lib/prisma";
 import type { ServerProduct, ProductFilter } from "@/server/domain/product";
 import type { Product } from "@/domain/product";
 
 /**
- * Convert client Product to ServerProduct
+ * Convert Prisma Product to ServerProduct
  */
-function toServerProduct(product: Product): ServerProduct {
+function toServerProduct(product: any): ServerProduct {
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
     description: product.description,
     price: product.price,
-    salePrice: product.salePrice ?? null,
+    salePrice: product.salePrice,
     currency: product.currency,
-    categorySlug: product.categorySlug,
+    categorySlug: product.category?.slug || "",
     tags: product.tags,
-    isFeatured: product.isFeatured ?? false,
-    isHero: product.isHero ?? false,
-    isOnOffer: product.isOnOffer ?? false,
+    isFeatured: product.isFeatured,
+    isHero: product.isHero,
+    isOnOffer: product.isOnOffer,
     rating: product.rating,
     reviewsCount: product.reviewsCount,
     images: product.images,
     thumbnail: product.thumbnail,
-    sizes: product.options?.sizes ?? [],
-    colors: product.options?.colors ?? [],
-    stock: 100, // Mock stock
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    sizes: product.sizes,
+    colors: product.colors,
+    stock: product.stock,
+    lowStockThreshold: product.lowStockThreshold || 10,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
   };
 }
 
@@ -59,6 +59,8 @@ function toClientProduct(product: ServerProduct): Product {
     reviewsCount: product.reviewsCount,
     images: product.images,
     thumbnail: product.thumbnail,
+    stock: product.stock,
+    lowStockThreshold: product.lowStockThreshold,
     options: {
       sizes: product.sizes.length > 0 ? product.sizes : undefined,
       colors: product.colors.length > 0 ? product.colors : undefined,
@@ -71,101 +73,147 @@ export class ProductRepository {
    * List products with optional filtering
    */
   async list(filter?: ProductFilter): Promise<ServerProduct[]> {
-    // Convert mock products to server products
-    let result = products.map(toServerProduct);
+    const where: any = {};
 
-    // Apply filters
+    // Apply category filter
     if (filter?.categorySlug) {
-      result = result.filter((p) => p.categorySlug === filter.categorySlug);
+      where.category = {
+        slug: filter.categorySlug,
+      };
     }
 
+    // Apply search filter
     if (filter?.search) {
-      const q = filter.search.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.tags.some((tag) => tag.toLowerCase().includes(q))
-      );
+      where.OR = [
+        { name: { contains: filter.search, mode: "insensitive" } },
+        { description: { contains: filter.search, mode: "insensitive" } },
+        { tags: { hasSome: [filter.search] } },
+      ];
     }
 
+    // Apply price filters
+    if (filter?.minPrice !== undefined) {
+      where.price = { ...where.price, gte: filter.minPrice };
+    }
+    if (filter?.maxPrice !== undefined) {
+      where.price = { ...where.price, lte: filter.maxPrice };
+    }
+
+    // Apply offer filter
     if (filter?.offerOnly) {
-      result = result.filter((p) => p.isOnOffer || p.salePrice !== null);
+      where.isOnOffer = true;
     }
 
+    // Apply featured filter
     if (filter?.featuredOnly) {
-      result = result.filter((p) => p.isFeatured);
+      where.isFeatured = true;
     }
 
-    if (filter?.minPrice != null) {
-      result = result.filter((p) => p.price >= filter.minPrice!);
-    }
+    const products = await prisma.product.findMany({
+      where,
+      include: {
+        category: {
+          select: { slug: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: filter?.limit,
+      skip: filter?.offset,
+    });
 
-    if (filter?.maxPrice != null) {
-      result = result.filter((p) => p.price <= filter.maxPrice!);
-    }
-
-    // Apply pagination
-    if (filter?.offset != null) {
-      result = result.slice(filter.offset);
-    }
-
-    if (filter?.limit != null) {
-      result = result.slice(0, filter.limit);
-    }
-
-    return result;
+    return products.map(toServerProduct);
   }
 
   /**
-   * Find product by slug
+   * Find a product by slug
    */
   async findBySlug(slug: string): Promise<ServerProduct | null> {
-    const product = products.find((p) => p.slug === slug);
-    return product ? toServerProduct(product) : null;
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: {
+        category: {
+          select: { slug: true, name: true },
+        },
+      },
+    });
+
+    if (!product) return null;
+    return toServerProduct(product);
   }
 
   /**
    * Find similar products
    */
   async findSimilar(slug: string, limit = 4): Promise<ServerProduct[]> {
-    const product = products.find((p) => p.slug === slug);
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: { category: true },
+    });
+
     if (!product) return [];
 
-    const serverProduct = toServerProduct(product);
+    const similar = await prisma.product.findMany({
+      where: {
+        categoryId: product.categoryId,
+        slug: { not: slug },
+      },
+      include: {
+        category: {
+          select: { slug: true },
+        },
+      },
+      take: limit,
+      orderBy: { rating: "desc" },
+    });
 
-    const similar = products
-      .filter(
-        (p) =>
-          p.slug !== slug &&
-          (p.categorySlug === serverProduct.categorySlug ||
-            p.tags.some((t) => serverProduct.tags.includes(t)))
-      )
-      .slice(0, limit)
-      .map(toServerProduct);
-
-    return similar;
+    return similar.map(toServerProduct);
   }
 
   /**
-   * Get hero/featured products for homepage
+   * Get hero products for homepage
    */
   async getHeroProducts(limit = 6): Promise<ServerProduct[]> {
-    return products
-      .filter((p) => p.isHero || p.isFeatured)
-      .slice(0, limit)
-      .map(toServerProduct);
+    const products = await prisma.product.findMany({
+      where: {
+        isHero: true,
+      },
+      include: {
+        category: {
+          select: { slug: true },
+        },
+      },
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return products.map(toServerProduct);
   }
 
   /**
    * Get products on offer
    */
   async getOfferProducts(limit?: number): Promise<ServerProduct[]> {
-    const offers = products
-      .filter((p) => p.isOnOffer || p.salePrice)
-      .map(toServerProduct);
+    const products = await prisma.product.findMany({
+      where: {
+        isOnOffer: true,
+      },
+      include: {
+        category: {
+          select: { slug: true },
+        },
+      },
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
 
-    return limit ? offers.slice(0, limit) : offers;
+    return products.map(toServerProduct);
+  }
+
+  /**
+   * Convert to client-facing Product
+   */
+  toClient(serverProduct: ServerProduct): Product {
+    return toClientProduct(serverProduct);
   }
 }
 
