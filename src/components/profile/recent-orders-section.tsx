@@ -3,6 +3,8 @@ import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { SectionHeader } from "../shared/SectionHeader";
+import { PriceDisplay } from "../shared/PriceDisplay";
 
 interface RecentOrdersSectionProps {
   orders: Order[];
@@ -13,22 +15,14 @@ export function RecentOrdersSection({ orders }: RecentOrdersSectionProps) {
     <Card>
       <CardHeader className="border-b border-border/60 pb-4">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-              Recent orders
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Your last few orders in this browser.
-            </p>
-          </div>
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
-          >
-            <a href="/orders">View all</a>
-          </Button>
+          <SectionHeader
+            overline="Your last few orders in this browser."
+            title="Recent orders"
+            action={{
+              label: "View all",
+              href: "/orders",
+            }}
+          />
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pt-4">
@@ -57,9 +51,7 @@ export function RecentOrdersSection({ orders }: RecentOrdersSectionProps) {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="font-semibold">
-                    {formatCurrency(order.totals.total)}
-                  </span>
+                  <PriceDisplay price={order.totals.total} size="sm" />
                 </div>
               </Link>
             ))}

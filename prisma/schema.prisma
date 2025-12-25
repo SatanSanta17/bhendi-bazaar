@@ -29,29 +29,31 @@ model Category {
 }
 
 model Product {
-  id           String   @id @default(cuid())
-  slug         String   @unique
-  name         String
-  description  String   @db.Text
-  price        Float
-  salePrice    Float?
-  currency     String   @default("INR")
-  categoryId   String
-  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  tags         String[] // Array of tags
-  isFeatured   Boolean  @default(false)
-  isHero       Boolean  @default(false)
-  isOnOffer    Boolean  @default(false)
-  rating       Float    @default(0)
-  reviewsCount Int      @default(0)
-  images       String[] // Array of image URLs
-  thumbnail    String // Main product image URL
-  sizes        String[] // Available sizes
-  colors       String[] // Available colors
-  stock        Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  reviews      Review[]
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  name              String
+  description       String   @db.Text
+  price             Float
+  salePrice         Float?
+  currency          String   @default("INR")
+  categoryId        String
+  category          Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags              String[] // Array of tags
+  isFeatured        Boolean  @default(false)
+  isHero            Boolean  @default(false)
+  isOnOffer         Boolean  @default(false)
+  rating            Float    @default(0)
+  reviewsCount      Int      @default(0)
+  images            String[] // Array of image URLs
+  thumbnail         String // Main product image URL
+  sizes             String[] // Available sizes
+  colors            String[] // Available colors
+  stock             Int      @default(0)
+  sku               String?  @unique // Stock Keeping Unit
+  lowStockThreshold Int      @default(10) // Alert when stock falls below this
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  reviews           Review[]
 
   @@index([slug])
   @@index([categoryId])
@@ -59,6 +61,7 @@ model Product {
   @@index([isHero])
   @@index([isOnOffer])
   @@index([createdAt])
+  @@index([stock])
 }
 
 model Review {
@@ -72,6 +75,7 @@ model Review {
   comment    String?  @db.Text
   userName   String // Store name in case user is deleted
   isVerified Boolean  @default(false) // Verified purchase
+  isApproved Boolean  @default(true) // Admin can moderate reviews
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -79,6 +83,7 @@ model Review {
   @@index([userId])
   @@index([rating])
   @@index([createdAt])
+  @@index([isApproved])
 }
 
 model Cart {
@@ -93,20 +98,28 @@ model Cart {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
   name         String?
-  email        String?  @unique
-  mobile       String?  @unique
+  email        String?    @unique
+  mobile       String?    @unique
   passwordHash String? // for credentials-based auth
+  role         String     @default("USER") // USER, ADMIN
+  isBlocked    Boolean    @default(false) // Admin can block users
+  lastActiveAt DateTime   @default(now())
   profile      Profile?
   cart         Cart?
   orders       Order[]
   reviews      Review[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  adminLogs    AdminLog[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   accounts Account[]
   sessions Session[]
+
+  @@index([role])
+  @@index([isBlocked])
+  @@index([lastActiveAt])
 }
 
 model Profile {
@@ -173,4 +186,23 @@ model Order {
   @@index([userId])
   @@index([code])
   @@index([createdAt])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+// Admin activity logging
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action     String // e.g., "USER_BLOCKED", "PRODUCT_UPDATED"
+  resource   String // e.g., "User", "Product", "Order"
+  resourceId String // ID of the affected resource
+  metadata   Json? // Additional details about the action
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([resource])
+  @@index([action])
 }

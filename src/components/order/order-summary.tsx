@@ -1,5 +1,7 @@
 import type { Order } from "@/domain/order";
 import { formatCurrency } from "@/lib/format";
+import { SectionHeader } from "../shared/SectionHeader";
+import { PriceDisplay } from "../shared/PriceDisplay";
 
 interface OrderSummaryProps {
   order: Order;
@@ -20,14 +22,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
   return (
     <section className="space-y-3 rounded-xl border border-border/70 bg-card/80 p-4 text-sm">
       <header className="flex items-baseline justify-between gap-2">
-        <div>
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-            Bill summary
-          </p>
-          <h2 className="font-heading text-lg font-semibold tracking-tight">
-            Order {order.code}
-          </h2>
-        </div>
+        <SectionHeader overline="Bill summary" title={`Order ${order.code}`} />
         {paymentLabel && (
           <p className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-emerald-700">
             {paymentLabel}
@@ -44,7 +39,11 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               {item.name} × {item.quantity}
             </span>
             <span>
-              {formatCurrency((item.salePrice ?? item.price) * item.quantity)}
+              <PriceDisplay
+                price={item.price}
+                salePrice={item.salePrice}
+                size="sm"
+              />
             </span>
           </div>
         ))}
@@ -52,17 +51,15 @@ export function OrderSummary({ order }: OrderSummaryProps) {
       <div className="mt-2 space-y-1 border-t border-dashed border-border/70 pt-2 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(order.totals.subtotal)}</span>
+          <PriceDisplay price={order.totals.subtotal} size="sm" />
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Savings</span>
-          <span className="text-emerald-700">
-            −{formatCurrency(order.totals.discount)}
-          </span>
+          <PriceDisplay price={order.totals.discount} size="sm" />
         </div>
         <div className="mt-1 flex items-center justify-between text-sm font-semibold">
           <span>Total</span>
-          <span>{formatCurrency(order.totals.total)}</span>
+          <PriceDisplay price={order.totals.total} size="sm" />
         </div>
       </div>
     </section>

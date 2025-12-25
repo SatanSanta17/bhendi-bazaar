@@ -1,0 +1,85 @@
+// hooks/core/useMutation.ts
+
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
+
+interface UseMutationOptions<TData, TVariables> {
+  onSuccess?: (data: TData) => void | Promise<void>;
+  onError?: (error: Error) => void;
+  successMessage?: string;
+  errorMessage?: string;
+  showToast?: boolean;
+}
+
+interface UseMutationReturn<TData, TVariables> {
+  mutate: (variables: TVariables) => Promise<TData>;
+  isLoading: boolean;
+  error: string | null;
+  data: TData | null;
+  reset: () => void;
+}
+
+export function useMutation<TData = any, TVariables = any>(
+  mutationFn: (variables: TVariables) => Promise<TData>,
+  options: UseMutationOptions<TData, TVariables> = {}
+): UseMutationReturn<TData, TVariables> {
+  const {
+    onSuccess,
+    onError,
+    successMessage,
+    errorMessage,
+    showToast = true,
+  } = options;
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<TData | null>(null);
+
+  const mutate = useCallback(
+    async (variables: TVariables): Promise<TData> => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const result = await mutationFn(variables);
+        setData(result);
+
+        if (showToast && successMessage) {
+          toast.success(successMessage);
+        }
+
+        await onSuccess?.(result);
+
+        return result;
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "An error occurred";
+        setError(errorMsg);
+
+        if (showToast && (errorMessage || errorMsg)) {
+          toast.error(errorMessage || errorMsg);
+        }
+
+        onError?.(err as Error);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [mutationFn, onSuccess, onError, successMessage, errorMessage, showToast]
+  );
+
+  const reset = useCallback(() => {
+    setIsLoading(false);
+    setError(null);
+    setData(null);
+  }, []);
+
+  return {
+    mutate,
+    isLoading,
+    error,
+    data,
+    reset,
+  };
+}

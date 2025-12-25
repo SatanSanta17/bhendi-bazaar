@@ -146,43 +146,80 @@ export class OrderRepository {
   }
 
   /**
-   * Create a new order
+   * Create a new order with automatic stock deduction
    */
   async create(input: CreateOrderInput): Promise<ServerOrder> {
-    // Get the count of orders to generate the next order code
-    const orderCount = await prisma.order.count();
-    const code = generateOrderCode(orderCount);
+    // Use Prisma transaction to ensure atomicity
+    const result = await prisma.$transaction(async (tx) => {
+      // Step 1: Validate and check stock availability for all items
+      for (const item of input.items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stock: true, name: true },
+        });
 
-    const order = await prisma.order.create({
-      data: {
-        code,
-        userId: input.userId ?? null,
-        items: input.items as any,
-        totals: input.totals as any,
-        status: "processing",
-        address: input.address as any,
-        notes: input.notes ?? null,
-        paymentMethod: input.paymentMethod ?? null,
-        paymentStatus: input.paymentStatus ?? "pending",
-        paymentId: input.paymentId ?? null,
-        estimatedDelivery: calculateEstimatedDelivery(),
-      },
+        if (!product) {
+          throw new Error(`Product not found: ${item.productId}`);
+        }
+
+        if (product.stock < item.quantity) {
+          throw new Error(
+            `Insufficient stock for "${product.name}". Available: ${product.stock}, Requested: ${item.quantity}`
+          );
+        }
+      }
+
+      // Step 2: Get order count and generate code
+      const orderCount = await tx.order.count();
+      const code = generateOrderCode(orderCount);
+
+      // Step 3: Create the order
+      const order = await tx.order.create({
+        data: {
+          code,
+          userId: input.userId ?? null,
+          items: input.items as any,
+          totals: input.totals as any,
+          status: "processing",
+          address: input.address as any,
+          notes: input.notes ?? null,
+          paymentMethod: input.paymentMethod ?? null,
+          paymentStatus: input.paymentStatus ?? "pending",
+          paymentId: input.paymentId ?? null,
+          estimatedDelivery: calculateEstimatedDelivery(),
+        },
+      });
+
+      // Step 4: Decrement stock for each item
+      for (const item of input.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+
+      return order;
     });
 
+    // Return normalized order
     return {
-      id: order.id,
-      code: order.code,
-      userId: order.userId ?? undefined,
-      items: normalizeItems(order.items),
-      totals: normalizeTotals(order.totals),
-      status: order.status as OrderStatus,
-      address: normalizeAddress(order.address),
-      notes: order.notes ?? undefined,
-      placedAt: order.createdAt.toISOString(),
-      estimatedDelivery: order.estimatedDelivery?.toISOString(),
-      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
-      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
-      paymentId: order.paymentId ?? undefined,
+      id: result.id,
+      code: result.code,
+      userId: result.userId ?? undefined,
+      items: normalizeItems(result.items),
+      totals: normalizeTotals(result.totals),
+      status: result.status as OrderStatus,
+      address: normalizeAddress(result.address),
+      notes: result.notes ?? undefined,
+      placedAt: result.createdAt.toISOString(),
+      estimatedDelivery: result.estimatedDelivery?.toISOString(),
+      paymentMethod: result.paymentMethod as PaymentMethod | undefined,
+      paymentStatus: result.paymentStatus as PaymentStatus | undefined,
+      paymentId: result.paymentId ?? undefined,
     };
   }
 
@@ -217,6 +254,68 @@ export class OrderRepository {
       paymentMethod: order.paymentMethod as PaymentMethod | undefined,
       paymentStatus: order.paymentStatus as PaymentStatus | undefined,
       paymentId: order.paymentId ?? undefined,
+    };
+  }
+
+  /**
+   * Cancel an order and restore stock
+   */
+  async cancel(orderId: string): Promise<ServerOrder | null> {
+    const result = await prisma.$transaction(async (tx) => {
+      // Get order to restore stock
+      const existingOrder = await tx.order.findUnique({
+        where: { id: orderId },
+      });
+
+      if (!existingOrder) {
+        throw new Error("Order not found");
+      }
+
+      // Only restore stock if order is in a cancellable state
+      const cancellableStatuses = ["processing", "packed"];
+      if (!cancellableStatuses.includes(existingOrder.status)) {
+        throw new Error(
+          `Cannot cancel order with status: ${existingOrder.status}`
+        );
+      }
+
+      const items = normalizeItems(existingOrder.items);
+
+      // Update order status to cancelled
+      const order = await tx.order.update({
+        where: { id: orderId },
+        data: { status: "cancelled" },
+      });
+
+      // Restore stock for each item
+      for (const item of items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              increment: item.quantity,
+            },
+          },
+        });
+      }
+
+      return order;
+    });
+
+    return {
+      id: result.id,
+      code: result.code,
+      userId: result.userId ?? undefined,
+      items: normalizeItems(result.items),
+      totals: normalizeTotals(result.totals),
+      status: result.status as OrderStatus,
+      address: normalizeAddress(result.address),
+      notes: result.notes ?? undefined,
+      placedAt: result.createdAt.toISOString(),
+      estimatedDelivery: result.estimatedDelivery?.toISOString(),
+      paymentMethod: result.paymentMethod as PaymentMethod | undefined,
+      paymentStatus: result.paymentStatus as PaymentStatus | undefined,
+      paymentId: result.paymentId ?? undefined,
     };
   }
 

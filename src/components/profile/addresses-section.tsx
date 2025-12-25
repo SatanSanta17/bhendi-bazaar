@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import type { ProfileAddress } from "@/domain/profile";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AddressModal } from "./address-modal";
+import { LoadingSpinner } from "../shared/states/LoadingSpinner";
+import { EmptyState } from "../shared/states/EmptyState";
+import { LoadingSkeleton } from "../shared/states/LoadingSkeleton";
+import { SectionHeader } from "../shared/SectionHeader";
+import { DefaultBadge } from "../shared/badges/StatusBadge";
 
 interface AddressesSectionProps {
   addresses: ProfileAddress[];
@@ -78,18 +83,20 @@ export function AddressesSection({
     handleCloseModal();
   }
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <>
       <Card>
         <CardHeader className="border-b border-border/60 pb-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-                Addresses
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Manage your delivery locations and contact details.
-              </p>
+              <SectionHeader
+                overline="Addresses"
+                title="Manage your delivery locations and contact details."
+              />
             </div>
             <Button
               type="button"
@@ -105,16 +112,13 @@ export function AddressesSection({
         </CardHeader>
         <CardContent className="space-y-3 pt-4">
           {!loading && !hasAddresses && (
-            <p className="text-sm text-muted-foreground">
-              You don&apos;t have any saved addresses yet. Add one to speed up
-              checkout.
-            </p>
+            <EmptyState
+              icon={MapPin}
+              title="You don't have any saved addresses yet"
+              description="Add one to speed up checkout."
+            />
           )}
-          {loading && (
-            <p className="text-sm text-muted-foreground">
-              Loading your addresses…
-            </p>
-          )}
+          {loading && <LoadingSkeleton count={3} />}
           {hasAddresses && (
             <div className="space-y-2">
               {addresses.map((address) => (
@@ -129,11 +133,7 @@ export function AddressesSection({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">{address.label}</span>
-                      {address.isDefault && (
-                        <Badge variant="secondary" className="text-[0.6rem]">
-                          Default
-                        </Badge>
-                      )}
+                      {address.isDefault && <DefaultBadge />}
                     </div>
                     <p className="line-clamp-1 text-muted-foreground">
                       {[

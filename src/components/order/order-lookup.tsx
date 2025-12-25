@@ -1,6 +1,7 @@
 // src/components/order/order-lookup.tsx
 "use client";
 
+import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useState } from "react";
 import type { Order } from "@/domain/order";
 import { orderService } from "@/services/orderService";
@@ -8,31 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OrderSummary } from "./order-summary";
 import { OrderTracking } from "./order-tracking";
+import { SectionHeader } from "../shared/SectionHeader";
 
 export function OrderLookup() {
   const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [order, setOrder] = useState<Order | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: order,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAsyncData(() => orderService.lookupOrderByCode(code), {
+    enabled: false,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = code.trim();
-    if (!trimmed) return;
-
-    setLoading(true);
-    setError(null);
-    setOrder(null);
-
-    try {
-      const found = await orderService.lookupOrderByCode(trimmed);
-      setOrder(found);
-    } catch (err) {
-      console.error("Failed to lookup order:", err);
-      setError(err instanceof Error ? err.message : "Failed to lookup order");
-    } finally {
-      setLoading(false);
-    }
+    if (code.trim()) return;
+    await refetch();
   }
 
   return (
@@ -42,12 +35,10 @@ export function OrderLookup() {
         className="space-y-4 rounded-xl border border-border/70 bg-card/80 p-5"
       >
         <header className="space-y-1 text-center">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-            Track order
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Enter your Bhendi Bazaar order ID to track your order.
-          </p>
+          <SectionHeader
+            overline="Track order"
+            title="Enter your Bhendi Bazaar order ID to track your order"
+          />
         </header>
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-[0.18em]">
@@ -62,10 +53,10 @@ export function OrderLookup() {
         </div>
         <Button
           type="submit"
-          disabled={!code.trim() || loading}
+          disabled={!code.trim() || isLoading}
           className="w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
         >
-          {loading ? "Searching…" : "Find order"}
+          {isLoading ? "Searching…" : "Find order"}
         </Button>
         {error && <p className="text-[0.7rem] text-destructive">{error}</p>}
       </form>

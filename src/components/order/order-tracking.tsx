@@ -1,4 +1,5 @@
 import type { Order } from "@/domain/order";
+import { SectionHeader } from "../shared/SectionHeader";
 
 const statusOrder = ["processing", "packed", "shipped", "delivered"] as const;
 
@@ -26,11 +27,7 @@ export function OrderTracking({ order }: OrderTrackingProps) {
 
   return (
     <section className="space-y-3 rounded-xl border border-border/70 bg-card/80 p-4 text-sm">
-      <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-          Order tracking
-        </p>
-      </header>
+      <SectionHeader overline="Order" title={`Order ${order.code}`} />
       <ol className="space-y-2 text-xs">
         {statusOrder.map((status, index) => {
           const reached = index <= currentIndex;
