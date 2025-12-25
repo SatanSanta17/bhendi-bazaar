@@ -9,8 +9,9 @@ import { EmptyState } from "@/components/shared/states/EmptyState";
 import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { Suspense } from "react";
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
 
@@ -58,3 +59,11 @@ export default function SearchPage() {
     </div>
   );
 }
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <SearchContent />
+    </Suspense>
+  );
+};
