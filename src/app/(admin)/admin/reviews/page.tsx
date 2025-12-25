@@ -5,70 +5,75 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
+import { useMutation } from "@/hooks/core/useMutation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable, Column } from "@/components/admin/data-table";
-import { Search, CheckCircle, XCircle, Trash2, Star, RefreshCw } from "lucide-react";
+import {
+  Search,
+  CheckCircle,
+  XCircle,
+  Trash2,
+  Star,
+  RefreshCw,
+} from "lucide-react";
 import { adminReviewService } from "@/services/admin/reviewService";
 import type { AdminReview, ReviewListFilters } from "@/domain/admin";
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [filters, setFilters] = useState<ReviewListFilters>({
     page: 1,
     limit: 20,
   });
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadReviews();
-  }, [filters]);
+  const {
+    data,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAsyncData(() => adminReviewService.getReviews(filters), {
+    refetchDependencies: [filters],
+  });
 
-  const loadReviews = async () => {
-    try {
-      setIsLoading(true);
-      const result = await adminReviewService.getReviews(filters);
-      setReviews(result.reviews);
-      setTotalPages(result.totalPages);
-    } catch (error) {
-      console.error("Failed to load reviews:", error);
-      toast.error("Failed to load reviews");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { reviews = [], totalPages = 1 } = data || {};
 
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      toast.info("Refreshing reviews...");
-      await loadReviews();
-      toast.success("Reviews refreshed successfully!");
-    } catch (error) {
-      console.error("Failed to refresh reviews:", error);
-      toast.error("Failed to refresh reviews");
-    } finally {
-      setIsRefreshing(false);
+  const { mutate: updateReview, isLoading: isUpdating } = useMutation(
+    ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { isApproved?: boolean; isVerified?: boolean };
+    }) => adminReviewService.updateReview(id, data),
+    {
+      successMessage: "Review updated successfully!",
+      onSuccess: () => refetch(),
     }
+  );
+
+  const { mutate: deleteReview, isLoading: isDeleting } = useMutation(
+    adminReviewService.deleteReview,
+    {
+      successMessage: "Review deleted successfully!",
+      onSuccess: () => refetch(),
+    }
+  );
+
+  const handleRefresh = () => {
+    toast.info("Refreshing reviews...");
+    refetch().then(() => toast.success("Reviews refreshed successfully!"));
   };
 
   const handleSearch = () => {
     setFilters({ ...filters, search: searchTerm, page: 1 });
   };
 
-  const handleToggleApprove = async (reviewId: string, isApproved: boolean) => {
-    try {
-      await adminReviewService.updateReview(reviewId, {
-        isApproved: !isApproved,
-      });
-      loadReviews();
-    } catch (error) {
-      console.error("Failed to update review:", error);
-      alert("Failed to update review");
-    }
+  const handleToggleApprove = (reviewId: string, isApproved: boolean) => {
+    updateReview({ id: reviewId, data: { isApproved: !isApproved } }).then(() =>
+      toast.success("Review updated successfully!")
+    );
   };
 
   const handleDelete = async (reviewId: string, userName: string) => {
@@ -79,15 +84,9 @@ export default function AdminReviewsPage() {
     ) {
       return;
     }
-
-    try {
-      await adminReviewService.deleteReview(reviewId);
-      alert("Review deleted successfully!");
-      loadReviews();
-    } catch (error) {
-      console.error("Failed to delete review:", error);
-      alert("Failed to delete review");
-    }
+    deleteReview(reviewId).then(() =>
+      toast.success("Review deleted successfully!")
+    );
   };
 
   const renderStars = (rating: number) => {
@@ -223,13 +222,11 @@ export default function AdminReviewsPage() {
         </div>
         <button
           onClick={handleRefresh}
-          disabled={isRefreshing}
+          disabled={isLoading}
           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          <RefreshCw
-            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-          />
-          {isRefreshing ? "Refreshing..." : "Refresh"}
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+          {isLoading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
@@ -282,7 +279,13 @@ export default function AdminReviewsPage() {
           </select>
 
           <select
-            value={filters.isVerified === undefined ? "all" : filters.isVerified ? "verified" : "unverified"}
+            value={
+              filters.isVerified === undefined
+                ? "all"
+                : filters.isVerified
+                ? "verified"
+                : "unverified"
+            }
             onChange={(e) =>
               setFilters({
                 ...filters,

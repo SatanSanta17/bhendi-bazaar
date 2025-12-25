@@ -1,5 +1,6 @@
 import { ProductCard } from "@/components/shared/product-card";
 import type { Product } from "@/domain/product";
+import { SectionHeader } from "../shared/SectionHeader";
 
 interface SimilarProductsProps {
   products: Product[];
@@ -10,14 +11,7 @@ export function SimilarProducts({ products }: SimilarProductsProps) {
 
   return (
     <section className="space-y-3">
-      <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-          Similar
-        </p>
-        <h2 className="font-heading text-lg font-semibold tracking-tight">
-          Pieces from nearby lanes
-        </h2>
-      </header>
+      <SectionHeader overline="Pieces from nearby lanes" title="Similar" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />

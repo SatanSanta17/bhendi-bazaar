@@ -1,92 +1,60 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useSearchParams } from "next/navigation";
-import { Product } from "@/domain/product";
 import { productService } from "@/services/productService";
 import { CategoryProductGrid } from "@/components/category/product-grid";
+import { Package } from "lucide-react";
+import { EmptyState } from "@/components/shared/states/EmptyState";
+import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
-function SearchContent() {
+export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadResults = async () => {
-      if (!query) {
-        setProducts([]);
-        setLoading(false);
-        return;
-      }
+  const {
+    data: products,
+    loading,
+    error,
+    refetch,
+  } = useAsyncData(() => productService.getProducts({ search: query }));
 
-      try {
-        setLoading(true);
-        const results = await productService.getProducts({ search: query });
-        setProducts(results);
-      } catch (error) {
-        console.error("Search failed:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
 
-    loadResults();
-  }, [query]);
+  if (error) {
+    return <ErrorState message={error} retry={refetch} />;
+  }
 
   if (!query) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-semibold mb-4">Search the Bazaar</h1>
-        <p className="text-muted-foreground">
-          Enter a search term to find products
-        </p>
-      </div>
+      <EmptyState
+        icon={Package}
+        title="No search results"
+        description="Try different keywords or browse categories"
+      />
     );
   }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold mb-2">
-          Search Results for "{query}"
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {loading ? "Searching..." : `${products.length} products found`}
-        </p>
-      </div>
+      <SectionHeader
+        overline="Search Results"
+        title={`Search Results for "${query}"`}
+      />
 
-      {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* Loading skeletons */}
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-64 bg-muted animate-pulse rounded-lg" />
-          ))}
-        </div>
-      ) : products.length > 0 ? (
+      {products && products.length > 0 ? (
         <CategoryProductGrid products={products} />
       ) : (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">
-            No products found for "{query}"
-          </p>
-          <p className="text-sm">Try different keywords or browse categories</p>
-        </div>
+        <EmptyState
+          icon={Package}
+          title="No products found"
+          description="Try different keywords or browse categories"
+        />
       )}
     </div>
-  );
-}
-
-export default function SearchPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="max-w-6xl mx-auto px-4 py-12 text-center">
-          <div className="h-64 bg-muted animate-pulse rounded-lg" />
-        </div>
-      }
-    >
-      <SearchContent />
-    </Suspense>
   );
 }

@@ -1,17 +1,25 @@
 "use client";
 
 import Link from "next/link";
-
+import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
-import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { PriceDisplay } from "../shared/PriceDisplay";
 
 export function CartSummary() {
+  const router = useRouter();
   const items = useCartStore((state) => state.items);
   const subtotal = useCartStore((state) => state.subtotal);
   const discount = useCartStore((state) => state.discount);
   const total = useCartStore((state) => state.total);
+  const clearBuyNow = useCartStore((state) => state.clearBuyNow);
   const hasItems = items.length > 0;
+
+  const handleCheckout = () => {
+    // ✅ Clear any Buy Now item before going to checkout from cart
+    clearBuyNow();
+    router.push("/checkout");
+  };
 
   return (
     <aside className="space-y-3 rounded-xl border border-border/70 bg-card/80 p-4 text-sm">
@@ -23,15 +31,15 @@ export function CartSummary() {
       <div className="space-y-1 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(subtotal)}</span>
+          <PriceDisplay price={subtotal} size="sm" />
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Savings</span>
-          <span className="text-emerald-700">−{formatCurrency(discount)}</span>
+          <PriceDisplay price={discount} size="sm" />
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-dashed border-border/70 pt-2 text-sm font-semibold">
           <span>Total</span>
-          <span>{formatCurrency(total)}</span>
+          <PriceDisplay price={total} size="sm" />
         </div>
       </div>
 
@@ -43,14 +51,12 @@ export function CartSummary() {
         <Link href="/">Add More</Link>
       </Button>
       <Button
-        asChild
         disabled={!hasItems}
+        onClick={handleCheckout}
         className="mt-2 w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
       >
-        <Link href="/checkout">Proceed to checkout</Link>
+        Proceed to checkout
       </Button>
     </aside>
   );
 }
-
-

@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import type { ProfileAddress } from "@/domain/profile";
-import type { Order } from "@/domain/order";
 import { orderService } from "@/services/orderService";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileCard } from "@/components/profile/profile-card";
@@ -11,11 +9,17 @@ import { AddressesSection } from "@/components/profile/addresses-section";
 import { RecentOrdersSection } from "@/components/profile/recent-orders-section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+import { useAsyncData } from "@/hooks/core/useAsyncData";
+import { ErrorState } from "@/components/shared/states/ErrorState";
+import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
+import { EmptyState } from "@/components/shared/states/EmptyState";
+import { Package } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 export default function ProfilePage() {
-  const { status, user: authUser } = useAuth();
+  const { status } = useAuth();
   const isAuthenticated = status === "authenticated";
-
+  const router = useRouter();
   const {
     user,
     profile,
@@ -27,27 +31,15 @@ export default function ProfilePage() {
     updateProfilePic,
   } = useProfile(isAuthenticated);
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-
-  // Load recent orders
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    async function fetchOrders() {
-      try {
-        setOrdersLoading(true);
-        const data = await orderService.getOrders();
-        setOrders(data.slice(0, 3)); // Show only 3 recent orders
-      } catch (err) {
-        console.error("Failed to fetch orders:", err);
-      } finally {
-        setOrdersLoading(false);
-      }
-    }
-
-    fetchOrders();
-  }, [isAuthenticated]);
+  const {
+    data: orders,
+    loading: ordersLoading,
+    refetch,
+    error: ordersError,
+  } = useAsyncData(() => orderService.getOrders(), {
+    enabled: isAuthenticated,
+    refetchDependencies: [isAuthenticated],
+  });
 
   // Handle saving an address (add or update)
   async function handleSaveAddress(address: ProfileAddress) {
@@ -93,19 +85,18 @@ export default function ProfilePage() {
     await updateAddresses(next);
   }
 
-  if (status === "loading") {
-    return (
-      <div className="space-y-4">
-        <Header />
-        <p className="text-sm text-muted-foreground">Loading your profile…</p>
-      </div>
-    );
+  if (loading) {
+    return <LoadingSkeleton count={3} />;
   }
 
   if (!isAuthenticated) {
     return (
       <div className="space-y-4">
-        <Header />
+        <SectionHeader
+          overline="Profile"
+          title="Your Bhendi Bazaar profile"
+          description="Manage your account information and delivery addresses."
+        />
         <Card>
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Sign in to view your profile</CardTitle>
@@ -129,9 +120,12 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <Header />
-
-      {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+      <SectionHeader
+        overline="Profile"
+        title="Your Bhendi Bazaar profile"
+        description="Manage your account information and delivery addresses."
+      />
+      {error && <ErrorState message={error} />}
 
       {/* Section 1: Primary Info */}
       <section>
@@ -140,7 +134,7 @@ export default function ProfilePage() {
           profilePic={profile?.profilePic ?? ""}
           loading={loading}
           saving={saving}
-          fallbackName={authUser?.name ?? ""}
+          fallbackName="User"
           onUpdate={updateUserInfo}
           onUpdateProfilePic={updateProfilePic}
         />
@@ -160,21 +154,26 @@ export default function ProfilePage() {
 
       {/* Section 3: Recent Orders */}
       <section>
-        <RecentOrdersSection orders={orders} />
+        {ordersLoading ? (
+          <LoadingSkeleton count={3} />
+        ) : orders && orders.length === 0 ? (
+          <EmptyState
+            icon={Package}
+            title="No orders found"
+            description="You haven't placed any orders yet."
+            action={{
+              label: "View all orders",
+              onClick: () => {
+                router.push("/orders");
+              },
+            }}
+          />
+        ) : ordersError ? (
+          <ErrorState message={ordersError} retry={refetch} />
+        ) : (
+          <RecentOrdersSection orders={orders ?? []} />
+        )}
       </section>
     </div>
-  );
-}
-
-function Header() {
-  return (
-    <header className="space-y-1">
-      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-        Profile
-      </p>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        Your Bhendi Bazaar profile
-      </h1>
-    </header>
   );
 }

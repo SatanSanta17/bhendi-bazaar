@@ -1,7 +1,8 @@
 "use client";
 
 import { useCartStore } from "@/store/cartStore";
-import { formatCurrency } from "@/lib/format";
+import { SectionHeader } from "../shared/SectionHeader";
+import { PriceDisplay } from "../shared/PriceDisplay";
 
 export function CheckoutSummary() {
   const items = useCartStore((state) => state.items);
@@ -33,11 +34,7 @@ export function CheckoutSummary() {
 
   return (
     <div className="space-y-3 rounded-xl border border-border/70 bg-card/80 p-4 text-sm">
-      <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-          Bill
-        </p>
-      </header>
+      <SectionHeader overline="Bill" title="Bill" />
       <div className="space-y-1 text-xs">
         {displayItems.map((item) => (
           <div
@@ -47,26 +44,22 @@ export function CheckoutSummary() {
             <span className="line-clamp-1 text-muted-foreground">
               {item.name} × {item.quantity}
             </span>
-            <span>
-              {formatCurrency((item.salePrice ?? item.price) * item.quantity)}
-            </span>
+            <PriceDisplay price={item.price * item.quantity} size="sm" />
           </div>
         ))}
       </div>
       <div className="mt-2 space-y-1 border-t border-dashed border-border/70 pt-2 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(displaySubtotal)}</span>
+          <PriceDisplay price={displaySubtotal} size="sm" />
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Savings</span>
-          <span className="text-emerald-700">
-            −{formatCurrency(displayDiscount)}
-          </span>
+          <PriceDisplay price={displayDiscount} size="sm" />
         </div>
         <div className="mt-1 flex items-center justify-between text-sm font-semibold">
           <span>Total</span>
-          <span>{formatCurrency(displayTotal)}</span>
+          <PriceDisplay price={displayTotal} size="sm" />
         </div>
       </div>
       <p className="pt-1 text-[0.65rem] text-muted-foreground">

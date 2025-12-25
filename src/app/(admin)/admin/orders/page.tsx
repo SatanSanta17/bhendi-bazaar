@@ -5,70 +5,59 @@
 
 "use client";
 
+import { useAsyncData } from "@/hooks/core/useAsyncData";
+import { useMutation } from "@/hooks/core/useMutation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DataTable, Column } from "@/components/admin/data-table";
 import { Search, Filter, RefreshCw } from "lucide-react";
 import { adminOrderService } from "@/services/admin/orderService";
 import type { AdminOrder, OrderListFilters } from "@/domain/admin";
+import { cn } from "@/lib/utils";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [filters, setFilters] = useState<OrderListFilters>({
     page: 1,
     limit: 20,
   });
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadOrders();
-  }, [filters]);
+  // Use new hooks for data fetching
+  const {
+    data,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAsyncData(() => adminOrderService.getOrders(filters), {
+    refetchDependencies: [filters],
+  });
 
-  const loadOrders = async () => {
-    try {
-      setIsLoading(true);
-      const result = await adminOrderService.getOrders(filters);
-      setOrders(result.orders);
-      setTotalPages(result.totalPages);
-    } catch (error) {
-      console.error("Failed to load orders:", error);
-      toast.error("Failed to load orders");
-    } finally {
-      setIsLoading(false);
+  // Use mutation for status updates
+  const { mutate: updateStatus, isLoading: isUpdatingStatus } = useMutation(
+    ({ orderId, status }: { orderId: string; status: string }) =>
+      adminOrderService.updateOrderStatus(orderId, { status }),
+    {
+      successMessage: "Order status updated!",
+      onSuccess: () => refetch(),
     }
-  };
+  );
 
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      toast.info("Refreshing orders...");
-      await loadOrders();
-      toast.success("Orders refreshed successfully!");
-    } catch (error) {
-      console.error("Failed to refresh orders:", error);
-      toast.error("Failed to refresh orders");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  // Extract data with fallbacks
+  const orders = data?.orders || [];
+  const totalPages = data?.totalPages || 1;
 
   const handleSearch = () => {
     setFilters({ ...filters, search: searchTerm, page: 1 });
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
-    try {
-      await adminOrderService.updateOrderStatus(orderId, {
-        status: newStatus,
-      });
-      loadOrders(); // Reload orders
-    } catch (error) {
-      console.error("Failed to update status:", error);
-      alert("Failed to update order status");
-    }
+    await updateStatus({ orderId, status: newStatus });
+  };
+
+  const handleRefresh = () => {
+    toast.info("Refreshing orders...");
+    refetch().then(() => toast.success("Orders refreshed!"));
   };
 
   const formatCurrency = (amount: number) => {
@@ -114,15 +103,14 @@ export default function AdminOrdersPage() {
         <select
           value={order.status}
           onChange={(e) => handleStatusChange(order.id, e.target.value)}
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
-            order.status === "processing"
-              ? "bg-orange-100 text-orange-800"
-              : order.status === "packed"
-              ? "bg-blue-100 text-blue-800"
-              : order.status === "shipped"
-              ? "bg-purple-100 text-purple-800"
-              : "bg-green-100 text-green-800"
-          }`}
+          disabled={isUpdatingStatus}
+          className={cn(
+            "px-3 py-1 rounded-full text-sm font-medium",
+            order.status === "processing" && "bg-orange-100 text-orange-800",
+            order.status === "packed" && "bg-blue-100 text-blue-800",
+            order.status === "shipped" && "bg-purple-100 text-purple-800",
+            order.status === "delivered" && "bg-green-100 text-green-800"
+          )}
         >
           <option value="processing">Processing</option>
           <option value="packed">Packed</option>
@@ -160,20 +148,15 @@ export default function AdminOrdersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-gray-900">
-            Orders
-          </h1>
-          <p className="text-gray-600 mt-1">Manage customer orders</p>
+          <SectionHeader overline="Orders" title="Orders" />
         </div>
         <button
           onClick={handleRefresh}
-          disabled={isRefreshing}
+          disabled={isLoading}
           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          <RefreshCw
-            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-          />
-          {isRefreshing ? "Refreshing..." : "Refresh"}
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+          {isLoading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
@@ -203,7 +186,11 @@ export default function AdminOrdersPage() {
           <select
             value={filters.status || ""}
             onChange={(e) =>
-              setFilters({ ...filters, status: e.target.value || undefined, page: 1 })
+              setFilters({
+                ...filters,
+                status: e.target.value || undefined,
+                page: 1,
+              })
             }
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >

@@ -1,42 +1,32 @@
-"use client";
-import Link from "next/link";
+// NEW VERSION - category-sections.tsx
 
+"use client";
+
+import Link from "next/link";
 import { categoryService } from "@/services/categoryService";
 import { Card } from "@/components/ui/card";
-import { useState } from "react";
-import { useEffect } from "react";
-import type { Category } from "@/domain/category";
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { LoadingSpinner } from "@/components/shared/states/LoadingSpinner";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
 
 export function CategorySections() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    categoryService
-      .getCategories()
-      .then(setCategories)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: categories, loading } = useAsyncData(() =>
+    categoryService.getCategories()
+  );
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center py-8">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
-  if (!categories.length) return null;
+  if (!categories?.length) return null;
 
   return (
     <section className="space-y-4">
-      <header className="flex items-baseline justify-between gap-2">
-        <div>
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-            Categories
-          </p>
-          <h2 className="font-heading text-xl font-semibold tracking-tight">
-            Browse by lane
-          </h2>
-        </div>
-      </header>
+      <SectionHeader overline="Categories" title="Browse by lane" />
       <div className="grid gap-4 sm:grid-cols-2">
         {categories.map((category) => (
           <Link key={category.slug} href={`/category/${category.slug}`}>

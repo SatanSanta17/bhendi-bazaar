@@ -1,26 +1,37 @@
 "use client";
 import { productService } from "@/services/productService";
-import { formatCurrency } from "@/lib/format";
-import { useEffect, useState } from "react";
-import type { Product } from "@/domain/product";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
+import { LoadingSkeleton } from "../shared/states/LoadingSkeleton";
+import { ErrorState } from "../shared/states/ErrorState";
+import { EmptyState } from "../shared/states/EmptyState";
+import { Package } from "lucide-react";
+import { PriceDisplay } from "../shared/PriceDisplay";
 
 export function OffersStrip() {
-  const [offers, setOffers] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    productService
-      .getOfferProducts()
-      .then(setOffers)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const {
+    data: offers,
+    loading,
+    error,
+    refetch,
+  } = useAsyncData(() => productService.getOfferProducts());
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingSkeleton />;
   }
 
-  if (!offers.length) return null;
+  if (error) {
+    return <ErrorState message={error} retry={refetch} />;
+  }
+
+  if (offers?.length === 0) {
+    return (
+      <EmptyState
+        icon={Package}
+        title="No offers found"
+        description="Try again later"
+      />
+    );
+  }
 
   return (
     <section className="overflow-hidden rounded-xl border border-dashed border-amber-500/50 bg-gradient-to-r from-amber-50 via-amber-25 to-emerald-50 px-4 py-3 text-xs text-amber-900">
@@ -29,7 +40,7 @@ export function OffersStrip() {
           Ongoing Offers
         </span>
         <div className="flex flex-1 flex-wrap gap-4">
-          {offers.slice(0, 4).map((offer) => (
+          {offers?.slice(0, 4).map((offer) => (
             <div
               key={offer.id}
               className="flex items-center gap-2 border-l border-amber-300/70 pl-3 text-[0.7rem]"
@@ -38,9 +49,7 @@ export function OffersStrip() {
                 {offer.name}
               </span>
               {offer.salePrice && (
-                <span className="font-semibold">
-                  {formatCurrency(offer.salePrice)}
-                </span>
+                <PriceDisplay price={offer.price} salePrice={offer.salePrice} />
               )}
             </div>
           ))}

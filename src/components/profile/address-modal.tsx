@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import type { ProfileAddress } from "@/domain/profile";
 import { X, Edit3 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { FormActions } from "../shared/button-groups/FormActions";
+import { DefaultBadge } from "../shared/badges/StatusBadge";
+import { AddressFields } from "../shared/forms/AddressFields";
+import { useForm } from "react-hook-form";
 
 interface AddressModalProps {
   mode: "view" | "edit" | "add";
@@ -28,25 +29,11 @@ export function AddressModal({
   onSetDefault,
   onDelete,
 }: AddressModalProps) {
-  const [local, setLocal] = useState<ProfileAddress>(address);
-
   const isEditing = mode === "edit" || mode === "add";
 
-  function handleChange<K extends keyof ProfileAddress>(
-    key: K,
-    value: ProfileAddress[K]
-  ) {
-    setLocal((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  function handleSave(data: ProfileAddress) {
+    void onSave({ ...address, ...data });
   }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    void onSave(local);
-  }
-
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-md rounded-2xl border border-border/60 bg-background shadow-xl">
@@ -56,8 +43,8 @@ export function AddressModal({
               {mode === "add"
                 ? "Add address"
                 : mode === "edit"
-                  ? "Edit address"
-                  : "Address details"}
+                ? "Edit address"
+                : "Address details"}
             </p>
             <p className="text-[0.7rem] text-muted-foreground">
               {mode === "view"
@@ -86,10 +73,9 @@ export function AddressModal({
 
         {isEditing && (
           <AddressForm
-            address={local}
+            address={address}
             saving={saving}
-            onSubmit={handleSubmit}
-            onChange={handleChange}
+            onSubmit={handleSave}
             onCancel={onClose}
           />
         )}
@@ -118,11 +104,7 @@ function AddressViewMode({
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <p className="font-semibold">{address.label}</p>
-          {address.isDefault && (
-            <Badge variant="secondary" className="text-[0.6rem]">
-              Default
-            </Badge>
-          )}
+          {address.isDefault && <DefaultBadge />}
         </div>
         <p className="text-xs text-muted-foreground">
           {address.name} · {address.phone}
@@ -186,11 +168,7 @@ function AddressViewMode({
 interface AddressFormProps {
   address: ProfileAddress;
   saving: boolean;
-  onSubmit: (e: React.FormEvent) => void;
-  onChange: <K extends keyof ProfileAddress>(
-    key: K,
-    value: ProfileAddress[K]
-  ) => void;
+  onSubmit: (address: ProfileAddress) => void;
   onCancel: () => void;
 }
 
@@ -198,134 +176,43 @@ function AddressForm({
   address,
   saving,
   onSubmit,
-  onChange,
   onCancel,
 }: AddressFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ProfileAddress>({
+    defaultValues: address,
+  });
+
   return (
-    <form onSubmit={onSubmit} className="space-y-3 px-4 py-4 text-xs">
-      <div className="space-y-1">
-        <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Address label
-        </label>
-        <Input
-          value={address.label}
-          onChange={(e) => onChange("label", e.target.value)}
-          placeholder="Home, Work…"
-        />
-      </div>
-      <div className="space-y-1">
-        <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Recipient name
-        </label>
-        <Input
-          value={address.name}
-          onChange={(e) => onChange("name", e.target.value)}
-          placeholder="Who will receive this order?"
-        />
-      </div>
-      <div className="space-y-1">
-        <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Contact number
-        </label>
-        <Input
-          value={address.phone}
-          onChange={(e) => onChange("phone", e.target.value)}
-          placeholder="10-digit mobile number"
-        />
-      </div>
-      <div className="space-y-1">
-        <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Address line 1
-        </label>
-        <Input
-          value={address.line1}
-          onChange={(e) => onChange("line1", e.target.value)}
-          placeholder="Flat, house no., building"
-        />
-      </div>
-      <div className="space-y-1">
-        <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Address line 2
-        </label>
-        <Input
-          value={address.line2 ?? ""}
-          onChange={(e) => onChange("line2", e.target.value)}
-          placeholder="Area, street (optional)"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            City
-          </label>
-          <Input
-            value={address.city}
-            onChange={(e) => onChange("city", e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Country
-          </label>
-          <Input
-            value={address.country}
-            onChange={(e) => onChange("country", e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            State (optional)
-          </label>
-          <Input
-            value={address.state ?? ""}
-            onChange={(e) => onChange("state", e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            PIN code
-          </label>
-          <Input
-            value={address.postalCode}
-            onChange={(e) => onChange("postalCode", e.target.value)}
-          />
-        </div>
-      </div>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-3 px-4 py-4 text-xs"
+    >
+      <AddressFields
+        register={register}
+        errors={errors}
+        includeEmail={false}
+        includeNotes={false}
+      />
 
       <div className="flex items-center justify-between gap-2 pt-2">
         <label className="flex items-center gap-2 text-[0.7rem] text-muted-foreground">
           <input
             type="checkbox"
-            checked={Boolean(address.isDefault)}
-            onChange={(e) =>
-              onChange("isDefault", e.target.checked || undefined)
-            }
+            {...register("isDefault")}
             className="h-3.5 w-3.5 rounded border border-border bg-background"
           />
           Set as default address
         </label>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={saving}
-            onClick={onCancel}
-            className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={saving}
-            className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
-          >
-            {saving ? "Saving…" : "Save"}
-          </Button>
-        </div>
+        <FormActions
+          onCancel={onCancel}
+          isSubmitting={saving}
+          submitLabel="Save"
+          cancelLabel="Cancel"
+        />
       </div>
     </form>
   );

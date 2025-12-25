@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { User } from "@/domain/profile";
 import { ProfilePicUpload } from "./profile-pic-upload";
-
+import { LoadingSpinner } from "../shared/states/LoadingSpinner";
+import { SectionHeader } from "../shared/SectionHeader";
+import { FormActions } from "../shared/button-groups/FormActions";
 interface ProfileCardProps {
   user: User | null;
   profilePic?: string | null;
@@ -84,11 +86,19 @@ export function ProfileCard({
     setPicUrl("");
   }
 
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="border-b border-border/60 pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle>Account</CardTitle>
+          <SectionHeader overline="Account" title="Your account information" />
           {!isEditing && !isEditingPic && (
             <Button
               type="button"
@@ -158,7 +168,13 @@ export function ProfileCard({
             }}
           />
         ) : (
-          <form className="space-y-3 text-xs">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="space-y-3 text-xs"
+          >
             <div className="space-y-1">
               <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Name
@@ -197,27 +213,12 @@ export function ProfileCard({
                 placeholder="10-digit mobile number"
               />
             </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={saving}
-                onClick={handleCancel}
-                className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={saving}
-                onClick={handleSave}
-                className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
-              >
-                {saving ? "Saving…" : "Save"}
-              </Button>
-            </div>
+            <FormActions
+              onCancel={handleCancel}
+              isSubmitting={saving}
+              submitLabel="Save"
+              cancelLabel="Cancel"
+            />
           </form>
         )}
       </CardContent>

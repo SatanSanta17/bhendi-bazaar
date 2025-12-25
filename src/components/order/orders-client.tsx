@@ -1,73 +1,53 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
-import type { Order } from "@/domain/order";
+import { useMemo, useState } from "react";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { orderService } from "@/services/orderService";
 import { formatCurrency } from "@/lib/format";
 import { Input } from "@/components/ui/input";
+import { LoadingSpinner } from "../shared/states/LoadingSpinner";
+import { ErrorState } from "../shared/states/ErrorState";
+import { Package } from "lucide-react";
+import { EmptyState } from "../shared/states/EmptyState";
+import { SectionHeader } from "../shared/SectionHeader";
+import { PriceDisplay } from "../shared/PriceDisplay";
 
 export function OrdersClient() {
-  const [orders, setOrders] = useState<Order[]>([]);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchOrders() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await orderService.getOrders();
-        setOrders(data);
-      } catch (err) {
-        console.error("Failed to fetch orders:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch orders");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchOrders();
-  }, []);
+  const {
+    data: orders,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAsyncData(() => orderService.getOrders(), {
+    refetchDependencies: [],
+  });
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return orders;
-    return orders.filter(
+    return orders?.filter(
       (order) =>
         order.code.toLowerCase().includes(q) ||
         order.address.fullName.toLowerCase().includes(q)
     );
   }, [orders, query]);
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Loading your orders...</p>
-      </div>
-    );
+  if (isLoading) {
+    return <LoadingSpinner />;
   }
 
   if (error) {
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-destructive">{error}</p>
-      </div>
-    );
+    return <ErrorState message={error} retry={refetch} />;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-muted-foreground/80">
-            Orders
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Your order history with Bhendi Bazaar.
-          </p>
-        </div>
+        <SectionHeader
+          overline="Orders"
+          title="Your order history with Bhendi Bazaar"
+        />
         <div className="w-full max-w-xs">
           <Input
             placeholder="Search by code or name"
@@ -77,15 +57,19 @@ export function OrdersClient() {
           />
         </div>
       </div>
-      {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {query.trim()
-            ? "No orders match your search."
-            : "No orders yet. Once you place an order, it will show up here."}
-        </p>
+      {filtered?.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="No Orders Yet"
+          description={
+            query.trim()
+              ? "No orders match your search."
+              : "Once you place an order, it will show up here."
+          }
+        />
       ) : (
         <div className="space-y-3">
-          {filtered.map((order) => (
+          {filtered?.map((order) => (
             <div
               key={order.id}
               className="flex flex-col justify-between gap-2 rounded-xl border border-border/70 bg-card/80 p-4 text-xs sm:flex-row sm:items-center"
@@ -104,7 +88,7 @@ export function OrdersClient() {
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-semibold">
-                  {formatCurrency(order.totals.total)}
+                  <PriceDisplay price={order.totals.total} size="sm" />
                 </span>
               </div>
             </div>

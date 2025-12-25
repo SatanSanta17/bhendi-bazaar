@@ -1,61 +1,63 @@
 "use client";
 
+import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useEffect, useState } from "react";
-import { notFound } from "next/navigation";
 import { CategoryHero } from "@/components/category/category-hero";
 import { CategoryProductGrid } from "@/components/category/product-grid";
 import { categoryService } from "@/services/categoryService"; // Client service
 import { productService } from "@/services/productService";
-import type { Category } from "@/domain/category";
-import type { Product } from "@/domain/product";
+import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
+import { EmptyState } from "@/components/shared/states/EmptyState";
+import { Package } from "lucide-react";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export default function CategoryPage({ params }: CategoryPageProps) {
-  const [category, setCategory] = useState<Category | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [slug, setSlug] = useState<string>("");
 
   useEffect(() => {
-    const loadData = async () => {
-      const { slug } = await params;
-
-      try {
-        const [categoryData, productsData] = await Promise.all([
-          categoryService.getCategoryBySlug(slug),
-          productService.getProducts({ categorySlug: slug }),
-        ]);
-
-        if (!categoryData) {
-          notFound();
-        }
-
-        setCategory(categoryData);
-        setProducts(productsData);
-      } catch (error) {
-        console.error("Failed to load category:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+    params.then(({ slug }) => setSlug(slug));
   }, [params]);
 
+  const { data, loading, error, refetch } = useAsyncData(
+    async () => {
+      const [category, products] = await Promise.all([
+        categoryService.getCategoryBySlug(slug),
+        productService.getProducts({ categorySlug: slug }),
+      ]);
+      return { category, products };
+    },
+    { enabled: !!slug }
+  );
+
+  const category = data?.category;
+  const products = data?.products;
+
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingSkeleton />;
   }
 
-  if (!category) {
-    notFound();
+  if (error) {
+    return <ErrorState message={error} retry={refetch} />;
   }
 
   return (
     <div className="space-y-4">
-      <CategoryHero category={category} />
-      <CategoryProductGrid products={products} />
+      {category && products ? (
+        <>
+          <CategoryHero category={category} />
+          <CategoryProductGrid products={products} />
+        </>
+      ) : (
+        <EmptyState
+          icon={Package}
+          title="No category or products found"
+          description="Try different keywords or browse categories"
+        />
+      )}
     </div>
   );
 }

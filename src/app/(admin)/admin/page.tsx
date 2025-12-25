@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { toast } from "sonner";
 import { StatsCard } from "@/components/admin/stats-card";
 import {
@@ -18,61 +18,42 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { adminDashboardService } from "@/services/admin/dashboardService";
-import type { DashboardStats, RecentActivity } from "@/domain/admin";
+import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { formatCurrency } from "@/lib/format";
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [activities, setActivities] = useState<RecentActivity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const {
+    data: stats,
+    loading: isLoadingStats,
+    error: errorStats,
+    refetch: refetchStats,
+  } = useAsyncData(() => adminDashboardService.getDashboardStats(), {
+    refetchDependencies: [],
+  });
+  const {
+    data: activities,
+    loading: isLoadingActivities,
+    error: errorActivities,
+    refetch: refetchActivities,
+  } = useAsyncData(() => adminDashboardService.getRecentActivities(10), {
+    refetchDependencies: [],
+  });
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      setIsLoading(true);
-      const [statsData, activitiesData] = await Promise.all([
-        adminDashboardService.getDashboardStats(),
-        adminDashboardService.getRecentActivities(10),
-      ]);
-      setStats(statsData);
-      setActivities(activitiesData);
-    } catch (error) {
-      console.error("Failed to load dashboard:", error);
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRefresh = () => {
+    toast.info("Refreshing dashboard...");
+    refetchStats().then(() =>
+      toast.success("Dashboard refreshed successfully!")
+    );
+    refetchActivities().then(() =>
+      toast.success("Activities refreshed successfully!")
+    );
   };
 
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      toast.info("Refreshing dashboard...");
-      await loadDashboardData();
-      toast.success("Dashboard refreshed successfully!");
-    } catch (error) {
-      console.error("Failed to refresh dashboard:", error);
-      toast.error("Failed to refresh dashboard");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  if (isLoading || !stats) {
+  if (isLoadingStats || isLoadingActivities) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <LoadingSkeleton />
       </div>
     );
   }
@@ -81,47 +62,39 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-gray-900">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Welcome to Bhendi Bazaar Admin Panel
-          </p>
-        </div>
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        >
-          <RefreshCw
-            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+          <SectionHeader
+            overline="Welcome to Bhendi Bazaar Admin Panel"
+            title="Dashboard"
+            action={{
+              label: "Refresh",
+              onClick: handleRefresh,
+            }}
           />
-          {isRefreshing ? "Refreshing..." : "Refresh"}
-        </button>
+        </div>
       </div>
 
       {/* Revenue Stats */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Revenue</h2>
+        <SectionHeader overline="Revenue" title="Revenue" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <StatsCard
             title="Today"
-            value={formatCurrency(stats.revenue.today)}
+            value={formatCurrency(stats?.revenue.today || 0)}
             icon={DollarSign}
           />
           <StatsCard
             title="This Week"
-            value={formatCurrency(stats.revenue.week)}
+            value={formatCurrency(stats?.revenue.week || 0)}
             icon={TrendingUp}
           />
           <StatsCard
             title="This Month"
-            value={formatCurrency(stats.revenue.month)}
+            value={formatCurrency(stats?.revenue.month || 0)}
             icon={DollarSign}
           />
           <StatsCard
             title="This Year"
-            value={formatCurrency(stats.revenue.year)}
+            value={formatCurrency(stats?.revenue.year || 0)}
             icon={TrendingUp}
           />
         </div>
@@ -129,59 +102,55 @@ export default function AdminDashboardPage() {
 
       {/* Key Metrics */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Key Metrics
-        </h2>
+        <SectionHeader overline="Key Metrics" title="Key Metrics" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatsCard
             title="Total Orders"
-            value={stats.orders.total}
+            value={stats?.orders.total || 0}
             icon={ShoppingCart}
-            description={`${stats.orders.todayCount} today`}
+            description={`${stats?.orders.todayCount || 0} today`}
           />
           <StatsCard
             title="Total Products"
-            value={stats.products.total}
+            value={stats?.products.total || 0}
             icon={Package}
-            description={`${stats.products.lowStock} low stock`}
+            description={`${stats?.products.lowStock || 0} low stock`}
           />
           <StatsCard
             title="Total Customers"
-            value={stats.customers.total}
+            value={stats?.customers.total || 0}
             icon={Users}
-            description={`${stats.customers.active} active`}
+            description={`${stats?.customers.active || 0} active`}
           />
         </div>
       </div>
 
       {/* Order Status Overview */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Order Status
-        </h2>
+        <SectionHeader overline="Order Status" title="Order Status" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <p className="text-sm font-medium text-gray-600">Processing</p>
             <p className="text-2xl font-bold text-orange-600 mt-2">
-              {stats.orders.processing}
+              {stats?.orders.processing || 0}
             </p>
           </div>
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <p className="text-sm font-medium text-gray-600">Packed</p>
             <p className="text-2xl font-bold text-blue-600 mt-2">
-              {stats.orders.packed}
+              {stats?.orders.packed || 0}
             </p>
           </div>
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <p className="text-sm font-medium text-gray-600">Shipped</p>
             <p className="text-2xl font-bold text-purple-600 mt-2">
-              {stats.orders.shipped}
+              {stats?.orders.shipped || 0}
             </p>
           </div>
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <p className="text-sm font-medium text-gray-600">Delivered</p>
             <p className="text-2xl font-bold text-green-600 mt-2">
-              {stats.orders.delivered}
+              {stats?.orders.delivered || 0}
             </p>
           </div>
         </div>
@@ -189,11 +158,9 @@ export default function AdminDashboardPage() {
 
       {/* Recent Activity */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Recent Activity
-        </h2>
+        <SectionHeader overline="Recent Activity" title="Recent Activity" />
         <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
-          {activities.map((activity) => (
+          {activities?.map((activity) => (
             <div key={activity.id} className="p-4 flex items-start gap-4">
               <div className="p-2 bg-gray-100 rounded-lg">
                 <Clock className="w-5 h-5 text-gray-600" />

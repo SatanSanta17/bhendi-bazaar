@@ -5,68 +5,68 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
+import { useMutation } from "@/hooks/core/useMutation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable, Column } from "@/components/admin/data-table";
 import { Search, RefreshCw } from "lucide-react";
 import { adminUserService } from "@/services/admin/userService";
 import type { AdminUser, UserListFilters } from "@/domain/admin";
+import { cn } from "@/lib/utils";
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
   const [filters, setFilters] = useState<UserListFilters>({
     page: 1,
     limit: 20,
   });
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadUsers();
-  }, [filters]);
+  const {
+    data,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAsyncData(() => adminUserService.getUsers(filters), {
+    refetchDependencies: [filters],
+  });
+  const { users = [], totalPages = 1 } = data || {};
 
-  const loadUsers = async () => {
-    try {
-      setIsLoading(true);
-      const result = await adminUserService.getUsers(filters);
-      setUsers(result.users);
-      setTotalPages(result.totalPages);
-    } catch (error) {
-      console.error("Failed to load users:", error);
-      toast.error("Failed to load users");
-    } finally {
-      setIsLoading(false);
+  const { mutate: toggleBlock, isLoading: isTogglingBlock } = useMutation(
+    ({ id, isBlocked }: { id: string; isBlocked: boolean }) =>
+      adminUserService.toggleBlockUser(id, isBlocked),
+    {
+      successMessage: "User status updated successfully!",
+      onSuccess: () => refetch(),
     }
-  };
+  );
+  const { mutate: updateUser, isLoading: updatingUser } = useMutation(
+    ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { name?: string; role?: string; isBlocked?: boolean };
+    }) => adminUserService.updateUser(id, data),
+    {
+      successMessage: "User updated successfully!",
+      onSuccess: () => refetch(),
+    }
+  );
 
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      toast.info("Refreshing users...");
-      await loadUsers();
-      toast.success("Users refreshed successfully!");
-    } catch (error) {
-      console.error("Failed to refresh users:", error);
-      toast.error("Failed to refresh users");
-    } finally {
-      setIsRefreshing(false);
-    }
+  const handleRefresh = () => {
+    toast.info("Refreshing users...");
+    refetch().then(() => toast.success("Users refreshed successfully!"));
   };
 
   const handleSearch = () => {
     setFilters({ ...filters, search: searchTerm, page: 1 });
   };
 
-  const handleToggleBlock = async (userId: string, isBlocked: boolean) => {
-    try {
-      await adminUserService.toggleBlockUser(userId, !isBlocked);
-      loadUsers(); // Reload users
-    } catch (error) {
-      console.error("Failed to toggle block:", error);
-      alert("Failed to update user status");
-    }
+  const handleToggleBlock = (userId: string, isBlocked: boolean) => {
+    toggleBlock({ id: userId, isBlocked: !isBlocked }).then(() =>
+      toast.success("User status updated successfully!")
+    );
   };
 
   const formatCurrency = (amount: number) => {
@@ -128,11 +128,14 @@ export default function AdminUsersPage() {
       render: (user) => (
         <button
           onClick={() => handleToggleBlock(user.id, user.isBlocked)}
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
+          disabled={isTogglingBlock}
+          className={cn(
+            "px-3 py-1 rounded-full text-xs font-medium",
             user.isBlocked
               ? "bg-red-100 text-red-800 hover:bg-red-200"
-              : "bg-green-100 text-green-800 hover:bg-green-200"
-          }`}
+              : "bg-green-100 text-green-800 hover:bg-green-200",
+            isTogglingBlock && "opacity-50 cursor-not-allowed"
+          )}
         >
           {user.isBlocked ? "Blocked" : "Active"}
         </button>
@@ -151,13 +154,14 @@ export default function AdminUsersPage() {
         </div>
         <button
           onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          disabled={isLoading}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all",
+            isLoading && "opacity-50 cursor-not-allowed"
+          )}
         >
-          <RefreshCw
-            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-          />
-          {isRefreshing ? "Refreshing..." : "Refresh"}
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+          {isLoading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
@@ -187,7 +191,11 @@ export default function AdminUsersPage() {
           <select
             value={filters.role || ""}
             onChange={(e) =>
-              setFilters({ ...filters, role: e.target.value || undefined, page: 1 })
+              setFilters({
+                ...filters,
+                role: e.target.value || undefined,
+                page: 1,
+              })
             }
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
@@ -238,5 +246,3 @@ export default function AdminUsersPage() {
     </div>
   );
 }
-
-

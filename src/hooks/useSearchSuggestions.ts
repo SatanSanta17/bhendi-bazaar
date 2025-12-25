@@ -2,8 +2,11 @@
 import { useState, useEffect } from "react";
 import type { Product } from "@/domain/product";
 import type { Category } from "@/domain/category";
+import { useDebounce } from "./core/useDebounce";
 
 export function useSearchSuggestions(query: string, debounceMs = 300) {
+  const debouncedQuery = useDebounce(query, debounceMs);
+
   const [suggestions, setSuggestions] = useState<{
     products: Product[];
     categories: Category[];
@@ -11,7 +14,7 @@ export function useSearchSuggestions(query: string, debounceMs = 300) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!query || query.length < 2) {
+    if (!debouncedQuery || debouncedQuery.length < 2) {
       setSuggestions({ products: [], categories: [] });
       return;
     }
@@ -20,7 +23,7 @@ export function useSearchSuggestions(query: string, debounceMs = 300) {
       setLoading(true);
       try {
         const response = await fetch(
-          `/api/search/suggestions?q=${encodeURIComponent(query)}`
+          `/api/search/suggestions?q=${encodeURIComponent(debouncedQuery)}`
         );
         const data = await response.json();
         setSuggestions(data);
@@ -32,7 +35,7 @@ export function useSearchSuggestions(query: string, debounceMs = 300) {
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [query, debounceMs]);
+  }, [debouncedQuery, debounceMs]);
 
   return { suggestions, loading };
 }

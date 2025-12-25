@@ -5,47 +5,62 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
+import { useMutation } from "@/hooks/core/useMutation";
+import { useState } from "react";
 import { DataTable, Column } from "@/components/admin/data-table";
 import { Search, Plus, Edit, Trash2, MoveUp, MoveDown } from "lucide-react";
 import Link from "next/link";
 import { adminCategoryService } from "@/services/admin/categoryService";
 import type { AdminCategory, CategoryListFilters } from "@/domain/admin";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [filters, setFilters] = useState<CategoryListFilters>({
     page: 1,
-    limit: 50, // Higher limit for categories (usually fewer items)
+    limit: 50,
     sortBy: "order",
     sortOrder: "asc",
   });
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadCategories();
-  }, [filters]);
+  // Use new hooks
+  const {
+    data,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAsyncData(() => adminCategoryService.getCategories(filters), {
+    refetchDependencies: [filters],
+  });
 
-  const loadCategories = async () => {
-    try {
-      setIsLoading(true);
-      const result = await adminCategoryService.getCategories(filters);
-      setCategories(result.categories);
-      setTotalPages(result.totalPages);
-    } catch (error) {
-      console.error("Failed to load categories:", error);
-    } finally {
-      setIsLoading(false);
+  // Mutations
+  const { mutate: deleteCategory, isLoading: isDeleting } = useMutation(
+    adminCategoryService.deleteCategory,
+    {
+      successMessage: "Category deleted successfully!",
+      onSuccess: () => refetch(),
     }
-  };
+  );
+
+  const { mutate: updateCategory, isLoading: isUpdating } = useMutation(
+    ({ id, order }: { id: string; order: number }) =>
+      adminCategoryService.updateCategory(id, { order }),
+    {
+      onSuccess: () => refetch(),
+    }
+  );
+
+  // Extract data
+  const categories = data?.categories || [];
+  const totalPages = data?.totalPages || 1;
 
   const handleSearch = () => {
     setFilters({ ...filters, search: searchTerm, page: 1 });
   };
 
-  const handleDelete = async (categoryId: string, categoryName: string) => {
+  const handleDelete = (categoryId: string, categoryName: string) => {
     if (
       !confirm(
         `Are you sure you want to delete "${categoryName}"? This will also affect products in this category.`
@@ -53,36 +68,20 @@ export default function AdminCategoriesPage() {
     ) {
       return;
     }
-
-    try {
-      await adminCategoryService.deleteCategory(categoryId);
-      alert("Category deleted successfully!");
-      loadCategories();
-    } catch (error) {
-      console.error("Failed to delete category:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to delete category. Make sure it has no products."
-      );
-    }
+    deleteCategory(categoryId).then(() =>
+      toast.success("Category deleted successfully!")
+    );
   };
 
-  const handleReorder = async (
+  const handleReorder = (
     categoryId: string,
     currentOrder: number,
     direction: "up" | "down"
   ) => {
-    try {
-      const newOrder = direction === "up" ? currentOrder - 1 : currentOrder + 1;
-      await adminCategoryService.updateCategory(categoryId, {
-        order: newOrder,
-      });
-      loadCategories();
-    } catch (error) {
-      console.error("Failed to reorder category:", error);
-      alert("Failed to reorder category");
-    }
+    const newOrder = direction === "up" ? currentOrder - 1 : currentOrder + 1;
+    updateCategory({ id: categoryId, order: newOrder }).then(() =>
+      toast.success("Category reordered successfully!")
+    );
   };
 
   const columns: Column<AdminCategory>[] = [
@@ -97,20 +96,23 @@ export default function AdminCategoriesPage() {
           </span>
           <div className="flex flex-col gap-1">
             <button
-              onClick={() =>
-                handleReorder(category.id, category.order, "up")
-              }
-              disabled={category.order === 0}
-              className="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => handleReorder(category.id, category.order, "up")}
+              disabled={category.order === 0 || isUpdating}
+              className={cn(
+                "p-0.5 text-gray-400 hover:text-gray-600",
+                isUpdating && "opacity-50 cursor-not-allowed"
+              )}
               title="Move up"
             >
               <MoveUp className="w-3 h-3" />
             </button>
             <button
-              onClick={() =>
-                handleReorder(category.id, category.order, "down")
-              }
-              className="p-0.5 text-gray-400 hover:text-gray-600"
+              onClick={() => handleReorder(category.id, category.order, "down")}
+              disabled={isUpdating}
+              className={cn(
+                "p-0.5 text-gray-400 hover:text-gray-600",
+                isUpdating && "opacity-50 cursor-not-allowed"
+              )}
               title="Move down"
             >
               <MoveDown className="w-3 h-3" />
@@ -188,7 +190,11 @@ export default function AdminCategoriesPage() {
           </Link>
           <button
             onClick={() => handleDelete(category.id, category.name)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            disabled={isDeleting}
+            className={cn(
+              "p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors",
+              isDeleting && "opacity-50 cursor-not-allowed"
+            )}
             title="Delete category"
           >
             <Trash2 className="w-4 h-4" />

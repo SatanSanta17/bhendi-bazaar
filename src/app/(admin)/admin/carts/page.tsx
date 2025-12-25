@@ -5,57 +5,47 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAsyncData } from "@/hooks/core/useAsyncData";
+import { useMutation } from "@/hooks/core/useMutation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable, Column } from "@/components/admin/data-table";
 import { ShoppingCart, Mail, Eye, RefreshCw } from "lucide-react";
 import { adminCartService } from "@/services/admin/cartService";
 import type { AbandonedCart, AbandonedCartFilters } from "@/domain/admin";
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { Button } from "@/components/ui/button";
+import { PriceDisplay } from "@/components/shared/PriceDisplay";
 
 export default function AdminAbandonedCartsPage() {
-  const [carts, setCarts] = useState<AbandonedCart[]>([]);
   const [filters, setFilters] = useState<AbandonedCartFilters>({
     page: 1,
     limit: 20,
     minDays: 1,
   });
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalValue, setTotalValue] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const [selectedCart, setSelectedCart] = useState<AbandonedCart | null>(null);
 
-  useEffect(() => {
-    loadCarts();
-  }, [filters]);
+  const {
+    data,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAsyncData(() => adminCartService.getAbandonedCarts(filters), {
+    refetchDependencies: [filters],
+  });
 
-  const loadCarts = async () => {
-    try {
-      setIsLoading(true);
-      const result = await adminCartService.getAbandonedCarts(filters);
-      setCarts(result.carts);
-      setTotalPages(result.totalPages);
-      setTotalValue(result.totalValue);
-    } catch (error) {
-      console.error("Failed to load abandoned carts:", error);
-      toast.error("Failed to load abandoned carts");
-    } finally {
-      setIsLoading(false);
+  const { mutate: sendReminder, isLoading: isSendingReminder } = useMutation(
+    adminCartService.sendReminder,
+    {
+      successMessage: "Reminder sent successfully!",
+      onSuccess: () => refetch(),
     }
-  };
+  );
 
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      toast.info("Refreshing carts...");
-      await loadCarts();
-      toast.success("Carts refreshed successfully!");
-    } catch (error) {
-      console.error("Failed to refresh carts:", error);
-      toast.error("Failed to refresh carts");
-    } finally {
-      setIsRefreshing(false);
-    }
+  const handleRefresh = () => {
+    toast.info("Refreshing carts...");
+    refetch().then(() => toast.success("Carts refreshed successfully!"));
   };
 
   const formatCurrency = (amount: number) => {
@@ -64,13 +54,6 @@ export default function AdminAbandonedCartsPage() {
       currency: "INR",
       maximumFractionDigits: 0,
     }).format(amount);
-  };
-
-  const handleSendReminder = (cart: AbandonedCart) => {
-    // TODO: Implement email reminder functionality
-    alert(
-      `Email reminder feature coming soon!\n\nWould send reminder to: ${cart.userEmail}`
-    );
   };
 
   const columns: Column<AbandonedCart>[] = [
@@ -132,7 +115,8 @@ export default function AdminAbandonedCartsPage() {
             <Eye className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleSendReminder(cart)}
+            onClick={() => sendReminder(cart.id)}
+            disabled={isSendingReminder}
             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
             title="Send reminder email"
           >
@@ -146,30 +130,25 @@ export default function AdminAbandonedCartsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-gray-900">
-            Abandoned Carts
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Track and recover abandoned shopping carts
-          </p>
-        </div>
+        <SectionHeader
+          overline="Abandoned Carts"
+          title="View and track abandoned shopping carts"
+        />
         <div className="flex items-center gap-4">
-          <button
+          <Button
+            variant="outline"
             onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            disabled={isLoading}
+            className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]"
           >
             <RefreshCw
-              className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
             />
-            {isRefreshing ? "Refreshing..." : "Refresh"}
-          </button>
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2">
-            <p className="text-sm text-emerald-600 font-medium">Total Value</p>
-            <p className="text-2xl font-bold text-emerald-700">
-              {formatCurrency(totalValue)}
-            </p>
+            {isLoading ? "Refreshing..." : "Refresh"}
+          </Button>
+          <div className="rounded-full text-[0.7rem] font-semibold uppercase tracking-[0.2em]">
+            <span className="text-muted-foreground">Total Value</span>
+            <PriceDisplay price={data?.totalValue || 0} size="lg" />
           </div>
         </div>
       </div>
@@ -228,9 +207,9 @@ export default function AdminAbandonedCartsPage() {
 
       {/* Carts Table */}
       <DataTable
-        data={carts}
+        data={data?.carts || []}
         columns={columns}
-        totalPages={totalPages}
+        totalPages={data?.totalPages || 1}
         currentPage={filters.page || 1}
         onPageChange={(page) => setFilters({ ...filters, page })}
         onSort={(key, order) =>
@@ -320,11 +299,12 @@ export default function AdminAbandonedCartsPage() {
               {/* Actions */}
               <div className="flex gap-3 pt-4">
                 <button
-                  onClick={() => handleSendReminder(selectedCart)}
+                  onClick={() => sendReminder(selectedCart.id)}
+                  disabled={isSendingReminder}
                   className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center justify-center gap-2"
                 >
                   <Mail className="w-4 h-4" />
-                  Send Reminder Email
+                  {isSendingReminder ? "Sending..." : "Send Reminder Email"}
                 </button>
                 <button
                   onClick={() => setSelectedCart(null)}

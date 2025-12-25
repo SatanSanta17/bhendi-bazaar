@@ -9,9 +9,6 @@ import type {
 } from "@/domain/admin";
 
 class AdminCartService {
-  /**
-   * Get abandoned carts with filters
-   */
   async getAbandonedCarts(
     filters: AbandonedCartFilters = {}
   ): Promise<AbandonedCartResult> {
@@ -34,6 +31,12 @@ class AdminCartService {
     }
 
     return response.json();
+  }
+
+  async sendReminder(cartId: string): Promise<void> {
+    // TODO: Implement email reminder functionality
+    console.log(`Sending reminder to ${cartId}`);
+    return Promise.resolve();
   }
 }
 
