@@ -84,6 +84,13 @@ class OrderService {
       body: JSON.stringify({ code }),
     });
 
+    if (response.status === 429) {
+      const error = await response.json();
+      throw new Error(
+        error.error || "Too many requests. Please try again later."
+      );
+    }
+
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error("Order not found");
@@ -106,6 +113,13 @@ class OrderService {
       credentials: "include",
       body: JSON.stringify(input),
     });
+
+    if (response.status === 429) {
+      const error = await response.json();
+      throw new Error(
+        error.error || "Too many requests. Please try again later."
+      );
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

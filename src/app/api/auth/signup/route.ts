@@ -1,36 +1,60 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
+import {
+  authRateLimit,
+  getClientIp,
+  formatTimeRemaining,
+} from "@/lib/rate-limit";
+import { validateRequest } from "@/lib/validation/utils";
+import { signupSchema } from "@/lib/validation/schemas/auth.schemas";
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limit check
+  const ip = getClientIp(request);
+  const { success, limit, remaining, reset } = await authRateLimit.limit(ip);
+
+  if (!success) {
+    const timeRemaining = reset - Date.now();
+    return NextResponse.json(
+      {
+        error: `Too many signup attempts. Please try again in ${formatTimeRemaining(
+          timeRemaining
+        )}.`,
+        retryAfter: Math.ceil(timeRemaining / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+          "Retry-After": Math.ceil(timeRemaining / 1000).toString(),
+        },
+      }
+    );
+  }
+
+  // Validate request body
+  const validation = await validateRequest(request, signupSchema);
+
+  if ("error" in validation) {
+    return validation.error;
+  }
+
+  const { email, password, name, mobile } = validation.data;
+
   try {
-    const body = await req.json();
-    const { name, email, mobile, password } = body as {
-      name?: string;
-      email?: string;
-      mobile?: string;
-      password?: string;
-    };
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 },
-      );
-    }
-
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, mobile ? { mobile } : undefined].filter(
-          Boolean,
-        ) as any,
+        OR: [{ email }, mobile ? { mobile } : undefined].filter(Boolean) as any,
       },
     });
 
     if (existingUser) {
       return NextResponse.json(
         { error: "User with this email or mobile already exists" },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -56,15 +80,13 @@ export async function POST(req: Request) {
         email: user.email,
         name: user.name,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
     console.error("Signup error", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
-
-

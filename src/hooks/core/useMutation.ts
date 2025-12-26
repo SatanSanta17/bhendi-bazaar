@@ -37,12 +37,13 @@ export function useMutation<TData = any, TVariables = any>(
 
   const mutate = useCallback(
     async (variables: TVariables): Promise<TData> => {
-      try {
-        setIsLoading(true);
-        setError(null);
+      setIsLoading(true);
+      setError(null);
 
+      try {
         const result = await mutationFn(variables);
         setData(result);
+        setIsLoading(false);
 
         if (showToast && successMessage) {
           toast.success(successMessage);
@@ -54,16 +55,19 @@ export function useMutation<TData = any, TVariables = any>(
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : "An error occurred";
+
+        // Set state synchronously before throwing
         setError(errorMsg);
+        setIsLoading(false);
 
         if (showToast && (errorMessage || errorMsg)) {
           toast.error(errorMessage || errorMsg);
         }
 
         onError?.(err as Error);
+
+        // Throw the error - state should be set by now
         throw err;
-      } finally {
-        setIsLoading(false);
       }
     },
     [mutationFn, onSuccess, onError, successMessage, errorMessage, showToast]

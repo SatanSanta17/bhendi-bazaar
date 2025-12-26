@@ -91,6 +91,13 @@ class PaymentGatewayService {
         body: JSON.stringify(input),
       });
 
+      if (response.status === 429) {
+        const error = await response.json();
+        throw new Error(
+          error.error || "Too many payment requests. Please try again later."
+        );
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(

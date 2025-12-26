@@ -110,7 +110,14 @@ export function useCheckoutPayment() {
       return order;
     } catch (error) {
       console.error("Checkout error:", error);
-      setError(error instanceof Error ? error.message : "Checkout failed");
+
+      // Check if it's a rate limit error
+      if (error instanceof Error && error.message.includes("Too many")) {
+        setError(error.message); // Will show the time remaining message
+      } else {
+        setError(error instanceof Error ? error.message : "Checkout failed");
+      }
+
       setIsProcessing(false);
       throw error;
     }

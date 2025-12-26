@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { Suspense } from "react";
+import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 
 const headingFont = Playfair_Display({
   variable: "--font-heading",
@@ -30,7 +32,9 @@ export default function RootLayout({
       <body
         className={`${headingFont.variable} ${bodyFont.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
+        </Providers>
       </body>
     </html>
   );

@@ -5,26 +5,19 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-interface StockCheckItem {
-  productId: string;
-  quantity: number;
-}
-
-interface StockCheckRequest {
-  items: StockCheckItem[];
-}
+import { validateRequest } from "@/lib/validation";
+import { stockCheckSchema } from "@/lib/validation/schemas/cart.schemas";
 
 export async function POST(request: NextRequest) {
   try {
-    const { items }: StockCheckRequest = await request.json();
+    // Validate request body
+    const validation = await validateRequest(request, stockCheckSchema);
 
-    if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: "Invalid request: items array required" },
-        { status: 400 }
-      );
+    if ("error" in validation) {
+      return validation.error;
     }
+
+    const { items } = validation.data;
 
     // Check stock for each item
     const stockStatus = await Promise.all(
@@ -71,4 +64,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

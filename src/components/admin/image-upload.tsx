@@ -103,8 +103,19 @@ export function ImageUpload({
               src={url}
               alt={`Upload ${index + 1}`}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error("❌ Image failed to load:", url);
+                e.currentTarget.src =
+                  'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23f3f4f6"/><text x="50%" y="50%" font-size="14" text-anchor="middle" dy=".3em" fill="%239ca3af">Failed to load</text></svg>';
+                e.currentTarget.style.objectFit = "contain";
+              }}
+              onLoad={(e) => {
+                console.log("✅ Image loaded successfully:", url);
+              }}
             />
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-2">
+
+            {/* Overlay with buttons - shows on hover */}
+            <div className="absolute inset-0 transition-all flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
@@ -131,6 +142,8 @@ export function ImageUpload({
                 </button>
               )}
             </div>
+
+            {/* Thumbnail badge */}
             {index === 0 && (
               <div className="absolute top-2 left-2 px-2 py-1 bg-emerald-500 text-white text-xs rounded">
                 Thumbnail
@@ -150,9 +163,7 @@ export function ImageUpload({
             {isUploading ? (
               <>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                <span className="text-sm text-gray-600">
-                  {uploadProgress}%
-                </span>
+                <span className="text-sm text-gray-600">{uploadProgress}%</span>
               </>
             ) : (
               <>
