@@ -61,7 +61,7 @@ export class AdminProductRepository {
       where.stock = 0;
     } else if (lowStock) {
       where.stock = {
-        lte: prisma.$queryRaw`"lowStockThreshold"`,
+        lte: prisma.product.fields.lowStockThreshold, // ✅ Type-safe
       };
     }
 
@@ -287,26 +287,27 @@ export class AdminProductRepository {
   async getProductStats(): Promise<ProductStats> {
     const [
       totalProducts,
-      lowStockProducts,
       outOfStockProducts,
       featuredProducts,
       allProducts,
     ] = await Promise.all([
       prisma.product.count(),
-      prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(*) as count 
-        FROM "Product" 
-        WHERE stock <= "lowStockThreshold" AND stock > 0
-      `,
       prisma.product.count({ where: { stock: 0 } }),
       prisma.product.count({ where: { isFeatured: true } }),
       prisma.product.findMany({
+        where: { stock: { gt: 0 } },
         select: {
           price: true,
           stock: true,
+          lowStockThreshold: true,
         },
       }),
     ]);
+
+    // Filter low stock products in-memory (type-safe, no SQL injection risk)
+    const lowStockProducts = allProducts.filter(
+      (p) => p.stock <= p.lowStockThreshold
+    ).length;
 
     const totalInventoryValue = allProducts.reduce((sum, product) => {
       return sum + product.price * product.stock;
@@ -314,7 +315,7 @@ export class AdminProductRepository {
 
     return {
       totalProducts,
-      lowStockProducts: Number(lowStockProducts[0]?.count || 0),
+      lowStockProducts,
       outOfStockProducts,
       featuredProducts,
       totalInventoryValue,

@@ -1,6 +1,6 @@
 // hooks/forms/useFormPersist.ts
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 export function useFormPersist<T extends Record<string, any>>(
@@ -14,9 +14,11 @@ export function useFormPersist<T extends Record<string, any>>(
 ) {
   const { enabled = true, excludeFields = [], debounceMs = 1000 } = options;
 
+  const hasLoadRef = useRef(false);
+
   // Load from localStorage on mount
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || hasLoadRef.current) return;
 
     const saved = localStorage.getItem(key);
     if (saved) {
@@ -28,11 +30,15 @@ export function useFormPersist<T extends Record<string, any>>(
             form.setValue(field as any, parsed[field]);
           }
         });
+        hasLoadRef.current = true;
       } catch (err) {
         console.error("Failed to parse saved form data:", err);
+        localStorage.removeItem(key);
       }
+    } else {
+      hasLoadRef.current = true;
     }
-  }, [key, enabled, form, excludeFields]);
+  }, [key, enabled]);
 
   // Save to localStorage on change (debounced)
   useEffect(() => {
@@ -56,6 +62,7 @@ export function useFormPersist<T extends Record<string, any>>(
 
   const clearSaved = () => {
     localStorage.removeItem(key);
+    hasLoadRef.current = false;
   };
 
   return { clearSaved };

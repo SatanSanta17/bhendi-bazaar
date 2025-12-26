@@ -1,0 +1,89 @@
+import { z } from 'zod';
+
+// Email validation
+export const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .email('Invalid email address')
+  .min(5, 'Email too short')
+  .max(255, 'Email too long');
+
+// Phone validation (Indian format)
+export const phoneSchema = z
+  .string()
+  .regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number')
+  .length(10, 'Phone must be exactly 10 digits');
+
+// UUID validation
+export const uuidSchema = z
+  .string()
+  .uuid('Invalid ID format');
+
+// Name validation
+export const nameSchema = z
+  .string()
+  .min(1, 'Name is required')
+  .max(255, 'Name too long')
+  .trim()
+  .refine((val) => !/[<>]/.test(val), 'Name contains invalid characters');
+
+// Currency/Price validation
+export const priceSchema = z
+  .number()
+  .positive('Price must be positive')
+  .max(10000000, 'Price exceeds maximum')
+  .finite('Price must be a valid number');
+
+// Quantity validation
+export const quantitySchema = z
+  .number()
+  .int('Quantity must be a whole number')
+  .positive('Quantity must be positive')
+  .max(1000, 'Quantity exceeds maximum');
+
+// Text content validation (prevent XSS)
+export const safeTextSchema = z
+  .string()
+  .max(5000, 'Text too long')
+  .trim()
+  .refine(
+    (val) => !/<script|javascript:|onerror=/i.test(val),
+    'Text contains potentially dangerous content'
+  );
+
+// URL validation
+export const urlSchema = z
+  .string()
+  .url('Invalid URL')
+  .max(2048, 'URL too long')
+  .refine(
+    (val) => val.startsWith('http://') || val.startsWith('https://'),
+    'URL must use HTTP or HTTPS protocol'
+  );
+
+// Postal code validation (Indian format)
+export const postalCodeSchema = z
+  .string()
+  .regex(/^\d{6}$/, 'Invalid postal code (must be 6 digits)');
+
+// Address validation
+export const addressSchema = z.object({
+  fullName: nameSchema.optional(),
+  name: nameSchema.optional(),
+  phone: phoneSchema,
+  email: emailSchema.optional(),
+  line1: z.string().min(5, 'Address line 1 too short').max(500, 'Address line 1 too long'),
+  line2: z.string().max(500, 'Address line 2 too long').optional(),
+  city: z.string().min(2, 'City too short').max(100, 'City too long'),
+  state: z.string().min(2, 'State too short').max(100, 'State too long').optional(),
+  postalCode: postalCodeSchema,
+  country: z.string().default('India'),
+});
+
+// Pagination validation
+export const paginationSchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+

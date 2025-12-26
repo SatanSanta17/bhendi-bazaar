@@ -10,7 +10,8 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth-config";
 import { profileService } from "@/server/services/profileService";
-import type { UpdateProfileInput } from "@/server/domain/profile";
+import { validateRequest } from "@/lib/validation";
+import { updateProfileSchema } from "@/lib/validation/schemas/profile.schemas";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -45,15 +46,18 @@ export async function PUT(req: Request) {
 
   const userId = (session.user as any).id as string;
 
-  let body: UpdateProfileInput;
-  try {
-    body = (await req.json()) as UpdateProfileInput;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  // Validate request body
+  const validation = await validateRequest(req, updateProfileSchema);
+
+  if ("error" in validation) {
+    return validation.error;
   }
 
   try {
-    const updated = await profileService.updateProfile(userId, body);
+    const updated = await profileService.updateProfile(
+      userId,
+      validation.data
+    );
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Failed to update profile:", error);

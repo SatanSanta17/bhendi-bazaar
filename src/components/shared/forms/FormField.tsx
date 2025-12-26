@@ -3,6 +3,17 @@
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
+import {
+  FieldValues,
+  Path,
+  Control,
+  Controller,
+  RegisterOptions,
+  ControllerRenderProps,
+  ControllerFieldState,
+  UseFormStateReturn,
+} from "react-hook-form";
 
 interface FormFieldProps {
   label: string;
@@ -65,4 +76,73 @@ export function FormTextarea({
   );
 }
 
-// TODO: Add other form fields here
+export function FormSelect({
+  label,
+  required,
+  error,
+  hint,
+  className,
+  children,
+  ...selectProps
+}: Omit<FormFieldProps, "children"> &
+  React.ComponentProps<typeof Select> & { children: React.ReactNode }) {
+  return (
+    <FormField
+      label={label}
+      required={required}
+      error={error}
+      hint={hint}
+      className={className}
+    >
+      <Select {...selectProps} aria-invalid={!!error}>
+        {children}
+      </Select>
+    </FormField>
+  );
+}
+// In FormField.tsx, update the FormController:
+
+interface FormControllerProps<T extends FieldValues> {
+  name: Path<T>;
+  control: Control<T>;
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  className?: string;
+  rules?: RegisterOptions<T>;
+  render: (props: {
+    field: ControllerRenderProps<T, Path<T>>;
+    fieldState: ControllerFieldState;
+    formState: UseFormStateReturn<T>;
+  }) => React.ReactElement;
+}
+
+export function FormController<T extends FieldValues>({
+  name,
+  control,
+  label,
+  required,
+  error,
+  hint,
+  className,
+  rules,
+  render,
+}: FormControllerProps<T>) {
+  return (
+    <FormField
+      label={label}
+      required={required}
+      error={error}
+      hint={hint}
+      className={className}
+    >
+      <Controller
+        name={name}
+        control={control}
+        rules={rules}
+        render={(props) => render(props)} // Pass the entire props object
+      />
+    </FormField>
+  );
+}

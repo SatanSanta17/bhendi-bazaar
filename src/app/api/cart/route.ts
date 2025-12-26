@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { cartService } from "@/server/services/cartService";
+import { validateRequest } from "@/lib/validation";
+import { updateCartSchema } from "@/lib/validation/schemas/cart.schemas";
 
 /**
  * API Routes act as the bridge between client and server
@@ -18,10 +20,7 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Call server service
@@ -46,24 +45,18 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const items = body.items; // Raw JSON - no type coupling
+    // Validate request body
+    const validation = await validateRequest(request, updateCartSchema);
 
-    if (!Array.isArray(items)) {
-      return NextResponse.json(
-        { error: "Invalid cart data" },
-        { status: 400 }
-      );
+    if ("error" in validation) {
+      return validation.error;
     }
 
     // Call server service (types converted at runtime)
-    await cartService.updateCart(session.user.id, items);
+    await cartService.updateCart(session.user.id, validation.data.items);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

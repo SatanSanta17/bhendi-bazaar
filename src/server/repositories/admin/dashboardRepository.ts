@@ -63,11 +63,13 @@ export class AdminDashboardRepository {
       ]),
       Promise.all([
         prisma.product.count(),
-        prisma.$queryRaw<[{ count: bigint }]>`
-          SELECT COUNT(*) as count 
-          FROM "Product" 
-          WHERE stock <= "lowStockThreshold" AND stock > 0
-        `,
+        prisma.product.findMany({
+          where: { stock: { gt: 0 } },
+          select: {
+            stock: true,
+            lowStockThreshold: true,
+          },
+        }),
         prisma.product.count({ where: { stock: 0 } }),
       ]),
       Promise.all([
@@ -116,7 +118,9 @@ export class AdminDashboardRepository {
       },
       products: {
         total: productStats[0],
-        lowStock: Number(productStats[1][0]?.count || 0),
+        lowStock: productStats[1].filter(
+          (p) => p.stock <= p.lowStockThreshold
+        ).length,
         outOfStock: productStats[2],
       },
       customers: {

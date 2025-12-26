@@ -21,7 +21,7 @@ export function PriceDisplay({
   showBadge = true,
   className,
 }: PriceDisplayProps) {
-  const hasOffer = salePrice && salePrice < price;
+  const hasOffer = salePrice != null && salePrice > 0 && salePrice < price;
   const displayPrice = hasOffer ? salePrice : price;
 
   const sizeClasses = {

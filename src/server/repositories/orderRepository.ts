@@ -21,9 +21,9 @@ import type {
 /**
  * Helper to generate order code
  */
-function generateOrderCode(count: number): string {
-  const base = 1000 + count;
-  return `BB-${base}`;
+function generateOrderCode(): string {
+  const code = `BB-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  return code;
 }
 
 /**
@@ -169,9 +169,8 @@ export class OrderRepository {
         }
       }
 
-      // Step 2: Get order count and generate code
-      const orderCount = await tx.order.count();
-      const code = generateOrderCode(orderCount);
+      // Step 2: Generate code
+      const code = generateOrderCode();
 
       // Step 3: Create the order
       const order = await tx.order.create({

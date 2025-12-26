@@ -1,0 +1,74 @@
+// hooks/admin/useCategoryForm.ts
+
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { adminCategoryService } from "@/services/admin/categoryService";
+import type {
+  AdminCategory,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from "@/domain/admin";
+
+interface UseCategoryFormOptions {
+  category?: AdminCategory;
+  isEdit: boolean;
+  onClearDraft?: () => void;
+}
+
+export function useCategoryForm({
+  category,
+  isEdit,
+  onClearDraft,
+}: UseCategoryFormOptions) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
+
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const submitCategory = async (data: CreateCategoryInput) => {
+    // Additional validation
+    if (!data.heroImage) {
+      throw new Error("Please upload a hero image");
+    }
+
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      if (isEdit && category) {
+        // Update existing category
+        await adminCategoryService.updateCategory(
+          category.id,
+          data as UpdateCategoryInput
+        );
+        setSuccessMessage("Category updated successfully!");
+      } else {
+        // Create new category
+        await adminCategoryService.createCategory(data);
+        setSuccessMessage("Category created successfully!");
+        // Clear the saved draft after successful creation
+        onClearDraft?.();
+      }
+
+      // Navigate back to categories list
+      setTimeout(() => {
+        router.push(returnUrl || "/admin/categories");
+      }, 500);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to save category";
+      setError(errorMessage);
+      throw err; // Re-throw so form knows it failed
+    }
+  };
+
+  return {
+    submitCategory,
+    error,
+    successMessage,
+    setError,
+  };
+}
+

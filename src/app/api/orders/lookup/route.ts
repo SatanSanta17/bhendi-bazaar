@@ -6,28 +6,51 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { orderService } from "@/server/services/orderService";
-
-interface LookupBody {
-  code: string;
-}
+import {
+  apiRateLimit,
+  getClientIp,
+  formatTimeRemaining,
+} from "@/lib/rate-limit";
+import { validateRequest } from "@/lib/validation";
+import { orderLookupSchema } from "@/lib/validation/schemas/order.schemas";
 
 export async function POST(request: NextRequest) {
-  let body: LookupBody;
-  try {
-    body = (await request.json()) as LookupBody;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+  // Rate limit check (using apiRateLimit for lookup)
+  const ip = getClientIp(request);
+  const { success, limit, remaining, reset } = await apiRateLimit.limit(ip);
 
-  if (!body.code) {
+  if (!success) {
+    const timeRemaining = reset - Date.now();
     return NextResponse.json(
-      { error: "Order code is required" },
-      { status: 400 }
+      {
+        error: `Too many lookup requests. Please try again in ${formatTimeRemaining(
+          timeRemaining
+        )}.`,
+        retryAfter: Math.ceil(timeRemaining / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+          "Retry-After": Math.ceil(timeRemaining / 1000).toString(),
+        },
+      }
     );
   }
 
+  // Validate request body
+  const validation = await validateRequest(request, orderLookupSchema);
+
+  if ("error" in validation) {
+    return validation.error;
+  }
+
+  const { code } = validation.data;
+
   try {
-    const order = await orderService.lookupOrderByCode(body.code);
+    const order = await orderService.lookupOrderByCode(code);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });

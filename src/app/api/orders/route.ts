@@ -9,7 +9,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { orderService } from "@/server/services/orderService";
-import type { CreateOrderInput } from "@/server/domain/order";
+import {
+  orderRateLimit,
+  getClientIp,
+  formatTimeRemaining,
+} from "@/lib/rate-limit";
+import { validateRequest } from "@/lib/validation";
+import { createOrderSchema } from "@/lib/validation/schemas/order.schemas";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -36,22 +42,54 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit check
+  const ip = getClientIp(request);
+  const { success, limit, remaining, reset } = await orderRateLimit.limit(ip);
+
+  if (!success) {
+    const timeRemaining = reset - Date.now();
+    return NextResponse.json(
+      {
+        error: `Too many order requests. Please try again in ${formatTimeRemaining(
+          timeRemaining
+        )}.`,
+        retryAfter: Math.ceil(timeRemaining / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+          "Retry-After": Math.ceil(timeRemaining / 1000).toString(),
+        },
+      }
+    );
+  }
+
   const session = await getServerSession(authOptions);
 
   // Orders can be created by both authenticated users and guests
   const userId = session?.user ? (session.user as any).id : undefined;
 
-  let body: CreateOrderInput;
-  try {
-    body = (await request.json()) as CreateOrderInput;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  // Validate request body
+  const validation = await validateRequest(request, createOrderSchema);
+
+  if ("error" in validation) {
+    return validation.error;
   }
 
   try {
+    // Convert client-side items (salePrice?: number) to server-side items (salePrice: number | null)
+    const serverItems = validation.data.items.map((item) => ({
+      ...item,
+      salePrice: item.salePrice ?? null,
+    }));
+
     // Add userId to the order if user is authenticated
-    const orderInput: CreateOrderInput = {
-      ...body,
+    const orderInput = {
+      ...validation.data,
+      items: serverItems,
       userId,
     };
 
