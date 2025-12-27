@@ -29,37 +29,34 @@ model Category {
 }
 
 model Product {
-  id                String   @id @default(cuid())
-  slug              String   @unique
+  id                String        @id @default(cuid())
+  slug              String        @unique
   name              String
-  description       String   @db.Text
+  description       String        @db.Text
   price             Float
   salePrice         Float?
-  currency          String   @default("INR")
+  currency          String        @default("INR")
   categoryId        String
-  category          Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  tags              String[] // Array of tags
-  isFeatured        Boolean  @default(false)
-  isHero            Boolean  @default(false)
-  isOnOffer         Boolean  @default(false)
-  rating            Float    @default(0)
-  reviewsCount      Int      @default(0)
-  images            String[] // Array of image URLs
-  thumbnail         String // Main product image URL
-  sizes             String[] // Available sizes
-  colors            String[] // Available colors
-  stock             Int      @default(0)
-  sku               String?  @unique // Stock Keeping Unit
-  lowStockThreshold Int      @default(10) // Alert when stock falls below this
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  category          Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags              String[]      // Array of tags
+  
+  flags             String[] @default([])
+  
+  rating            Float         @default(0)
+  reviewsCount      Int           @default(0)
+  images            String[]      // Array of image URLs
+  thumbnail         String        // Main product image URL
+  sizes             String[]      // Available sizes
+  colors            String[]      // Available colors
+  stock             Int           @default(0)
+  sku               String?       @unique // Stock Keeping Unit
+  lowStockThreshold Int           @default(10) // Alert when stock falls below this
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
   reviews           Review[]
 
   @@index([slug])
   @@index([categoryId])
-  @@index([isFeatured])
-  @@index([isHero])
-  @@index([isOnOffer])
   @@index([createdAt])
   @@index([stock])
 }

@@ -1,4 +1,5 @@
 import type { Product } from "@/domain/product";
+import { ProductFlag } from "@/types/product";
 
 const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL;
 
@@ -14,9 +15,7 @@ export const products: Product[] = [
     currency: "INR",
     categorySlug: "abayas",
     tags: ["abaya", "evening", "embroidered", "emerald"],
-    isFeatured: true,
-    isHero: true,
-    isOnOffer: true,
+    flags: [ProductFlag.FEATURED, ProductFlag.HERO, ProductFlag.ON_OFFER],
     rating: 4.8,
     reviewsCount: 128,
     stock: 25,
@@ -41,7 +40,7 @@ export const products: Product[] = [
     currency: "INR",
     categorySlug: "abayas",
     tags: ["jilbab", "everyday", "black"],
-    isFeatured: true,
+    flags: [ProductFlag.FEATURED, ProductFlag.HERO, ProductFlag.ON_OFFER],
     rating: 4.6,
     reviewsCount: 64,
     stock: 15,
@@ -67,8 +66,7 @@ export const products: Product[] = [
     currency: "INR",
     categorySlug: "attars",
     tags: ["attar", "oud", "unisex"],
-    isFeatured: true,
-    isOnOffer: true,
+    flags: [ProductFlag.FEATURED, ProductFlag.HERO, ProductFlag.ON_OFFER],
     rating: 4.9,
     reviewsCount: 210,
     stock: 50,

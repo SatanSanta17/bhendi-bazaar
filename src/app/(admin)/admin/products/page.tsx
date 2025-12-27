@@ -12,6 +12,7 @@ import { useMutation } from "@/hooks/core/useMutation";
 import { PriceDisplay } from "@/components/shared/PriceDisplay";
 import { StockBadge } from "@/components/shared/badges/StatusBadge";
 import type { AdminProduct, ProductListFilters } from "@/domain/admin";
+import { ProductFlag } from "@/types/product";
 
 export default function AdminProductsPage() {
   const [filters, setFilters] = useState<ProductListFilters>({
@@ -113,19 +114,29 @@ export default function AdminProductsPage() {
       label: "Badges",
       render: (product) => (
         <div className="flex flex-wrap gap-1">
-          {product.isFeatured && (
+          {product.flags.includes(ProductFlag.FEATURED) && (
             <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
               Featured
             </span>
           )}
-          {product.isOnOffer && (
+          {product.flags.includes(ProductFlag.ON_OFFER) && (
             <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">
               Offer
             </span>
           )}
-          {product.isHero && (
+          {product.flags.includes(ProductFlag.HERO) && (
             <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
               Hero
+            </span>
+          )}
+          {product.flags.includes(ProductFlag.NEW_ARRIVAL) && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+              New
+            </span>
+          )}
+          {product.flags.includes(ProductFlag.CLEARANCE_SALE) && (
+            <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
+              Clearance
             </span>
           )}
         </div>

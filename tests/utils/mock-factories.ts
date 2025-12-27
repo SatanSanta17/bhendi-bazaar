@@ -8,30 +8,29 @@ import type { Product } from '@/domain/product';
 import type { CartItem } from '@/domain/cart';
 import type { ServerOrder, OrderAddress, OrderItem } from '@/server/domain/order';
 import type { AuthUser } from '@/lib/auth';
+import { ProductFlag } from "@/types/product";
 
 /**
  * Create a mock product with default values
  */
 export const createMockProduct = (overrides?: Partial<Product>): Product => ({
-  id: 'product-1',
-  slug: 'test-product',
-  name: 'Test Product',
-  description: 'Test product description',
+  id: "product-1",
+  slug: "test-product",
+  name: "Test Product",
+  description: "Test product description",
   price: 100,
   salePrice: 80,
-  currency: 'INR',
-  categorySlug: 'test-category',
-  tags: ['test'],
-  isFeatured: false,
-  isHero: false,
-  isOnOffer: false,
+  currency: "INR",
+  categorySlug: "test-category",
+  tags: ["test"],
+  flags: [ProductFlag.FEATURED],
   rating: 4.5,
   reviewsCount: 10,
-  images: ['https://example.com/image.jpg'],
-  thumbnail: 'https://example.com/thumb.jpg',
+  images: ["https://example.com/image.jpg"],
+  thumbnail: "https://example.com/thumb.jpg",
   options: {
-    sizes: ['M', 'L', 'XL'],
-    colors: ['Red', 'Blue'],
+    sizes: ["M", "L", "XL"],
+    colors: ["Red", "Blue"],
   },
   stock: 10,
   lowStockThreshold: 5,

@@ -5,6 +5,8 @@
  * They mirror the API response structure and are used for type safety.
  */
 
+import { ProductFlag } from "@/types/product";
+
 export type ProductId = string;
 export type CategorySlug = string;
 
@@ -18,9 +20,7 @@ export interface Product {
   currency: "INR";
   categorySlug: CategorySlug;
   tags: string[];
-  isFeatured?: boolean;
-  isHero?: boolean;
-  isOnOffer?: boolean;
+  flags?: ProductFlag[];
   rating: number;
   reviewsCount: number;
   images: string[];

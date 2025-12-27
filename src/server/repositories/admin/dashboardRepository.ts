@@ -10,6 +10,7 @@ import type {
   TopProduct,
   RevenueChart,
 } from "@/server/domain/admin/dashboard";
+import { ProductFlag } from "@/types/product";
 
 export class AdminDashboardRepository {
   /**
@@ -118,9 +119,8 @@ export class AdminDashboardRepository {
       },
       products: {
         total: productStats[0],
-        lowStock: productStats[1].filter(
-          (p) => p.stock <= p.lowStockThreshold
-        ).length,
+        lowStock: productStats[1].filter((p) => p.stock <= p.lowStockThreshold)
+          .length,
         outOfStock: productStats[2],
       },
       customers: {
@@ -203,7 +203,7 @@ export class AdminDashboardRepository {
     // This would require order item parsing from JSON
     // For now, return featured products as placeholder
     const products = await prisma.product.findMany({
-      where: { isFeatured: true },
+      where: { flags: { has: ProductFlag.FEATURED } },
       take: limit,
       orderBy: { reviewsCount: "desc" },
       select: {
