@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
   if (
     authRateLimitMiddleware &&
     (pathname.startsWith("/api/auth/signin") ||
-       pathname.startsWith("/api/auth/callback"))
+      pathname.startsWith("/api/auth/callback"))
   ) {
     try {
       const ip = getClientIp(request);
@@ -89,27 +89,6 @@ export async function middleware(request: NextRequest) {
     } catch (error) {
       console.error("Rate limiting error:", error);
       // Continue without rate limiting on error
-    }
-  }
-
-  // Redirect authenticated admins from home to admin dashboard
-  if (pathname === "/" || pathname === "/signin") {
-    if (!process.env.NEXTAUTH_SECRET) {
-      console.error("⚠️ NEXTAUTH_SECRET not configured");
-      return NextResponse.next();
-    }
-
-    try {
-      const token = await getToken({
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET,
-      });
-
-      if (token && (token as any).role === "ADMIN") {
-        return NextResponse.redirect(new URL("/admin", request.url));
-      }
-    } catch (error) {
-      console.error("Error checking admin redirect:", error);
     }
   }
 
