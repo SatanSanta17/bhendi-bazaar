@@ -95,21 +95,23 @@ model Cart {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  name         String?
-  email        String?    @unique
-  mobile       String?    @unique
-  passwordHash String? // for credentials-based auth
-  role         String     @default("USER") // USER, ADMIN
-  isBlocked    Boolean    @default(false) // Admin can block users
-  lastActiveAt DateTime   @default(now())
-  profile      Profile?
-  cart         Cart?
-  orders       Order[]
-  reviews      Review[]
-  adminLogs    AdminLog[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  name            String?
+  email           String?    @unique
+  emailVerified   DateTime?  // Keep this for NextAuth compatibility
+  isEmailVerified Boolean    @default(false) // Our custom field
+  mobile          String?    @unique
+  passwordHash    String?
+  role            String     @default("USER")
+  isBlocked       Boolean    @default(false)
+  lastActiveAt    DateTime   @default(now())
+  profile         Profile?
+  cart            Cart?
+  orders          Order[]
+  reviews         Review[]
+  adminLogs       AdminLog[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   accounts Account[]
   sessions Session[]
@@ -117,6 +119,7 @@ model User {
   @@index([role])
   @@index([isBlocked])
   @@index([lastActiveAt])
+  @@index([isEmailVerified])
 }
 
 model Profile {

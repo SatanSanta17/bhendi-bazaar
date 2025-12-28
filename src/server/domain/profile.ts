@@ -31,6 +31,8 @@ export interface ServerUser {
   name: string | null;
   email: string | null;
   mobile: string | null;
+  isEmailVerified: boolean;
+  emailVerifiedAt: Date | null;
 }
 
 export interface ServerProfileData {

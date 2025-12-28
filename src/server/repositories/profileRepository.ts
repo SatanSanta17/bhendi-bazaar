@@ -54,6 +54,8 @@ export class ProfileRepository {
         name: user.name ?? null,
         email: user.email ?? null,
         mobile: user.mobile ?? null,
+        isEmailVerified: user.isEmailVerified,
+        emailVerifiedAt: user.emailVerified ?? null,
       },
       profile: {
         id: profile.id,
@@ -73,16 +75,85 @@ export class ProfileRepository {
   ): Promise<ServerProfileData> {
     const { name, email, mobile, profilePic, addresses } = input;
 
+    // Check if email is changing
+    let isEmailChanging = false;
+    if (email !== undefined) {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+      isEmailChanging = email !== currentUser?.email;
+
+      // Additional safeguard: Check if new email is already taken
+      if (isEmailChanging && email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true },
+        });
+
+        if (existingUser && existingUser.id !== userId) {
+          throw new Error(
+            "This email is already registered to another account"
+          );
+        }
+      }
+    }
+
+    // Check if mobile is changing and already taken
+    if (mobile !== undefined) {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { mobile: true },
+      });
+      const isMobileChanging = mobile !== currentUser?.mobile;
+
+      if (isMobileChanging && mobile) {
+        const existingMobile = await prisma.user.findUnique({
+          where: { mobile },
+          select: { id: true },
+        });
+
+        if (existingMobile && existingMobile.id !== userId) {
+          throw new Error(
+            "This mobile number is already registered to another account"
+          );
+        }
+      }
+    }
+
     // Update User table if user fields are provided
     if (name !== undefined || email !== undefined || mobile !== undefined) {
       await prisma.user.update({
         where: { id: userId },
         data: {
           ...(name !== undefined && { name }),
-          ...(email !== undefined && { email }),
+          ...(email !== undefined && {
+            email,
+            // If email is changing, mark as unverified
+            ...(isEmailChanging && { isEmailVerified: false }),
+          }),
           ...(mobile !== undefined && { mobile }),
         },
       });
+
+      // If email changed, send verification email
+      if (isEmailChanging && email) {
+        try {
+          const { emailService } = await import(
+            "@/server/services/emailService"
+          );
+          // Delete any existing verification tokens
+          await prisma.verificationToken.deleteMany({
+            where: { identifier: userId },
+          });
+          // Send new verification email
+          await emailService.sendVerificationEmail(userId, email);
+          console.log(`✅ Verification email sent to new address: ${email}`);
+        } catch (emailError) {
+          console.error("Failed to send verification email:", emailError);
+          // Don't fail the update if email sending fails
+        }
+      }
     }
 
     // Get the user with profile
@@ -115,6 +186,8 @@ export class ProfileRepository {
         name: user.name ?? null,
         email: user.email ?? null,
         mobile: user.mobile ?? null,
+        isEmailVerified: user.isEmailVerified,
+        emailVerifiedAt: user.emailVerified ?? null,
       },
       profile: {
         id: nextProfile.id,

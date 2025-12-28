@@ -32,6 +32,8 @@ export interface User {
   name: string | null;
   email: string | null;
   mobile: string | null;
+  isEmailVerified: boolean;
+  emailVerifiedAt: Date | null;
 }
 
 // Aggregate root - combines user + profile for this context

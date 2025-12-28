@@ -1,5 +1,6 @@
 "use client";
 
+import { useProfileContext } from "@/context/ProfileContext";
 import { useAuth } from "@/lib/auth";
 import type { ProfileAddress } from "@/domain/profile";
 import { orderService } from "@/services/orderService";
@@ -16,10 +17,13 @@ import { EmptyState } from "@/components/shared/states/EmptyState";
 import { Package } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+
 export default function ProfilePage() {
   const { status } = useAuth();
   const isAuthenticated = status === "authenticated";
   const router = useRouter();
+
+  // Use context instead of hook
   const {
     user,
     profile,
@@ -29,7 +33,7 @@ export default function ProfilePage() {
     updateAddresses,
     updateUserInfo,
     updateProfilePic,
-  } = useProfile(isAuthenticated);
+  } = useProfileContext();
 
   const {
     data: orders,
