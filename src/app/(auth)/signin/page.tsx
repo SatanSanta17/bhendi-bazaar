@@ -82,8 +82,15 @@ export default function SignInPage() {
           />
         </div>
 
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         {error && <p className="text-[0.7rem] text-red-600">{error}</p>}
-
         <Button
           type="submit"
           disabled={isLoading}
@@ -91,7 +98,6 @@ export default function SignInPage() {
         >
           {isLoading ? "Signing in..." : "Sign in"}
         </Button>
-
         <div className="flex items-center gap-2 pt-2">
           <span className="h-px flex-1 bg-border/70" />
           <span className="text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground">
@@ -99,7 +105,6 @@ export default function SignInPage() {
           </span>
           <span className="h-px flex-1 bg-border/70" />
         </div>
-
         <Button
           type="button"
           variant="outline"
@@ -108,13 +113,11 @@ export default function SignInPage() {
         >
           Continue with Google
         </Button>
-
         <p className="pt-2 text-center text-[0.7rem] text-muted-foreground">
           New to Bhendi Bazaar?{" "}
           <Link href="/signup" className="underline underline-offset-4">
             Create an account
           </Link>
-          .
         </p>
       </form>
     </div>
