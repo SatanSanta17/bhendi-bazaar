@@ -1,21 +1,29 @@
 /**
  * Prisma Database Seed Script
  *
- * This script populates the database with initial data for:
+ * This script populates the database with realistic seed data for:
+ * - Users (with profiles and addresses)
  * - Categories
  * - Products
- * - Sample Reviews
+ * - Orders
+ * - Reviews
+ * - Abandoned Carts
  *
  * Run with: npx prisma db seed
  */
 
-
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { categories } from "../src/data/categories";
-import { products } from "../src/data/products";
 import { hash } from "bcryptjs";
+import {
+  seedUsers,
+  seedCategories,
+  seedProducts,
+  seedOrders,
+  seedReviews,
+  seedCarts,
+} from "../src/data/seed";
 
 // Use the same adapter configuration as the main app
 const pool = new Pool({
@@ -33,147 +41,238 @@ async function main() {
 
   // Clear existing data (in correct order to respect foreign keys)
   console.log("🗑️  Clearing existing data...");
+  await prisma.cart.deleteMany();
   await prisma.review.deleteMany();
+  await prisma.order.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
+  await prisma.profile.deleteMany();
+  await prisma.adminLog.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.verificationToken.deleteMany();
+  await prisma.user.deleteMany();
   console.log("✅ Existing data cleared\n");
 
-  // Seed Categories
-  console.log("📦 Seeding categories...");
-  const categoryMap = new Map<string, string>(); // slug -> id mapping
+  // ====================
+  // SEED USERS
+  // ====================
+  console.log("👥 Seeding users and profiles...");
+  for (const userData of seedUsers) {
+    // Hash the password
+    const hashedPassword = await hash(userData.passwordPlain, 10);
 
-  for (const category of categories) {
-    const created = await prisma.category.create({
+    // Create user
+    const user = await prisma.user.create({
       data: {
-        slug: category.slug,
-        name: category.name,
-        description: category.description,
-        heroImage: category.heroImage,
-        accentColorClass: category.accentColorClass,
-        order: category.order,
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        passwordHash: hashedPassword,
+        role: userData.role,
+        mobile: userData.mobile,
+        isEmailVerified: userData.isEmailVerified,
+        profile: {
+          create: {
+            addresses: userData.profile.addresses as any,
+            profilePic: userData.profile.profilePic,
+          },
+        },
       },
     });
-    categoryMap.set(category.slug, created.id);
+
+    console.log(`  ✓ ${user.name} (${user.role}) - ${user.email}`);
+  }
+  console.log(`✅ ${seedUsers.length} users seeded\n`);
+
+  // ====================
+  // SEED CATEGORIES
+  // ====================
+  console.log("📦 Seeding categories...");
+  for (const categoryData of seedCategories) {
+    const category = await prisma.category.create({
+      data: {
+        id: categoryData.id,
+        slug: categoryData.slug,
+        name: categoryData.name,
+        description: categoryData.description,
+        heroImage: categoryData.heroImage,
+        accentColorClass: categoryData.accentColorClass,
+        order: categoryData.order,
+      },
+    });
     console.log(`  ✓ ${category.name}`);
   }
-  console.log(`✅ ${categories.length} categories seeded\n`);
+  console.log(`✅ ${seedCategories.length} categories seeded\n`);
 
-  // Seed Products
+  // ====================
+  // SEED PRODUCTS
+  // ====================
   console.log("🛍️  Seeding products...");
-  let productCount = 0;
-
-  for (const product of products) {
-    const categoryId = categoryMap.get(product.categorySlug);
-    if (!categoryId) {
-      console.warn(`  ⚠️  Category not found for product: ${product.name}`);
-      continue;
-    }
-
-    await prisma.product.create({
+  for (const productData of seedProducts) {
+    const product = await prisma.product.create({
       data: {
-        slug: product.slug,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        salePrice: product.salePrice || null,
-        currency: product.currency,
-        categoryId: categoryId,
-        tags: product.tags,
-        flags: product.flags,
-        rating: product.rating,
-        reviewsCount: product.reviewsCount,
-        images: product.images,
-        thumbnail: product.thumbnail,
-        sizes: product.options?.sizes || [],
-        colors: product.options?.colors || [],
-        stock: 100, // Default stock
+        id: productData.id,
+        slug: productData.slug,
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        salePrice: productData.salePrice || null,
+        currency: productData.currency,
+        categoryId: productData.categoryId,
+        tags: productData.tags,
+        flags: productData.flags,
+        rating: productData.rating,
+        reviewsCount: productData.reviewsCount,
+        images: productData.images,
+        thumbnail: productData.thumbnail,
+        sizes: productData.sizes,
+        colors: productData.colors,
+        stock: productData.stock,
+        sku: productData.sku,
+        lowStockThreshold: productData.lowStockThreshold,
       },
     });
-    productCount++;
-    console.log(`  ✓ ${product.name}`);
+    console.log(`  ✓ ${product.name} (Stock: ${product.stock})`);
   }
-  console.log(`✅ ${productCount} products seeded\n`);
+  console.log(`✅ ${seedProducts.length} products seeded\n`);
 
-  // Seed Sample Reviews (optional)
-  console.log("⭐ Seeding sample reviews...");
-  const sampleReviews = [
-    {
-      productSlug: "velvet-embroidered-kurta",
-      rating: 5,
-      title: "Absolutely stunning!",
-      comment:
-        "The embroidery work is exquisite. Perfect for special occasions.",
-      userName: "Aisha Khan",
-      isVerified: true,
-    },
-    {
-      productSlug: "velvet-embroidered-kurta",
-      rating: 4,
-      title: "Beautiful but runs small",
-      comment: "Gorgeous piece but I'd recommend sizing up.",
-      userName: "Fatima Ahmed",
-      isVerified: true,
-    },
-    {
-      productSlug: "silk-palazzo-pants",
-      rating: 5,
-      title: "Super comfortable",
-      comment: "Perfect fit and the silk quality is top-notch!",
-      userName: "Zainab Ali",
-      isVerified: true,
-    },
-    {
-      productSlug: "cotton-printed-dupatta",
-      rating: 4,
-      title: "Nice colors",
-      comment: "The print is vibrant and it's soft to touch.",
-      userName: "Mariam Hassan",
-      isVerified: false,
-    },
-  ];
-
-  let reviewCount = 0;
-  for (const review of sampleReviews) {
-    const product = await prisma.product.findUnique({
-      where: { slug: review.productSlug },
+  // ====================
+  // SEED ORDERS
+  // ====================
+  console.log("📦 Seeding orders...");
+  for (const orderData of seedOrders) {
+    const order = await prisma.order.create({
+      data: {
+        id: orderData.id,
+        code: orderData.code,
+        userId: orderData.userId,
+        items: orderData.items as any,
+        totals: orderData.totals,
+        status: orderData.status,
+        address: orderData.address as any,
+        notes: orderData.notes,
+        paymentMethod: orderData.paymentMethod,
+        paymentStatus: orderData.paymentStatus,
+        paymentId: orderData.paymentId,
+        estimatedDelivery: orderData.estimatedDelivery,
+        createdAt: orderData.createdAt,
+      },
     });
+    console.log(
+      `  ✓ ${order.code} - ${order.status} (${
+        orderData.userId ? "User" : "Guest"
+      })`
+    );
+  }
+  console.log(`✅ ${seedOrders.length} orders seeded\n`);
 
-    if (product) {
-      await prisma.review.create({
+  // ====================
+  // SEED REVIEWS
+  // ====================
+  console.log("⭐ Seeding reviews...");
+  for (const reviewData of seedReviews) {
+    const review = await prisma.review.create({
+      data: {
+        id: reviewData.id,
+        productId: reviewData.productId,
+        userId: reviewData.userId,
+        rating: reviewData.rating,
+        title: reviewData.title,
+        comment: reviewData.comment,
+        userName: reviewData.userName,
+        isVerified: reviewData.isVerified,
+        isApproved: reviewData.isApproved,
+        createdAt: reviewData.createdAt,
+      },
+    });
+    console.log(
+      `  ✓ ${review.userName} - ${review.rating}⭐ on product ${reviewData.productId}`
+    );
+  }
+  console.log(`✅ ${seedReviews.length} reviews seeded\n`);
+
+  // ====================
+  // UPDATE PRODUCT RATINGS
+  // ====================
+  console.log("📊 Calculating product ratings...");
+  for (const product of seedProducts) {
+    const reviews = seedReviews.filter((r) => r.productId === product.id);
+    if (reviews.length > 0) {
+      const avgRating =
+        reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      await prisma.product.update({
+        where: { id: product.id },
         data: {
-          productId: product.id,
-          rating: review.rating,
-          title: review.title,
-          comment: review.comment,
-          userName: review.userName,
-          isVerified: review.isVerified,
+          rating: Math.round(avgRating * 10) / 10, // Round to 1 decimal
+          reviewsCount: reviews.length,
         },
       });
-      reviewCount++;
+      console.log(
+        `  ✓ ${product.name} - ${avgRating.toFixed(1)}⭐ (${
+          reviews.length
+        } reviews)`
+      );
     }
   }
-  console.log(`✅ ${reviewCount} reviews seeded\n`);
+  console.log("✅ Product ratings updated\n");
 
-  // Create admin user
-  const hashedPassword = await hash("admin123", 10);
+  // ====================
+  // SEED ABANDONED CARTS
+  // ====================
+  console.log("🛒 Seeding abandoned carts...");
+  for (const cartData of seedCarts) {
+    const cart = await prisma.cart.create({
+      data: {
+        id: cartData.id,
+        userId: cartData.userId,
+        items: cartData.items as any,
+        updatedAt: cartData.updatedAt,
+      },
+    });
+    console.log(
+      `  ✓ Cart for user ${cartData.userId} - ${
+        cartData.items.length
+      } items (${Math.floor(
+        (Date.now() - cartData.updatedAt.getTime()) / (1000 * 60 * 60 * 24)
+      )} days old)`
+    );
+  }
+  console.log(`✅ ${seedCarts.length} abandoned carts seeded\n`);
 
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@bhendibazaar.com" },
-    update: {
-      role: "ADMIN",
-      name: "Admin User",
-    },
-    create: {
-      email: "admin@bhendibazaar.com",
-      name: "Admin User",
-      role: "ADMIN",
-      passwordHash: hashedPassword,
-    },
-  });
-
-  console.log("✅ Admin user created:", admin.email);
-
-  console.log("🎉 Database seed completed successfully!");
+  // ====================
+  // SUMMARY
+  // ====================
+  console.log("🎉 Database seed completed successfully!\n");
+  console.log("📊 Summary:");
+  console.log(
+    `   • ${seedUsers.length} users (${
+      seedUsers.filter((u) => u.role === "ADMIN").length
+    } admins, ${
+      seedUsers.filter((u) => u.role === "USER").length
+    } regular users)`
+  );
+  console.log(`   • ${seedCategories.length} categories`);
+  console.log(`   • ${seedProducts.length} products`);
+  console.log(
+    `   • ${seedOrders.length} orders (${
+      seedOrders.filter((o) => o.userId === null).length
+    } guest orders)`
+  );
+  console.log(
+    `   • ${seedReviews.length} reviews (${
+      seedReviews.filter((r) => r.isVerified).length
+    } verified)`
+  );
+  console.log(`   • ${seedCarts.length} abandoned carts`);
+  console.log("\n💡 Next steps:");
+  console.log("   1. Upload product/category images to Vercel Blob");
+  console.log("   2. Update image URLs in seed data files");
+  console.log("   3. Re-run seed to update with real image URLs");
+  console.log("\n📝 Default credentials:");
+  console.log("   Admin: admin@bhendibazaar.com / Admin@123");
+  console.log("   Manager: manager@bhendibazaar.com / Admin@123");
+  console.log("   Users: [email from seed] / Test@123");
 }
 
 main()
@@ -184,5 +283,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
-

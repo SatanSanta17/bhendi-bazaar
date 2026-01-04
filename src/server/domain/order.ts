@@ -13,22 +13,23 @@ export type PaymentStatus = "pending" | "paid" | "failed";
 
 export interface OrderAddress {
   fullName: string;
-  phone: string;
+  mobile: string;
   email?: string;
-  line1: string;
-  line2?: string;
+  addressLine1: string;
+  addressLine2?: string;
   city: string;
   state: string;
-  postalCode: string;
+  pincode: string;
   country: string;
 }
 
 export interface OrderItem {
   productId: string;
-  name: string;
+  productName: string;
+  productSlug: string;
   thumbnail: string;
   price: number;
-  salePrice: number | null;
+  salePrice?: number;
   quantity: number;
   selectedVariant?: string;
 }

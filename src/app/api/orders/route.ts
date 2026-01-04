@@ -80,11 +80,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Convert client-side items (salePrice?: number) to server-side items (salePrice: number | null)
-    const serverItems = validation.data.items.map((item) => ({
-      ...item,
-      salePrice: item.salePrice ?? null,
-    }));
+    // Convert client-side items to server-side items
+    const serverItems = validation.data.items.map((item) => {
+      const { id, salePrice, ...rest } = item;
+
+      // Build the server item - only include salePrice if it has a value
+      const serverItem: any = {
+        ...rest,
+      };
+
+      // Only add salePrice if it's a valid number (not null or undefined)
+      if (typeof salePrice === "number") {
+        serverItem.salePrice = salePrice;
+      }
+
+      return serverItem;
+    });
 
     // Add userId to the order if user is authenticated
     const orderInput = {

@@ -110,6 +110,16 @@ export class ProductRepository {
   }
 
   /**
+   * Find products by slugs
+   */
+  async findBySlugs(slugs: string[]): Promise<ServerProduct[]> {
+    const products = await prisma.product.findMany({
+      where: { slug: { in: slugs } },
+    });
+    return products.map(toServerProduct);
+  }
+
+  /**
    * Find similar products
    */
   async findSimilar(slug: string, limit = 4): Promise<ServerProduct[]> {

@@ -3,7 +3,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
-import { useCartSync } from "@/hooks/useCartSync";
+import { useCartSync } from "@/hooks/cart/useCartSync";
 import { ProfileProvider } from "@/context/ProfileContext";
 
 function CartSyncProvider({ children }: { children: React.ReactNode }) {

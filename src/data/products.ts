@@ -1,5 +1,5 @@
 import type { Product } from "@/domain/product";
-import { ProductFlag } from "@/types/product";
+import { ProductFlag } from "../types/product";
 
 const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL;
 

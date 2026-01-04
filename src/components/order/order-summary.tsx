@@ -30,13 +30,13 @@ export function OrderSummary({ order }: OrderSummaryProps) {
         )}
       </header>
       <div className="space-y-1 text-xs">
-        {order.items.map((item) => (
+        {order.items.map((item, index) => (
           <div
-            key={item.id}
+            key={`${item.productId}-${index}`} // ✅ Use productId + index for uniqueness
             className="flex items-baseline justify-between gap-2"
           >
             <span className="line-clamp-1 text-muted-foreground">
-              {item.name} × {item.quantity}
+              {item.productName} × {item.quantity}
             </span>
             <span>
               <PriceDisplay

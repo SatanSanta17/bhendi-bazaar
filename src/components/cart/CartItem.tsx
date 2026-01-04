@@ -19,6 +19,7 @@ export function CartItem({ item }: CartItemProps) {
   const removeItem = useCartStore((state) => state.removeItem);
   const [stock, setStock] = useState<number | null>(null);
   const [isLoadingStock, setIsLoadingStock] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     // Fetch stock
@@ -40,19 +41,30 @@ export function CartItem({ item }: CartItemProps) {
   }, [item.productId]);
 
   const handleIncrease = () => {
+    if (isUpdating) return; // Prevent multiple clicks
+
     if (stock !== null && item.quantity + 1 > stock) {
       toast.error(`Only ${stock} available in stock`);
       return;
     }
+
+    setIsUpdating(true);
     updateQuantity(item.id, item.quantity + 1);
+    // Reset after a short delay
+    setTimeout(() => setIsUpdating(false), 300);
   };
 
   const handleDecrease = () => {
+    if (isUpdating) return; // Prevent multiple clicks
+
+    setIsUpdating(true);
     if (item.quantity - 1 === 0) {
       removeItem(item.id);
     } else {
       updateQuantity(item.id, item.quantity - 1);
     }
+    // Reset after a short delay
+    setTimeout(() => setIsUpdating(false), 300);
   };
 
   const isAtMaxStock = stock !== null && item.quantity >= stock;
@@ -61,7 +73,7 @@ export function CartItem({ item }: CartItemProps) {
     <div className="flex items-start justify-between gap-3 rounded-xl border border-border/70 bg-card/80 p-3 text-sm">
       <div className="flex-1 space-y-1">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground/80">
-          {item.name}
+          {item.productName}
         </p>
         {(item.size || item.color) && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

@@ -2,10 +2,9 @@
  * Server-side Category Repository
  *
  * This repository handles all database operations for categories.
- * Currently uses mock data, will be replaced with Prisma once schema is ready.
  */
 
-import { categories } from "@/data/categories";
+import { prisma } from "@/lib/prisma";
 import type { ServerCategory } from "@/server/domain/category";
 
 export class CategoryRepository {
@@ -13,15 +12,27 @@ export class CategoryRepository {
    * List all categories sorted by order
    */
   async list(): Promise<ServerCategory[]> {
-    return [...categories].sort((a, b) => a.order - b.order);
+    const categories = await prisma.category.findMany({
+      orderBy: [
+        {
+          order: "asc",
+        },
+        {
+          name: "asc",
+        },
+      ],
+    });
+    return categories;
   }
 
   /**
    * Find category by slug
    */
   async findBySlug(slug: string): Promise<ServerCategory | null> {
-    const category = categories.find((c) => c.slug === slug);
-    return category ?? null;
+    const category = await prisma.category.findUnique({
+      where: { slug },
+    });
+    return category;
   }
 }
 

@@ -1,13 +1,16 @@
-// REFACTORED: checkout-form.tsx (orchestrator only)
-
 "use client";
 
 import { useSession } from "next-auth/react";
 import { GuestCheckoutForm } from "./GuestCheckoutForm";
 import { AuthenticatedCheckout } from "./AuthenticatedCheckout";
 import { LoadingSpinner } from "@/components/shared/states/LoadingSpinner";
+import type { Product } from "@/domain/product";
 
-export function CheckoutForm() {
+interface CheckoutFormProps {
+  buyNowProduct: Product | null;
+}
+
+export function CheckoutForm({ buyNowProduct }: CheckoutFormProps) {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
@@ -18,5 +21,9 @@ export function CheckoutForm() {
     );
   }
 
-  return session?.user ? <AuthenticatedCheckout /> : <GuestCheckoutForm />;
+  return session?.user ? (
+    <AuthenticatedCheckout buyNowProduct={buyNowProduct} />
+  ) : (
+    <GuestCheckoutForm buyNowProduct={buyNowProduct} />
+  );
 }

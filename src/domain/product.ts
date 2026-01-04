@@ -7,18 +7,15 @@
 
 import { ProductFlag } from "@/types/product";
 
-export type ProductId = string;
-export type CategorySlug = string;
-
 export interface Product {
-  id: ProductId;
+  id: string;
   slug: string;
   name: string;
   description: string;
   price: number;
   salePrice?: number;
   currency: "INR";
-  categorySlug: CategorySlug;
+  categorySlug: string;
   tags: string[];
   flags?: ProductFlag[];
   rating: number;
@@ -34,7 +31,7 @@ export interface Product {
 }
 
 export interface ProductFilter {
-  categorySlug?: CategorySlug;
+  categorySlug?: string;
   search?: string;
   minPrice?: number;
   maxPrice?: number;

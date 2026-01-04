@@ -4,18 +4,18 @@
  * These types are used exclusively on the server-side (services, repositories).
  * They mirror the database schema and contain server-specific logic.
  */
-
 export interface ProfileAddress {
   id: string;
   label: string;
-  name: string; // name of the recipient for this address
-  line1: string;
-  line2?: string;
+  fullName: string;
+  mobile: string;
+  addressLine1: string;
+  addressLine2?: string;
+  landmark?: string;
   city: string;
-  state?: string;
-  country: string;
-  postalCode: string;
-  phone: string; // contact number for this address
+  state: string;
+  pincode: string;
+  country?: string;
   isDefault?: boolean;
 }
 

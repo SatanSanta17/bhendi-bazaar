@@ -2,12 +2,28 @@
 
 import { prisma } from "@/lib/prisma";
 import type { CartItem, ServerCart } from "@/server/domain/cart";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Cart repository - Data access layer
  * Only uses server-side types and dependencies
  */
 export class CartRepository {
+  /**
+   * Parse JSON cart items from database
+   */
+  private parseCartItems(items: Prisma.JsonValue): CartItem[] {
+    if (!Array.isArray(items)) return [];
+    return items as unknown as CartItem[];
+  }
+
+  /**
+   * Convert CartItem[] to Prisma JsonValue
+   */
+  private toJsonValue(items: CartItem[]): Prisma.InputJsonValue {
+    return items as unknown as Prisma.InputJsonValue;
+  }
+
   /**
    * Find cart by user ID
    */
@@ -22,7 +38,7 @@ export class CartRepository {
       return {
         id: cart.id,
         userId: cart.userId,
-        items: cart.items as unknown as CartItem[],
+        items: this.parseCartItems(cart.items),
         updatedAt: cart.updatedAt,
       };
     } catch (error) {
@@ -32,30 +48,53 @@ export class CartRepository {
   }
 
   /**
-   * Create or update cart
+   * Create or update cart with version control
    */
-  async upsert(userId: string, items: CartItem[]): Promise<ServerCart> {
+  async upsert(
+    userId: string,
+    items: CartItem[],
+    expectedVersion?: number
+  ): Promise<ServerCart> {
     try {
+      // If version is provided, check for conflicts
+      if (expectedVersion !== undefined) {
+        const existingCart = await prisma.cart.findUnique({
+          where: { userId },
+          select: { version: true },
+        });
+
+        if (existingCart && existingCart.version !== expectedVersion) {
+          throw new Error(
+            "Cart was modified by another session. Please refresh and try again."
+          );
+        }
+      }
+
       const cart = await prisma.cart.upsert({
         where: { userId },
         update: {
-          items: items as any,
+          items: this.toJsonValue(items),
+          version: { increment: 1 },
           updatedAt: new Date(),
         },
         create: {
           userId,
-          items: items as any,
+          items: this.toJsonValue(items),
+          version: 1,
         },
       });
 
       return {
         id: cart.id,
         userId: cart.userId,
-        items: cart.items as unknown as CartItem[],
+        items: this.parseCartItems(cart.items),
         updatedAt: cart.updatedAt,
       };
     } catch (error) {
       console.error("[CartRepository] upsert failed:", error);
+      if (error instanceof Error && error.message.includes("another session")) {
+        throw error; // Propagate version conflict
+      }
       throw new Error("Failed to save cart to database");
     }
   }
@@ -68,7 +107,8 @@ export class CartRepository {
       await prisma.cart.update({
         where: { userId },
         data: {
-          items: [],
+          items: this.toJsonValue([]),
+          version: { increment: 1 },
           updatedAt: new Date(),
         },
       });

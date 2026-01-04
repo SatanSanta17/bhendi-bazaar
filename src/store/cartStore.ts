@@ -1,30 +1,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import type { Cart, CartItem } from "@/domain/cart";
 
-import type { CartItem, CartState } from "@/domain/cart";
-
-type CartStoreState = CartState & {
-  subtotal: number;
-  discount: number;
-  total: number;
-  buyNowItem: CartItem | null;
-  isSyncing: boolean;
-  lastSyncError: string | null;
-
+type CartStoreState = Cart & {
   addItem: (item: Omit<CartItem, "id">) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  updateQuantityWithLimit: (id: string, quantity: number, maxStock: number) => boolean;
   clear: () => void;
-  setBuyNowItem: (item: Omit<CartItem, "id"> | null) => void;
-  clearBuyNow: () => void;
   setItems: (items: CartItem[]) => void;
-  setSyncing: (syncing: boolean) => void;
-  setSyncError: (error: string | null) => void;
-  checkStockAvailability: () => Promise<{
-    available: boolean;
-    issues: Array<{ productId: string; message: string }>;
-  }>;
 };
 
 function computeTotals(items: CartItem[]) {
@@ -41,20 +24,79 @@ function computeTotals(items: CartItem[]) {
   return { subtotal, discount, total: subtotal - discount };
 }
 
+/**
+ * Validate and clean cart item
+ * Returns null if item is invalid
+ */
+function validateCartItem(item: any): CartItem | null {
+  try {
+    // Check all required fields exist and are valid
+    if (
+      !item.id ||
+      typeof item.id !== "string" ||
+      !item.productId ||
+      typeof item.productId !== "string" ||
+      !item.productName ||
+      typeof item.productName !== "string" ||
+      !item.productSlug ||
+      typeof item.productSlug !== "string" ||
+      !item.thumbnail ||
+      typeof item.thumbnail !== "string" ||
+      typeof item.price !== "number" ||
+      item.price < 0 ||
+      typeof item.quantity !== "number" ||
+      item.quantity <= 0 ||
+      item.quantity > 99
+    ) {
+      return null;
+    }
+
+    // Validate optional fields
+    if (item.salePrice !== undefined) {
+      if (typeof item.salePrice !== "number" || item.salePrice < 0) {
+        return null;
+      }
+    }
+
+    if (item.size !== undefined && typeof item.size !== "string") {
+      return null;
+    }
+
+    if (item.color !== undefined && typeof item.color !== "string") {
+      return null;
+    }
+
+    // Return cleaned item
+    return {
+      id: item.id,
+      productId: item.productId,
+      productName: item.productName,
+      productSlug: item.productSlug,
+      thumbnail: item.thumbnail,
+      price: item.price,
+      salePrice: item.salePrice,
+      quantity: item.quantity,
+      size: item.size,
+      color: item.color,
+    };
+  } catch (error) {
+    console.warn("[Cart] Invalid item during validation:", error);
+    return null;
+  }
+}
+
 export const useCartStore = create<CartStoreState>()(
   persist(
-    (set, get) => ({
-      items: [],
-      subtotal: 0,
-      discount: 0,
-      total: 0,
-      buyNowItem: null,
-      isSyncing: false,
-      lastSyncError: null,
+    (set) => ({
+      items: [] as CartItem[],
+      totals: {
+        subtotal: 0,
+        discount: 0,
+        total: 0,
+      },
+      updatedAt: new Date(),
 
-      addItem: async (itemInput) => {
-        // Add item to cart without stock validation
-        // Stock will be validated at checkout via checkStockAvailability()
+      addItem: (itemInput) => {
         set((state) => {
           const existing = state.items.find(
             (i) =>
@@ -72,7 +114,7 @@ export const useCartStore = create<CartStoreState>()(
                 : i
             );
           } else {
-            const id = `${itemInput.productId}-${Date.now()}`;
+            const id = crypto.randomUUID();
             nextItems = [...state.items, { ...itemInput, id }];
           }
 
@@ -80,7 +122,8 @@ export const useCartStore = create<CartStoreState>()(
 
           return {
             items: nextItems,
-            ...totals,
+            totals: totals,
+            updatedAt: new Date(),
           };
         });
       },
@@ -92,7 +135,8 @@ export const useCartStore = create<CartStoreState>()(
 
           return {
             items: nextItems,
-            ...totals,
+            totals: totals,
+            updatedAt: new Date(),
           };
         });
       },
@@ -106,125 +150,71 @@ export const useCartStore = create<CartStoreState>()(
 
           return {
             items: nextItems,
-            ...totals,
+            totals: totals,
+            updatedAt: new Date(),
           };
         });
-      },
-
-      updateQuantityWithLimit: (id, quantity, maxStock) => {
-        let success = false;
-        set((state) => {
-          const item = state.items.find((i) => i.id === id);
-          if (!item) return state;
-
-          // Validate against max stock
-          if (quantity > maxStock) {
-            success = false;
-            return state; // Don't update
-          }
-
-          success = true;
-          const nextItems = state.items
-            .map((i) => (i.id === id ? { ...i, quantity } : i))
-            .filter((i) => i.quantity > 0);
-          const totals = computeTotals(nextItems);
-
-          return {
-            items: nextItems,
-            ...totals,
-          };
-        });
-        return success;
       },
 
       clear: () => {
         set({
           items: [],
-          subtotal: 0,
-          discount: 0,
-          total: 0,
+          totals: {
+            subtotal: 0,
+            discount: 0,
+            total: 0,
+          },
+          updatedAt: new Date(),
         });
-      },
-
-      setBuyNowItem: (itemInput) => {
-        if (!itemInput) {
-          set({ buyNowItem: null });
-          return;
-        }
-        const id = `buynow-${itemInput.productId}-${Date.now()}`;
-        set({ buyNowItem: { ...itemInput, id } });
-      },
-
-      clearBuyNow: () => {
-        set({ buyNowItem: null });
       },
 
       setItems: (items) => {
         const totals = computeTotals(items);
-        set({ items, ...totals });
-      },
-
-      setSyncing: (syncing) => {
-        set({ isSyncing: syncing });
-      },
-
-      setSyncError: (error) => {
-        set({ lastSyncError: error });
-      },
-
-      checkStockAvailability: async () => {
-        const state = get();
-        const items = state.items.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-        }));
-
-        if (items.length === 0) {
-          return { available: true, issues: [] };
-        }
-
-        try {
-          const response = await fetch("/api/products/check-stock", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Stock check failed");
-          }
-
-          const data = await response.json();
-
-          if (!data.available) {
-            const issues = data.items
-              .filter((item: any) => !item.available)
-              .map((item: any) => ({
-                productId: item.productId,
-                message: `Only ${item.stock} available for ${item.name} (you requested ${item.requested})`,
-              }));
-
-            return { available: false, issues };
-          }
-
-          return { available: true, issues: [] };
-        } catch (error) {
-          console.error("Stock check failed:", error);
-          return {
-            available: false,
-            issues: [
-              { productId: "", message: "Failed to verify stock availability" },
-            ],
-          };
-        }
+        set({ items, totals, updatedAt: new Date() });
       },
     }),
     {
       name: "bhendi-bazaar-cart",
       storage: createJSONStorage(() => localStorage),
+
       partialize: (state) => ({
         items: state.items,
+        updatedAt: state.updatedAt,
       }),
+
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+
+        // Validate and filter corrupted items
+        if (state.items && state.items.length > 0) {
+          const validItems: CartItem[] = [];
+          let corruptedCount = 0;
+
+          for (const item of state.items) {
+            const validatedItem = validateCartItem(item);
+            if (validatedItem) {
+              validItems.push(validatedItem);
+            } else {
+              corruptedCount++;
+              console.warn("[Cart] Removed corrupted item from storage:", item);
+            }
+          }
+
+          // Update state with only valid items
+          state.items = validItems;
+
+          // Recalculate totals
+          const totals = computeTotals(validItems);
+          state.totals = totals;
+
+          // Log if corruption was detected
+          if (corruptedCount > 0) {
+            console.warn(
+              `[Cart] Cleaned ${corruptedCount} corrupted item(s) from localStorage`
+            );
+          }
+        }
+      },
     }
   )
 );

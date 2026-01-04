@@ -5,7 +5,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useProfile } from "@/hooks/useProfile";
-import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AddressModal } from "@/components/profile/address-modal";
@@ -14,12 +13,24 @@ import { useCheckoutPayment } from "./hooks/useCheckoutPayment";
 import { useDisplayItems } from "./hooks/useDisplayItems";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import type { ProfileAddress } from "@/domain/profile";
+import type { Product } from "@/domain/product";
 
-export function AuthenticatedCheckout() {
+interface AuthenticatedCheckoutProps {
+  buyNowProduct: Product | null;
+}
+
+export function AuthenticatedCheckout({
+  buyNowProduct,
+}: AuthenticatedCheckoutProps) {
   const { data: session } = useSession();
   const { profile, user, updateAddresses } = useProfile(!!session?.user);
-  const { displayItems, displaySubtotal, displayDiscount, displayTotal } =
-    useDisplayItems();
+  const {
+    displayItems,
+    displaySubtotal,
+    displayDiscount,
+    displayTotal,
+    isBuyNow,
+  } = useDisplayItems(buyNowProduct);
   const { processPayment, isProcessing, error, setError } =
     useCheckoutPayment();
 
@@ -29,7 +40,11 @@ export function AuthenticatedCheckout() {
   const [showAddressSelector, setShowAddressSelector] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [orderNotes, setOrderNotes] = useState("");
-
+  // Helper function to strip +91 country code
+  const stripCountryCode = (phone: string): string => {
+    // Remove +91, +, spaces, and hyphens
+    return phone.replace(/^\+91/, "").replace(/[\s\-+]/g, "");
+  };
   // Auto-select default address
   useEffect(() => {
     if (profile?.addresses?.length) {
@@ -55,18 +70,44 @@ export function AuthenticatedCheckout() {
   };
 
   const handleCheckout = async () => {
-    if (!selectedAddress || !displayItems.length) return;
+    console.log("🔍 [DEBUG] selectedAddress:", selectedAddress);
+    console.log("🔍 [DEBUG] displayItems:", displayItems);
+
+    if (!selectedAddress || !displayItems.length) {
+      console.error("❌ Guard check failed: no address or items");
+      return;
+    }
 
     setError(null);
-
     try {
-      // Check stock availability
-      const checkStockAvailability = useCartStore.getState()
-        .checkStockAvailability;
-      const stockCheck = await checkStockAvailability();
+      // Log the address object being sent
+      const addressData = {
+        fullName: selectedAddress.fullName,
+        mobile: stripCountryCode(selectedAddress.mobile),
+        email: user?.email || "",
+        addressLine1: selectedAddress.addressLine1,
+        addressLine2: selectedAddress.addressLine2,
+        city: selectedAddress.city,
+        state: selectedAddress.state ?? "",
+        pincode: selectedAddress.pincode,
+        country: selectedAddress.country,
+      };
 
+      console.log("📦 [DEBUG] Address data being sent:", addressData);
+
+      const stockCheck = await fetch("/api/products/check-stock", {
+        method: "POST",
+        body: JSON.stringify({
+          items: displayItems.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+          })),
+        }),
+      }).then((r) => r.json());
       if (!stockCheck.available) {
-        const messages = stockCheck.issues.map((i) => i.message).join("\n");
+        const messages = stockCheck.issues
+          .map((i: any) => i.message)
+          .join("\n");
         setError(
           `Some items are no longer available:\n\n${messages}\n\nPlease update your cart.`
         );
@@ -80,20 +121,11 @@ export function AuthenticatedCheckout() {
           discount: displayDiscount,
           total: displayTotal,
         },
-        address: {
-          fullName: selectedAddress.name,
-          phone: selectedAddress.phone,
-          email: user?.email || "",
-          line1: selectedAddress.line1,
-          line2: selectedAddress.line2,
-          city: selectedAddress.city,
-          state: selectedAddress.state ?? "",
-          postalCode: selectedAddress.postalCode,
-          country: selectedAddress.country,
-        },
+        address: { ...addressData, country: "India" },
         notes: orderNotes,
         paymentMethod: "razorpay",
         paymentStatus: "pending",
+        isBuyNow,
       });
     } catch (error) {
       console.error("Checkout error:", error);
@@ -153,14 +185,14 @@ export function AuthenticatedCheckout() {
           address={{
             id: crypto.randomUUID(),
             label: "",
-            name: user?.name || "",
-            line1: "",
-            line2: "",
+            fullName: user?.name || "",
+            addressLine1: "",
+            addressLine2: "",
             city: "",
             state: "",
             country: "India",
-            postalCode: "",
-            phone: user?.mobile || "",
+            pincode: "",
+            mobile: user?.mobile || "",
             isDefault: !hasAddresses,
           }}
           saving={false}

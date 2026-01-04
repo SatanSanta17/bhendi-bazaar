@@ -1,44 +1,64 @@
 // hooks/checkout/useDisplayItems.ts
 
 import { useCartStore } from "@/store/cartStore";
-import type { CartItem, CartTotals } from "@/domain/cart";
+import type { CartItem } from "@/domain/cart";
+import type { Product } from "@/domain/product";
 
 interface DisplayItemsReturn {
   displayItems: CartItem[];
   displaySubtotal: number;
   displayDiscount: number;
   displayTotal: number;
+  isBuyNow: boolean;
   clearDisplayItems: () => Promise<void>;
 }
 
-export function useDisplayItems(): DisplayItemsReturn {
-  const items = useCartStore((state) => state.items);
-  const buyNowItem = useCartStore((state) => state.buyNowItem);
-  const subtotal = useCartStore((state) => state.subtotal);
-  const discount = useCartStore((state) => state.discount);
-  const total = useCartStore((state) => state.total);
-  const clearBuyNow = useCartStore((state) => state.clearBuyNow);
-  const clear = useCartStore((state) => state.clear);
+export function useDisplayItems(
+  buyNowProduct: Product | null
+): DisplayItemsReturn {
+  const cartItems = useCartStore((state) => state.items);
+  const { subtotal, discount, total } = useCartStore((state) => state.totals);
+  const clearCart = useCartStore((state) => state.clear);
 
-  // Compute display values based on buyNow vs regular cart
-  const displayItems = buyNowItem ? [buyNowItem] : items;
-  const displaySubtotal = buyNowItem
-    ? buyNowItem.price * buyNowItem.quantity
-    : subtotal;
-  const displayDiscount =
-    buyNowItem && buyNowItem.salePrice
-      ? (buyNowItem.price - buyNowItem.salePrice) * buyNowItem.quantity
-      : discount;
-  const displayTotal = buyNowItem
-    ? (buyNowItem.salePrice ?? buyNowItem.price) * buyNowItem.quantity
-    : total;
+  const isBuyNow = buyNowProduct !== null;
+
+  let displayItems: CartItem[];
+  let displaySubtotal: number;
+  let displayDiscount: number;
+  let displayTotal: number;
+
+  if (isBuyNow && buyNowProduct) {
+    // Convert Product to CartItem for Buy Now
+    const buyNowItem: CartItem = {
+      id: `buynow-${buyNowProduct.id}`,
+      productId: buyNowProduct.id,
+      productName: buyNowProduct.name,
+      productSlug: buyNowProduct.slug,
+      thumbnail: buyNowProduct.thumbnail,
+      price: buyNowProduct.price,
+      salePrice: buyNowProduct.salePrice,
+      quantity: 1,
+    };
+
+    displayItems = [buyNowItem];
+    displaySubtotal = buyNowItem.price;
+    displayDiscount = buyNowItem.salePrice
+      ? buyNowItem.price - buyNowItem.salePrice
+      : 0;
+    displayTotal = buyNowItem.salePrice ?? buyNowItem.price;
+  } else {
+    // Regular cart checkout
+    displayItems = cartItems;
+    displaySubtotal = subtotal;
+    displayDiscount = discount;
+    displayTotal = total;
+  }
 
   const clearDisplayItems = async () => {
-    if (buyNowItem) {
-      clearBuyNow();
-    } else {
-      clear();
+    if (!isBuyNow) {
+      clearCart();
     }
+    // For Buy Now, nothing to clear - it's just URL params
   };
 
   return {
@@ -46,6 +66,7 @@ export function useDisplayItems(): DisplayItemsReturn {
     displaySubtotal,
     displayDiscount,
     displayTotal,
+    isBuyNow,
     clearDisplayItems,
   };
 }

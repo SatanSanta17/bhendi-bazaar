@@ -42,14 +42,15 @@ export const createMockProduct = (overrides?: Partial<Product>): Product => ({
  */
 export const createMockCartItem = (overrides?: Partial<CartItem>): CartItem => ({
   id: `cart-item-${Date.now()}-${Math.random()}`,
-  productId: 'product-1',
-  name: 'Test Product',
-  thumbnail: 'https://example.com/thumb.jpg',
+  productId: "product-1",
+  productName: "Test Product",
+  productSlug: "test-product",
+  thumbnail: "https://example.com/thumb.jpg",
   price: 100,
   salePrice: 80,
   quantity: 1,
-  size: 'M',
-  color: 'Red',
+  size: "M",
+  color: "Red",
   ...overrides,
 });
 

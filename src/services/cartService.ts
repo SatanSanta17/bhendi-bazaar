@@ -1,6 +1,7 @@
 // src/services/cartService.ts
 
 import type { CartItem } from "@/domain/cart";
+import { toast } from "sonner";
 
 /**
  * Client-side cart service
@@ -9,28 +10,6 @@ import type { CartItem } from "@/domain/cart";
  */
 export class CartService {
   private baseUrl = "/api/cart";
-
-  async getCart(): Promise<CartItem[]> {
-    try {
-      const response = await fetch(this.baseUrl, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          return [];
-        }
-        throw new Error(`Failed to fetch cart: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.items || [];
-    } catch (error) {
-      console.error("[CartService] getCart failed:", error);
-      return [];
-    }
-  }
 
   async syncCart(localItems: CartItem[]): Promise<CartItem[]> {
     try {
@@ -48,9 +27,13 @@ export class CartService {
       }
 
       const data = await response.json();
-      return data.items || [];
+      return data.items as CartItem[];
     } catch (error) {
       console.error("[CartService] syncCart failed:", error);
+      toast.error("Failed to sync your cart with the server", {
+        description:
+          "Your local cart is still safe. We'll retry when you're back online.",
+      });
       return localItems;
     }
   }
@@ -58,7 +41,7 @@ export class CartService {
   async updateCart(items: CartItem[]): Promise<void> {
     try {
       const response = await fetch(this.baseUrl, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -67,10 +50,31 @@ export class CartService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update cart: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Failed to update cart: ${response.statusText}`
+        );
       }
     } catch (error) {
       console.error("[CartService] updateCart failed:", error);
+      const message =
+        error instanceof Error ? error.message : "Failed to update cart";
+
+      // Show user-friendly error
+      if (message.includes("offline") || message.includes("network")) {
+        toast.error("You're offline", {
+          description:
+            "Your cart changes are saved locally and will sync when you're back online.",
+        });
+      } else {
+        toast.error("Failed to save cart", {
+          description:
+            "Your changes are saved locally. We'll try to sync again shortly.",
+        });
+      }
+
+      // Re-throw for retry logic
+      throw error;
     }
   }
 
@@ -86,6 +90,11 @@ export class CartService {
       }
     } catch (error) {
       console.error("[CartService] clearCart failed:", error);
+      toast.error("Failed to clear cart on server", {
+        description:
+          "Your local cart is cleared. Server sync will happen next time.",
+      });
+      throw error;
     }
   }
 }

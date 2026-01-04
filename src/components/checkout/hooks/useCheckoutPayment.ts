@@ -21,6 +21,7 @@ interface ProcessPaymentInput {
   notes?: string;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
+  isBuyNow: boolean;
 }
 
 export function useCheckoutPayment() {
@@ -34,6 +35,23 @@ export function useCheckoutPayment() {
     setIsProcessing(true);
 
     try {
+      // Step 0: Validate stock BEFORE creating order
+      const stockCheck = await fetch("/api/products/check-stock", {
+        method: "POST",
+        body: JSON.stringify({
+          items: orderData.items.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+          })),
+        }),
+      }).then((r) => r.json());
+
+      if (!stockCheck.available) {
+        const outOfStock = stockCheck.items.filter((i: any) => !i.available);
+        throw new Error(
+          `Sorry, ${outOfStock[0].name} is out of stock. Please update your cart.`
+        );
+      }
       // Step 1: Create order
       const order = await orderService.createOrder(orderData);
 
@@ -54,7 +72,7 @@ export function useCheckoutPayment() {
         customer: {
           name: orderData.address.fullName,
           email: orderData.address.email,
-          contact: orderData.address.phone,
+          contact: orderData.address.mobile,
         },
       });
 
@@ -71,17 +89,13 @@ export function useCheckoutPayment() {
               razorpaySignature: response.razorpay_signature,
             });
 
-            // Clear cart
-            if (session?.user) {
-              await cartService.clearCart();
-            }
-
-            const {clearBuyNow, clear, buyNowItem} = useCartStore.getState();
-            if (buyNowItem) {
-              clearBuyNow();
-            }
-            else {
-              clear();
+            // Clear cart - server AND local
+            if (!orderData.isBuyNow) {
+              // Regular cart: Clear both server and local
+              if (session?.user) {
+                await cartService.clearCart();
+              }
+              useCartStore.getState().clear();
             }
             // Redirect to order page
             router.push(`/order/${order.id}`);

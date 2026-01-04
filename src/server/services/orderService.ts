@@ -105,7 +105,7 @@ export class OrderService {
     }
 
     for (const item of input.items) {
-      if (!item.productId || !item.name || !item.thumbnail) {
+      if (!item.productId || !item.productName || !item.thumbnail) {
         throw new Error("Invalid item data: missing required fields");
       }
       if (item.quantity <= 0) {
@@ -128,21 +128,29 @@ export class OrderService {
     if (!input.address) {
       throw new Error("Shipping address is required");
     }
-    const { fullName, phone, line1, city, state, postalCode, country } =
+    const { fullName, mobile, addressLine1, city, state, pincode, country } =
       input.address;
-    if (!fullName || !phone || !line1 || !city || !state || !postalCode || !country) {
+    if (
+      !fullName ||
+      !mobile ||
+      !addressLine1 ||
+      !city ||
+      !state ||
+      !pincode ||
+      !country
+    ) {
       throw new Error("Address is missing required fields");
     }
 
     // Validate phone format (basic validation)
     const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone)) {
+    if (!phoneRegex.test(mobile)) {
       throw new Error("Phone number must be 10 digits");
     }
 
     // Validate postal code (basic validation)
     const postalCodeRegex = /^\d{6}$/;
-    if (!postalCodeRegex.test(postalCode)) {
+    if (!postalCodeRegex.test(pincode)) {
       throw new Error("Postal code must be 6 digits");
     }
   }

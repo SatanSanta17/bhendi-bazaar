@@ -5,16 +5,21 @@ import { priceSchema, emailSchema } from './common.schemas';
 export const createPaymentOrderSchema = z.object({
   amount: z
     .number()
-    .int('Amount must be in paise (smallest currency unit)')
-    .positive('Amount must be positive')
-    .max(100000000, 'Amount exceeds maximum (10 lakh rupees)'),
-  currency: z.enum(['INR'], { message: 'Only INR currency is supported' }),
-  localOrderId: z.string().uuid('Invalid order ID'),
-  customer: z.object({
-    name: z.string().min(1).max(255).optional(),
-    email: emailSchema.optional(),
-    contact: z.string().regex(/^\d{10}$/).optional(),
-  }).optional(),
+    .int("Amount must be in paise (smallest currency unit)")
+    .positive("Amount must be positive")
+    .max(100000000, "Amount exceeds maximum (10 lakh rupees)"),
+  currency: z.enum(["INR"], { message: "Only INR currency is supported" }),
+  localOrderId: z.string().min(1),
+  customer: z
+    .object({
+      name: z.string().min(1).max(255).optional(),
+      email: emailSchema.optional(),
+      contact: z
+        .string()
+        .regex(/^\d{10}$/)
+        .optional(),
+    })
+    .optional(),
 });
 
 export type CreatePaymentOrderInput = z.infer<typeof createPaymentOrderSchema>;
