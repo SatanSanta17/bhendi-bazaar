@@ -5,6 +5,13 @@ import { Providers } from "./providers";
 import { Suspense } from "react";
 import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 import { FloatingAdminButton } from "@/components/layout/FloatingAdminButton";
+import {
+  APP_DESCRIPTION,
+  APP_NAME,
+  FAVICON,
+  LOGO,
+  OG_IMAGE,
+} from "@/lib/config";
 
 const headingFont = Playfair_Display({
   variable: "--font-heading",
@@ -18,9 +25,20 @@ const bodyFont = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Bhendi Bazaar",
-  description:
-    "Bhendi Bazaar – a royal curation of Islamic clothing, boutique wear, and essentials.",
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
+  icons: {
+    icon: [
+      { url: FAVICON },
+      { url: LOGO["192"], sizes: "192x192", type: "image/png" },
+      { url: LOGO["512"], sizes: "512x512", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: APP_NAME,
+    description: APP_DESCRIPTION,
+    images: [{ url: OG_IMAGE }],
+  },
 };
 
 export default function RootLayout({

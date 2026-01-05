@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { NavbarSearch } from "./NavbarSearch";
 import { CategoriesDropdown } from "./CategoriesDropdown";
 import { ProfileMenu } from "./ProfileMenu";
+import Image from "next/image";
+import { APP_NAME, LOGO } from "@/lib/config";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -25,9 +27,14 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg font-semibold tracking-[0.2em] uppercase sm:text-xl text-primary">
-            Bhendi Bazaar
-          </span>
+          <Image
+            src={LOGO.FULL}
+            alt={APP_NAME}
+            width={160}
+            height={160}
+            priority
+            className="h-16 w-auto"
+          />
         </Link>
 
         {/* Middle: categories dropdown + search */}
