@@ -2,6 +2,8 @@
  * Admin Product Management Domain Types
  */
 
+import { ProductFlag } from "@/server/types/products";
+
 export interface AdminProduct {
   id: string;
   slug: string;
@@ -13,9 +15,7 @@ export interface AdminProduct {
   categoryId: string;
   categoryName?: string;
   tags: string[];
-  isFeatured: boolean;
-  isHero: boolean;
-  isOnOffer: boolean;
+  flags: ProductFlag[];
   rating: number;
   reviewsCount: number;
   images: string[];
@@ -32,8 +32,7 @@ export interface AdminProduct {
 export interface ProductListFilters {
   search?: string; // Search by name, SKU, tags
   categoryId?: string;
-  isFeatured?: boolean;
-  isOnOffer?: boolean;
+  flags?: ProductFlag[]; // Filter by any flags
   lowStock?: boolean; // Products below lowStockThreshold
   outOfStock?: boolean; // Stock = 0
   minPrice?: number;
@@ -61,9 +60,7 @@ export interface CreateProductInput {
   currency?: string;
   categoryId: string;
   tags?: string[];
-  isFeatured?: boolean;
-  isHero?: boolean;
-  isOnOffer?: boolean;
+  flags?: ProductFlag[];
   images: string[];
   thumbnail: string;
   sizes?: string[];
@@ -81,9 +78,7 @@ export interface UpdateProductInput {
   salePrice?: number;
   categoryId?: string;
   tags?: string[];
-  isFeatured?: boolean;
-  isHero?: boolean;
-  isOnOffer?: boolean;
+  flags?: ProductFlag[];
   images?: string[];
   thumbnail?: string;
   sizes?: string[];

@@ -11,6 +11,7 @@ import type {
   UpdateProductInput,
   ProductStats,
 } from "@/server/domain/admin/product";
+import { ProductFlag } from "@/server/types/products";
 
 export class AdminProductRepository {
   /**
@@ -20,8 +21,7 @@ export class AdminProductRepository {
     const {
       search,
       categoryId,
-      isFeatured,
-      isOnOffer,
+      flags,
       lowStock,
       outOfStock,
       minPrice,
@@ -49,12 +49,10 @@ export class AdminProductRepository {
       where.categoryId = categoryId;
     }
 
-    if (typeof isFeatured === "boolean") {
-      where.isFeatured = isFeatured;
-    }
-
-    if (typeof isOnOffer === "boolean") {
-      where.isOnOffer = isOnOffer;
+    if (flags && flags.length > 0) {
+      where.flags = {
+        hasSome: flags,
+      };
     }
 
     if (outOfStock) {
@@ -99,9 +97,7 @@ export class AdminProductRepository {
       categoryId: product.categoryId,
       categoryName: product.category.name,
       tags: product.tags,
-      isFeatured: product.isFeatured,
-      isHero: product.isHero,
-      isOnOffer: product.isOnOffer,
+      flags: product.flags as ProductFlag[],
       rating: product.rating,
       reviewsCount: product.reviewsCount,
       images: product.images,
@@ -146,9 +142,7 @@ export class AdminProductRepository {
       categoryId: product.categoryId,
       categoryName: product.category.name,
       tags: product.tags,
-      isFeatured: product.isFeatured,
-      isHero: product.isHero,
-      isOnOffer: product.isOnOffer,
+      flags: product.flags as ProductFlag[],
       rating: product.rating,
       reviewsCount: product.reviewsCount,
       images: product.images,
@@ -177,9 +171,7 @@ export class AdminProductRepository {
         currency: data.currency || "INR",
         categoryId: data.categoryId,
         tags: data.tags || [],
-        isFeatured: data.isFeatured || false,
-        isHero: data.isHero || false,
-        isOnOffer: data.isOnOffer || false,
+        flags: data.flags || [],
         images: data.images,
         thumbnail: data.thumbnail,
         sizes: data.sizes || [],
@@ -206,11 +198,8 @@ export class AdminProductRepository {
       salePrice: product.salePrice,
       currency: product.currency,
       categoryId: product.categoryId,
-      categoryName: product.category.name,
       tags: product.tags,
-      isFeatured: product.isFeatured,
-      isHero: product.isHero,
-      isOnOffer: product.isOnOffer,
+      flags: product.flags as ProductFlag[],
       rating: product.rating,
       reviewsCount: product.reviewsCount,
       images: product.images,
@@ -255,9 +244,7 @@ export class AdminProductRepository {
       categoryId: product.categoryId,
       categoryName: product.category.name,
       tags: product.tags,
-      isFeatured: product.isFeatured,
-      isHero: product.isHero,
-      isOnOffer: product.isOnOffer,
+      flags: product.flags as ProductFlag[],
       rating: product.rating,
       reviewsCount: product.reviewsCount,
       images: product.images,
@@ -285,28 +272,27 @@ export class AdminProductRepository {
    * Get product statistics
    */
   async getProductStats(): Promise<ProductStats> {
-    const [
-      totalProducts,
-      outOfStockProducts,
-      featuredProducts,
-      allProducts,
-    ] = await Promise.all([
+    const [totalProducts, outOfStockProducts, allProducts] = await Promise.all([
       prisma.product.count(),
       prisma.product.count({ where: { stock: 0 } }),
-      prisma.product.count({ where: { isFeatured: true } }),
       prisma.product.findMany({
         where: { stock: { gt: 0 } },
         select: {
           price: true,
           stock: true,
           lowStockThreshold: true,
+          flags: true,
         },
       }),
     ]);
 
-    // Filter low stock products in-memory (type-safe, no SQL injection risk)
+    // Filter low stock products and featured products in-memory
     const lowStockProducts = allProducts.filter(
       (p) => p.stock <= p.lowStockThreshold
+    ).length;
+
+    const featuredProducts = allProducts.filter((p) =>
+      p.flags.includes(ProductFlag.FEATURED)
     ).length;
 
     const totalInventoryValue = allProducts.reduce((sum, product) => {

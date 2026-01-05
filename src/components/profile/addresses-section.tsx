@@ -47,14 +47,14 @@ export function AddressesSection({
           ? crypto.randomUUID()
           : `${Date.now()}`,
       label: "",
-      name: "",
-      line1: "",
-      line2: "",
+      fullName: "",
+      addressLine1: "",
+      addressLine2: "",
       city: "",
       state: "",
       country: "",
-      postalCode: "",
-      phone: "",
+      pincode: "",
+      mobile: "",
       isDefault: addresses.length === 0,
     });
     setModalMode("add");
@@ -137,17 +137,17 @@ export function AddressesSection({
                     </div>
                     <p className="line-clamp-1 text-muted-foreground">
                       {[
-                        address.line1,
-                        address.line2,
+                        address.addressLine1,
+                        address.addressLine2,
                         address.city,
-                        address.postalCode,
+                        address.pincode,
                       ]
                         .filter(Boolean)
                         .join(", ")}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1 text-[0.7rem] text-muted-foreground">
-                    <span>{address.phone}</span>
+                    <span>{address.mobile}</span>
                   </div>
                 </button>
               ))}

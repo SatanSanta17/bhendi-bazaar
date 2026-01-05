@@ -6,6 +6,8 @@ import { authOptions } from "@/lib/auth-config";
 import { cartService } from "@/server/services/cartService";
 import { validateRequest } from "@/lib/validation";
 import { updateCartSchema } from "@/lib/validation/schemas/cart.schemas";
+import { withRateLimit, getRateLimitIdentifier } from "@/lib/rateLimit";
+import type { CartItem } from "@/domain/cart";
 
 /**
  * API Routes act as the bridge between client and server
@@ -13,9 +15,10 @@ import { updateCartSchema } from "@/lib/validation/schemas/cart.schemas";
  */
 
 /**
- * GET /api/cart
+ * PUT /api/cart
+ * Replace entire cart with new items
  */
-export async function GET(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -23,30 +26,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Call server service
-    const items = await cartService.getCart(session.user.id);
-
-    // Return to client (types are compatible via JSON)
-    return NextResponse.json({ items }, { status: 200 });
-  } catch (error) {
-    console.error("[API] GET /api/cart failed:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch cart" },
-      { status: 500 }
+    // Apply rate limiting: 100 requests per minute
+    const rateLimitResult = await withRateLimit(
+      request,
+      { interval: 60 * 1000, uniqueTokenPerInterval: 100 },
+      () => getRateLimitIdentifier(request, session.user.id)
     );
-  }
-}
-
-/**
- * POST /api/cart
- */
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (rateLimitResult) return rateLimitResult;
 
     // Validate request body
     const validation = await validateRequest(request, updateCartSchema);
@@ -55,12 +41,18 @@ export async function POST(request: NextRequest) {
       return validation.error;
     }
 
+    // Transform items: convert null to undefined for salePrice
+    const items = validation.data.items.map((item) => ({
+      ...item,
+      salePrice: item.salePrice ?? undefined,
+    })) as CartItem[];
+
     // Call server service (types converted at runtime)
-    await cartService.updateCart(session.user.id, validation.data.items);
+    await cartService.updateCart(session.user.id, items);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("[API] POST /api/cart failed:", error);
+    console.error("[API] PUT /api/cart failed:", error);
 
     const errorMessage =
       error instanceof Error ? error.message : "Failed to update cart";
@@ -77,11 +69,16 @@ export async function DELETE(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Apply rate limiting: 20 requests per minute
+    const rateLimitResult = await withRateLimit(
+      request,
+      { interval: 60 * 1000, uniqueTokenPerInterval: 20 },
+      () => getRateLimitIdentifier(request, session.user.id)
+    );
+    if (rateLimitResult) return rateLimitResult;
 
     await cartService.clearCart(session.user.id);
 

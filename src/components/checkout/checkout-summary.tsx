@@ -1,28 +1,17 @@
 "use client";
 
-import { useCartStore } from "@/store/cartStore";
+import { useDisplayItems } from "./hooks/useDisplayItems";
 import { SectionHeader } from "../shared/SectionHeader";
 import { PriceDisplay } from "../shared/PriceDisplay";
+import type { Product } from "@/domain/product";
 
-export function CheckoutSummary() {
-  const items = useCartStore((state) => state.items);
-  const buyNowItem = useCartStore((state) => state.buyNowItem);
-  const subtotal = useCartStore((state) => state.subtotal);
-  const discount = useCartStore((state) => state.discount);
-  const total = useCartStore((state) => state.total);
+interface CheckoutSummaryProps {
+  buyNowProduct: Product | null;
+}
 
-  const displayItems = buyNowItem ? [buyNowItem] : items;
-
-  const displaySubtotal = buyNowItem
-    ? buyNowItem.price * buyNowItem.quantity
-    : subtotal;
-  const displayDiscount =
-    buyNowItem && buyNowItem.salePrice
-      ? (buyNowItem.price - buyNowItem.salePrice) * buyNowItem.quantity
-      : discount;
-  const displayTotal = buyNowItem
-    ? (buyNowItem.salePrice ?? buyNowItem.price) * buyNowItem.quantity
-    : total;
+export function CheckoutSummary({ buyNowProduct }: CheckoutSummaryProps) {
+  const { displayItems, displaySubtotal, displayDiscount, displayTotal } =
+    useDisplayItems(buyNowProduct);
 
   if (!displayItems.length) {
     return (
@@ -42,7 +31,7 @@ export function CheckoutSummary() {
             className="flex items-baseline justify-between gap-2"
           >
             <span className="line-clamp-1 text-muted-foreground">
-              {item.name} × {item.quantity}
+              {item.productName} × {item.quantity}
             </span>
             <PriceDisplay price={item.price * item.quantity} size="sm" />
           </div>

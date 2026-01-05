@@ -7,15 +7,16 @@
 
 export interface ProfileAddress {
   id: string;
-  label: string;
-  name: string; // name of the recipient for this address.
-  line1: string;
-  line2?: string;
+  label?: string;
+  fullName: string;
+  mobile: string;
+  addressLine1: string;
+  addressLine2?: string;
+  landmark?: string;
   city: string;
-  state?: string;
+  state: string;
+  pincode: string;
   country: string;
-  postalCode: string;
-  phone: string; // contact number for this address.
   isDefault?: boolean;
 }
 
@@ -32,6 +33,8 @@ export interface User {
   name: string | null;
   email: string | null;
   mobile: string | null;
+  isEmailVerified: boolean;
+  emailVerifiedAt: Date | null;
 }
 
 // Aggregate root - combines user + profile for this context

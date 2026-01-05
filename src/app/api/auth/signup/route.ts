@@ -8,6 +8,7 @@ import {
 } from "@/lib/rate-limit";
 import { validateRequest } from "@/lib/validation/utils";
 import { signupSchema } from "@/lib/validation/schemas/auth.schemas";
+import { emailService } from "@/server/services/emailService";
 
 export async function POST(request: NextRequest) {
   // Rate limit check
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
         email,
         mobile,
         passwordHash,
+        isEmailVerified: false, // Explicitly set to false
         profile: {
           create: {
             addresses: [],
@@ -74,11 +76,24 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Send verification email
+    if (email) {
+      try {
+        await emailService.sendVerificationEmail(user.id, email);
+        console.log(`✅ Verification email sent to ${email}`);
+      } catch (emailError) {
+        console.error("Failed to send verification email:", emailError);
+        // Don't fail signup if email fails
+      }
+    }
+
     return NextResponse.json(
       {
         id: user.id,
         email: user.email,
         name: user.name,
+        message:
+          "Account created! Please check your email to verify your account.",
       },
       { status: 201 }
     );

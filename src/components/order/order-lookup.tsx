@@ -3,7 +3,6 @@
 
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useState } from "react";
-import type { Order } from "@/domain/order";
 import { orderService } from "@/services/orderService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,18 +12,21 @@ import { SectionHeader } from "../shared/SectionHeader";
 
 export function OrderLookup() {
   const [code, setCode] = useState("");
+  const [shouldFetch, setShouldFetch] = useState(false); // Add this
+
   const {
     data: order,
     loading: isLoading,
     error,
     refetch,
   } = useAsyncData(() => orderService.lookupOrderByCode(code), {
-    enabled: false,
+    enabled: shouldFetch,
   });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (code.trim()) return;
+    if (!code.trim()) return;
+    setShouldFetch(true);
     await refetch();
   }
 
@@ -47,7 +49,7 @@ export function OrderLookup() {
           <Input
             placeholder="e.g. BB-1001"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) => setCode(e.target.value.trim())}
             className="h-9 text-xs"
           />
         </div>

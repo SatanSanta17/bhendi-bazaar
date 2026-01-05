@@ -22,8 +22,11 @@ class AdminProductService {
 
     if (filters.search) params.append("search", filters.search);
     if (filters.categoryId) params.append("categoryId", filters.categoryId);
-    if (filters.isFeatured) params.append("isFeatured", "true");
-    if (filters.isOnOffer) params.append("isOnOffer", "true");
+    if (filters.flags && filters.flags.length > 0)
+      params.append(
+        "flags",
+        filters.flags.map((flag) => flag.toString()).join(",")
+      );
     if (filters.lowStock) params.append("lowStock", "true");
     if (filters.outOfStock) params.append("outOfStock", "true");
     if (filters.minPrice) params.append("minPrice", String(filters.minPrice));

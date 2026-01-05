@@ -5,12 +5,12 @@
  * COMPLETELY INDEPENDENT - No client imports!
  */
 
-export type ProductId = string;
 
 export interface CartItem {
   id: string;
-  productId: ProductId;
-  name: string;
+  productId: string;
+  productSlug: string;
+  productName: string;
   thumbnail: string;
   price: number;
   salePrice?: number;
@@ -23,10 +23,6 @@ export interface CartTotals {
   subtotal: number;
   discount: number;
   total: number;
-}
-
-export interface CartState {
-  items: CartItem[];
 }
 
 export interface ServerCart {

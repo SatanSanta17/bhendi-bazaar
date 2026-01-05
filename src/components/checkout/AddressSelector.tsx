@@ -64,15 +64,15 @@ export function AddressSelector({
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {selectedAddress.name} • {selectedAddress.phone}
+              {selectedAddress.fullName} • {selectedAddress.mobile}
             </p>
             <p className="text-sm text-muted-foreground">
               {[
-                selectedAddress.line1,
-                selectedAddress.line2,
+                selectedAddress.addressLine1,
+                selectedAddress.addressLine2,
                 selectedAddress.city,
                 selectedAddress.state,
-                selectedAddress.postalCode,
+                selectedAddress.pincode,
               ]
                 .filter(Boolean)
                 .join(", ")}
@@ -114,10 +114,10 @@ export function AddressSelector({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {address.name} • {address.phone}
+                      {address.fullName} • {address.mobile}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {[address.line1, address.city, address.postalCode]
+                      {[address.addressLine1, address.city, address.pincode]
                         .filter(Boolean)
                         .join(", ")}
                     </p>

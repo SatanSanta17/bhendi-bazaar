@@ -5,22 +5,19 @@
  * They mirror the API response structure and are used for type safety.
  */
 
-export type ProductId = string;
-export type CategorySlug = string;
+import { ProductFlag } from "@/types/product";
 
 export interface Product {
-  id: ProductId;
+  id: string;
   slug: string;
   name: string;
   description: string;
   price: number;
   salePrice?: number;
   currency: "INR";
-  categorySlug: CategorySlug;
+  categorySlug: string;
   tags: string[];
-  isFeatured?: boolean;
-  isHero?: boolean;
-  isOnOffer?: boolean;
+  flags?: ProductFlag[];
   rating: number;
   reviewsCount: number;
   images: string[];
@@ -34,7 +31,7 @@ export interface Product {
 }
 
 export interface ProductFilter {
-  categorySlug?: CategorySlug;
+  categorySlug?: string;
   search?: string;
   minPrice?: number;
   maxPrice?: number;

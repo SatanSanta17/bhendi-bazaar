@@ -4,6 +4,8 @@
  * These types are used exclusively on the server-side (services, repositories).
  */
 
+import { ProductFlag } from "@/server/types/products";
+
 export type ProductId = string;
 export type CategorySlug = string;
 
@@ -17,9 +19,7 @@ export interface ServerProduct {
   currency: "INR";
   categorySlug: CategorySlug;
   tags: string[];
-  isFeatured: boolean;
-  isHero: boolean;
-  isOnOffer: boolean;
+  flags: ProductFlag[];
   rating: number;
   reviewsCount: number;
   images: string[];

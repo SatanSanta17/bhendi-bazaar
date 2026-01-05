@@ -11,6 +11,7 @@ import type {
   ProductListFilters,
   CreateProductInput,
 } from "@/server/domain/admin/product";
+import { ProductFlag } from "@/types/product";
 
 export async function GET(request: NextRequest) {
   const session = await verifyAdminSession();
@@ -22,8 +23,12 @@ export async function GET(request: NextRequest) {
     const filters: ProductListFilters = {
       search: searchParams.get("search") || undefined,
       categoryId: searchParams.get("categoryId") || undefined,
-      isFeatured: searchParams.get("isFeatured") === "true" ? true : undefined,
-      isOnOffer: searchParams.get("isOnOffer") === "true" ? true : undefined,
+      flags: searchParams.get("flags")
+        ? searchParams
+            .get("flags")!
+            .split(",")
+            .map((flag) => flag as ProductFlag)
+        : undefined,
       lowStock: searchParams.get("lowStock") === "true" ? true : undefined,
       outOfStock: searchParams.get("outOfStock") === "true" ? true : undefined,
       minPrice: searchParams.get("minPrice")

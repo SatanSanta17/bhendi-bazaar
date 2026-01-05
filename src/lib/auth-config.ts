@@ -48,6 +48,46 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Only process OAuth logins
+      if (account?.provider === "google") {
+        try {
+          // Check if user with this email exists
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            include: { accounts: true },
+          });
+
+          if (existingUser) {
+            // Check if Google account is already linked
+            const googleAccount = existingUser.accounts.find(
+              (a) => a.provider === "google"
+            );
+
+            if (!googleAccount) {
+              // Link Google account to existing user
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                },
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error linking account:", error);
+          return false;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

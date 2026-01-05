@@ -10,6 +10,7 @@ interface AddressFieldsProps {
   namePrefix?: string; // For nested forms like "shippingAddress."
   includeEmail?: boolean;
   includeNotes?: boolean;
+  includeLabel?: boolean;
 }
 
 export function AddressFields({
@@ -18,23 +19,24 @@ export function AddressFields({
   namePrefix = "",
   includeEmail = false,
   includeNotes = false,
+  includeLabel = false,
 }: AddressFieldsProps) {
   const getFieldName = (field: string) => `${namePrefix}${field}`;
 
   const getError = (field: string): string | undefined => {
     if (!errors) return undefined;
-  
+
     try {
       if (namePrefix) {
         // Safely access nested error
         const nestedErrors = errors[namePrefix];
-        if (nestedErrors && typeof nestedErrors === 'object') {
+        if (nestedErrors && typeof nestedErrors === "object") {
           const fieldError = (nestedErrors as Record<string, any>)[field];
           return fieldError?.message;
         }
         return undefined;
       }
-      
+
       // Direct field access
       const fieldError = errors[field];
       return fieldError?.message as string | undefined;
@@ -42,10 +44,18 @@ export function AddressFields({
       return undefined;
     }
   };
-  
+
   return (
     <>
-      {/* Name and Phone Row */}
+      {/* Label (optional) */}
+      {includeLabel && (
+        <FormInput
+          label="Label"
+          placeholder="Home, Office, Other."
+          {...register(getFieldName("label"))}
+          error={getError("label")}
+        />
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <FormInput
           label="Full Name"
@@ -55,12 +65,12 @@ export function AddressFields({
           error={getError("fullName")}
         />
         <FormInput
-          label="Phone"
+          label="Mobile"
           required
           type="tel"
-          placeholder="10-digit mobile"
-          {...register(getFieldName("phone"), { required: true })}
-          error={getError("phone")}
+          placeholder="10-digit Mobile Number"
+          {...register(getFieldName("mobile"), { required: true })}
+          error={getError("mobile")}
         />
       </div>
 
@@ -81,16 +91,16 @@ export function AddressFields({
         label="Address Line 1"
         required
         placeholder="Flat, house no., building"
-        {...register(getFieldName("line1"), { required: true })}
-        error={getError("line1")}
+        {...register(getFieldName("addressLine1"), { required: true })}
+        error={getError("addressLine1")}
       />
 
       {/* Address Line 2 */}
       <FormInput
         label="Address Line 2"
         placeholder="Area, street (optional)"
-        {...register(getFieldName("line2"))}
-        error={getError("line2")}
+        {...register(getFieldName("addressLine2"))}
+        error={getError("addressLine2")}
       />
 
       {/* City, State, PIN Row */}
@@ -110,8 +120,8 @@ export function AddressFields({
         <FormInput
           label="PIN Code"
           required
-          {...register(getFieldName("postalCode"), { required: true })}
-          error={getError("postalCode")}
+          {...register(getFieldName("pincode"), { required: true })}
+          error={getError("pincode")}
         />
       </div>
 

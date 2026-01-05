@@ -15,13 +15,13 @@ export type PaymentStatus = "pending" | "paid" | "failed";
 
 export interface OrderAddress {
   fullName: string;
-  phone: string;
+  mobile: string;
   email?: string;
-  line1: string;
-  line2?: string;
+  addressLine1: string;
+  addressLine2?: string;
   city: string;
   state: string;
-  postalCode: string;
+  pincode: string;
   country: string;
 }
 

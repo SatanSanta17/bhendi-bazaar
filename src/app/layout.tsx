@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Suspense } from "react";
 import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
+import { FloatingAdminButton } from "@/components/layout/FloatingAdminButton";
 
 const headingFont = Playfair_Display({
   variable: "--font-heading",
@@ -34,6 +35,7 @@ export default function RootLayout({
       >
         <Providers>
           <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
+          <FloatingAdminButton />
         </Providers>
       </body>
     </html>

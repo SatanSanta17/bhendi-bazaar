@@ -6,7 +6,7 @@
 
 import { prisma } from "@/lib/prisma";
 import type { ServerProduct, ProductFilter } from "@/server/domain/product";
-import type { Product } from "@/domain/product";
+import { ProductFlag } from "@/server/types/products";
 
 /**
  * Convert Prisma Product to ServerProduct
@@ -22,9 +22,7 @@ function toServerProduct(product: any): ServerProduct {
     currency: product.currency,
     categorySlug: product.category?.slug || "",
     tags: product.tags,
-    isFeatured: product.isFeatured,
-    isHero: product.isHero,
-    isOnOffer: product.isOnOffer,
+    flags: product.flags,
     rating: product.rating,
     reviewsCount: product.reviewsCount,
     images: product.images,
@@ -35,36 +33,6 @@ function toServerProduct(product: any): ServerProduct {
     lowStockThreshold: product.lowStockThreshold || 10,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
-  };
-}
-
-/**
- * Convert ServerProduct to client Product
- */
-function toClientProduct(product: ServerProduct): Product {
-  return {
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    description: product.description,
-    price: product.price,
-    salePrice: product.salePrice ?? undefined,
-    currency: product.currency,
-    categorySlug: product.categorySlug,
-    tags: product.tags,
-    isFeatured: product.isFeatured || undefined,
-    isHero: product.isHero || undefined,
-    isOnOffer: product.isOnOffer || undefined,
-    rating: product.rating,
-    reviewsCount: product.reviewsCount,
-    images: product.images,
-    thumbnail: product.thumbnail,
-    stock: product.stock,
-    lowStockThreshold: product.lowStockThreshold,
-    options: {
-      sizes: product.sizes.length > 0 ? product.sizes : undefined,
-      colors: product.colors.length > 0 ? product.colors : undefined,
-    },
   };
 }
 
@@ -101,12 +69,12 @@ export class ProductRepository {
 
     // Apply offer filter
     if (filter?.offerOnly) {
-      where.isOnOffer = true;
+      where.flags = { has: ProductFlag.ON_OFFER };
     }
 
     // Apply featured filter
     if (filter?.featuredOnly) {
-      where.isFeatured = true;
+      where.flags = { has: ProductFlag.FEATURED };
     }
 
     const products = await prisma.product.findMany({
@@ -139,6 +107,16 @@ export class ProductRepository {
 
     if (!product) return null;
     return toServerProduct(product);
+  }
+
+  /**
+   * Find products by slugs
+   */
+  async findBySlugs(slugs: string[]): Promise<ServerProduct[]> {
+    const products = await prisma.product.findMany({
+      where: { slug: { in: slugs } },
+    });
+    return products.map(toServerProduct);
   }
 
   /**
@@ -175,7 +153,7 @@ export class ProductRepository {
   async getHeroProducts(limit = 6): Promise<ServerProduct[]> {
     const products = await prisma.product.findMany({
       where: {
-        isHero: true,
+        flags: { has: ProductFlag.HERO },
       },
       include: {
         category: {
@@ -195,7 +173,7 @@ export class ProductRepository {
   async getOfferProducts(limit?: number): Promise<ServerProduct[]> {
     const products = await prisma.product.findMany({
       where: {
-        isOnOffer: true,
+        flags: { has: ProductFlag.ON_OFFER },
       },
       include: {
         category: {
@@ -207,13 +185,6 @@ export class ProductRepository {
     });
 
     return products.map(toServerProduct);
-  }
-
-  /**
-   * Convert to client-facing Product
-   */
-  toClient(serverProduct: ServerProduct): Product {
-    return toClientProduct(serverProduct);
   }
 }
 

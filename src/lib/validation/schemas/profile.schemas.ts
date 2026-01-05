@@ -3,16 +3,19 @@ import { nameSchema, emailSchema, phoneSchema, uuidSchema, postalCodeSchema } fr
 
 // Profile address schema (includes ID and default flag)
 const profileAddressSchema = z.object({
-  id: uuidSchema,
-  label: z.string().min(1).max(100),
-  name: nameSchema, // Required for profile addresses
-  phone: phoneSchema,
-  line1: z.string().min(5, 'Address line 1 too short').max(500, 'Address line 1 too long'),
-  line2: z.string().max(500, 'Address line 2 too long').optional(),
-  city: z.string().min(2, 'City too short').max(100, 'City too long'),
-  state: z.string().min(2, 'State too short').max(100, 'State too long').optional(),
-  postalCode: postalCodeSchema,
-  country: z.string().default('India'),
+  id: z.string().min(1),
+  label: z.string().max(100).optional(),
+  fullName: nameSchema, // Required for profile addresses
+  mobile: phoneSchema,
+  addressLine1: z
+    .string()
+    .min(5, "Address line 1 too short")
+    .max(500, "Address line 1 too long"),
+  addressLine2: z.string().max(500, "Address line 2 too long").optional(),
+  city: z.string().min(2, "City too short").max(100, "City too long"),
+  state: z.string().min(2, "State too short").max(100, "State too long"),
+  pincode: postalCodeSchema,
+  country: z.string().default("India"),
   isDefault: z.boolean().default(false),
 });
 

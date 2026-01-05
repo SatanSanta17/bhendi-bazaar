@@ -10,7 +10,6 @@ export function useProductActions(product: Product) {
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const items = useCartStore((state) => state.items);
-  const setBuyNowItem = useCartStore((state) => state.setBuyNowItem);
 
   const [isAddingToCart, startAddToCart] = useTransition();
   const [isBuyingNow, startBuyNow] = useTransition();
@@ -22,32 +21,35 @@ export function useProductActions(product: Product) {
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
-      toast.error("This item is out of stock");
+      toast.warning("This item is out of stock");
       return;
     }
 
     if (currentCartQty + 1 > product.stock) {
-      toast.error(
+      toast.warning(
         `Cannot add more. Maximum ${product.stock} available (${currentCartQty} already in cart)`
       );
       return;
     }
 
-    startAddToCart(() =>
-      new Promise((resolve) => {
-        setTimeout(() => {
-          addItem({
-            productId: product.id,
-            name: product.name,
-            thumbnail: product.thumbnail,
-            price: product.price,
-            salePrice: product.salePrice,
-            quantity: 1,
-          });
-          toast.success("Added to cart");
-          resolve(undefined);
-        }, 300);
-      })
+    // after stock validation done
+    startAddToCart(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => {
+            addItem({
+              productId: product.id,
+              productName: product.name,
+              productSlug: product.slug,
+              thumbnail: product.thumbnail,
+              price: product.price,
+              salePrice: product.salePrice,
+              quantity: 1,
+            });
+            toast.success("Added to cart");
+            resolve(undefined);
+          }, 300);
+        })
     );
   };
 
@@ -64,22 +66,10 @@ export function useProductActions(product: Product) {
       return;
     }
 
-    const item = {
-      productId: product.id,
-      name: product.name,
-      thumbnail: product.thumbnail,
-      price: product.price,
-      salePrice: product.salePrice,
-      quantity: 1,
-    };
-
-    setBuyNowItem(item);
-
-    setTimeout(() => {
-      startBuyNow(() => {
-        router.push("/checkout");
-      });
-    }, 50);
+    // Navigate to checkout with product ID in URL
+    startBuyNow(() => {
+      router.push(`/checkout?buyNow=${product.slug}`);
+    });
   };
 
   return {

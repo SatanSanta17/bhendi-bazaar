@@ -9,15 +9,10 @@ import { PriceDisplay } from "../shared/PriceDisplay";
 export function CartSummary() {
   const router = useRouter();
   const items = useCartStore((state) => state.items);
-  const subtotal = useCartStore((state) => state.subtotal);
-  const discount = useCartStore((state) => state.discount);
-  const total = useCartStore((state) => state.total);
-  const clearBuyNow = useCartStore((state) => state.clearBuyNow);
+  const { subtotal, discount, total } = useCartStore((state) => state.totals);
   const hasItems = items.length > 0;
 
   const handleCheckout = () => {
-    // ✅ Clear any Buy Now item before going to checkout from cart
-    clearBuyNow();
     router.push("/checkout");
   };
 

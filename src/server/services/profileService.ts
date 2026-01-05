@@ -1,11 +1,12 @@
 /**
  * Server-side Profile Service
- * 
+ *
  * This service encapsulates all business logic related to user profiles.
  * It acts as an intermediary between API routes and the repository layer.
  */
 
 import { profileRepository } from "@/server/repositories/profileRepository";
+import { prisma } from "@/lib/prisma";
 import type {
   ServerProfileData,
   UpdateProfileInput,
@@ -17,11 +18,11 @@ export class ProfileService {
    */
   async getProfile(userId: string): Promise<ServerProfileData> {
     const profile = await profileRepository.getByUserId(userId);
-    
+
     if (!profile) {
       throw new Error("User not found");
     }
-    
+
     return profile;
   }
 
@@ -32,12 +33,12 @@ export class ProfileService {
     userId: string,
     input: UpdateProfileInput
   ): Promise<ServerProfileData> {
-    // Validate input
-    this.validateUpdateInput(input);
-    
+    // Validate input (includes uniqueness checks)
+    await this.validateUpdateInput(userId, input);
+
     // Update profile
     const updated = await profileRepository.update(userId, input);
-    
+
     return updated;
   }
 
@@ -51,12 +52,25 @@ export class ProfileService {
   /**
    * Validate update input
    */
-  private validateUpdateInput(input: UpdateProfileInput): void {
+  private async validateUpdateInput(
+    userId: string,
+    input: UpdateProfileInput
+  ): Promise<void> {
     // Validate email format if provided
     if (input.email !== undefined && input.email !== null) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(input.email)) {
         throw new Error("Invalid email format");
+      }
+
+      // Check if email is already taken by another user
+      const existingUser = await prisma.user.findUnique({
+        where: { email: input.email },
+        select: { id: true },
+      });
+
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error("This email is already registered to another account");
       }
     }
 
@@ -65,6 +79,18 @@ export class ProfileService {
       const mobileRegex = /^\d{10}$/;
       if (!mobileRegex.test(input.mobile)) {
         throw new Error("Mobile number must be 10 digits");
+      }
+
+      // Check if mobile is already taken by another user
+      const existingMobile = await prisma.user.findUnique({
+        where: { mobile: input.mobile },
+        select: { id: true },
+      });
+
+      if (existingMobile && existingMobile.id !== userId) {
+        throw new Error(
+          "This mobile number is already registered to another account"
+        );
       }
     }
 
@@ -75,7 +101,14 @@ export class ProfileService {
       }
 
       for (const address of input.addresses) {
-        if (!address.name || !address.line1 || !address.city || !address.country || !address.postalCode || !address.phone) {
+        if (
+          !address.fullName ||
+          !address.addressLine1 ||
+          !address.city ||
+          !address.country ||
+          !address.pincode ||
+          !address.mobile
+        ) {
           throw new Error("Address is missing required fields");
         }
       }
@@ -93,4 +126,3 @@ export class ProfileService {
 }
 
 export const profileService = new ProfileService();
-

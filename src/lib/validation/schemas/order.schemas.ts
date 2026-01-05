@@ -4,21 +4,25 @@ import { uuidSchema, priceSchema, quantitySchema, nameSchema, emailSchema, phone
 // Order-specific address schema (requires fullName and state)
 const orderAddressSchema = z.object({
   fullName: nameSchema,
-  phone: phoneSchema,
+  mobile: phoneSchema,
   email: emailSchema.optional(),
-  line1: z.string().min(5, 'Address line 1 too short').max(500, 'Address line 1 too long'),
-  line2: z.string().max(500, 'Address line 2 too long').optional(),
-  city: z.string().min(2, 'City too short').max(100, 'City too long'),
-  state: z.string().min(2, 'State too short').max(100, 'State too long'),
-  postalCode: postalCodeSchema,
-  country: z.string().default('India'),
+  addressLine1: z
+    .string()
+    .min(5, "Address line 1 too short")
+    .max(500, "Address line 1 too long"),
+  addressLine2: z.string().max(500, "Address line 2 too long").optional(),
+  city: z.string().min(2, "City too short").max(100, "City too long"),
+  state: z.string().min(2, "State too short").max(100, "State too long"),
+  pincode: postalCodeSchema,
+  country: z.string().default("India"),
 });
 
 // Cart item schema - matches client-side CartItem type
 const cartItemSchema = z.object({
   id: z.string(),
-  productId: uuidSchema,
-  name: z.string().min(1).max(255),
+  productId: z.string().min(1),
+  productName: z.string().min(1).max(255),
+  productSlug: z.string().min(1).max(255),
   thumbnail: z.string().url().max(2048),
   price: priceSchema,
   salePrice: priceSchema.optional(),

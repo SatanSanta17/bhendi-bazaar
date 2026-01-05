@@ -6,14 +6,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 
-// Only initialize rate limiter if Redis credentials exist
-let authRateLimitMiddleware: Ratelimit | null = null;
+// Rate limiter - initialized lazily
+let authRateLimitMiddleware: any = null;
+let rateLimitInitialized = false;
 
-if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+async function initRateLimiter() {
+  if (rateLimitInitialized) return;
+  rateLimitInitialized = true;
+
+  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+    console.warn(
+      "⚠️ Redis credentials not configured - rate limiting disabled"
+    );
+    return;
+  }
+
   try {
+    const { Ratelimit } = await import("@upstash/ratelimit");
+    const { Redis } = await import("@upstash/redis");
+
     const redis = new Redis({
       url: process.env.KV_REST_API_URL,
       token: process.env.KV_REST_API_TOKEN,
@@ -25,8 +37,11 @@ if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
       analytics: true,
       prefix: "ratelimit:auth:middleware",
     });
+
+    console.log("✅ Rate limiter initialized");
   } catch (error) {
-    console.error("Failed to initialize rate limiter:", error);
+    console.error("❌ Failed to initialize rate limiter:", error);
+    authRateLimitMiddleware = null;
   }
 }
 
@@ -45,46 +60,45 @@ function getClientIp(request: NextRequest): string {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Initialize rate limiter on first request
+  if (!rateLimitInitialized) {
+    await initRateLimiter();
+  }
+
   // Rate limit auth endpoints (only if rate limiter is available)
   if (
     authRateLimitMiddleware &&
     (pathname.startsWith("/api/auth/signin") ||
       pathname.startsWith("/api/auth/callback"))
   ) {
-    const ip = getClientIp(request);
-    const { success, reset } = await authRateLimitMiddleware.limit(ip);
-
-    if (!success) {
-      const timeRemaining = reset - Date.now();
-      const seconds = Math.ceil(timeRemaining / 1000);
-
-      return NextResponse.json(
-        {
-          error: `Too many authentication attempts. Please try again in ${seconds} seconds.`,
-        },
-        { status: 429 }
-      );
-    }
-  }
-
-  // Redirect authenticated admins from home to admin dashboard
-  if (pathname === "/" || pathname === "/signin") {
     try {
-      const token = await getToken({
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET,
-      });
+      const ip = getClientIp(request);
+      const { success, reset } = await authRateLimitMiddleware.limit(ip);
 
-      if (token && (token as any).role === "ADMIN") {
-        return NextResponse.redirect(new URL("/admin", request.url));
+      if (!success) {
+        const timeRemaining = reset - Date.now();
+        const seconds = Math.ceil(timeRemaining / 1000);
+
+        return NextResponse.json(
+          {
+            error: `Too many authentication attempts. Please try again in ${seconds} seconds.`,
+          },
+          { status: 429 }
+        );
       }
     } catch (error) {
-      console.error("Error checking admin redirect:", error);
+      console.error("Rate limiting error:", error);
+      // Continue without rate limiting on error
     }
   }
 
   // Protect admin routes
   if (pathname.startsWith("/admin")) {
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error("⚠️ NEXTAUTH_SECRET not configured");
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
     try {
       const token = await getToken({
         req: request,

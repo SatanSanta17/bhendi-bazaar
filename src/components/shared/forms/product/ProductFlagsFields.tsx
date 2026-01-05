@@ -4,6 +4,7 @@ import { Control } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { CreateProductInput } from "@/domain/admin";
 import { FormController } from "../FormField";
+import { ProductFlag, PRODUCT_FLAG_METADATA } from "@/types/product";
 
 interface ProductFlagsFieldsProps {
   control: Control<CreateProductInput>;
@@ -17,43 +18,33 @@ export function ProductFlagsFields({ control }: ProductFlagsFieldsProps) {
       </h2>
       <div className="space-y-3">
         <FormController
-          name="isFeatured"
+          name="flags"
           control={control}
-          label="Featured Product"
-          render={({ field }) => (
-            <Checkbox
-              label="Featured Product"
-              description="Display this product in featured sections"
-              checked={field.value as boolean}
-              onChange={(e) => field.onChange(e.target.checked)}
-            />
-          )}
-        />
-        <FormController
-          name="isHero"
-          control={control}
-          label="Hero Product"
-          render={({ field }) => (
-            <Checkbox
-              label="Hero Product"
-              description="Display this product in hero sections on homepage"
-              checked={field.value as boolean}
-              onChange={(e) => field.onChange(e.target.checked)}
-            />
-          )}
-        />
-        <FormController
-          name="isOnOffer"
-          control={control}
-          label="On Offer"
-          render={({ field }) => (
-            <Checkbox
-              label="On Offer"
-              description="Mark this product as being on special offer"
-              checked={field.value as boolean}
-              onChange={(e) => field.onChange(e.target.checked)}
-            />
-          )}
+          label="Product Flags"
+          render={({ field }) => {
+            const currentFlags = (field.value as ProductFlag[]) || [];
+
+            const toggleFlag = (flag: ProductFlag) => {
+              const newFlags = currentFlags.includes(flag)
+                ? currentFlags.filter((f) => f !== flag)
+                : [...currentFlags, flag];
+              field.onChange(newFlags);
+            };
+
+            return (
+              <div className="space-y-3">
+                {Object.entries(PRODUCT_FLAG_METADATA).map(([flag, meta]) => (
+                  <Checkbox
+                    key={flag}
+                    label={meta.label}
+                    description={meta.description}
+                    checked={currentFlags.includes(flag as ProductFlag)}
+                    onChange={() => toggleFlag(flag as ProductFlag)}
+                  />
+                ))}
+              </div>
+            );
+          }}
         />
       </div>
     </div>

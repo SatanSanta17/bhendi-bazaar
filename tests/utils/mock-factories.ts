@@ -8,30 +8,29 @@ import type { Product } from '@/domain/product';
 import type { CartItem } from '@/domain/cart';
 import type { ServerOrder, OrderAddress, OrderItem } from '@/server/domain/order';
 import type { AuthUser } from '@/lib/auth';
+import { ProductFlag } from "@/types/product";
 
 /**
  * Create a mock product with default values
  */
 export const createMockProduct = (overrides?: Partial<Product>): Product => ({
-  id: 'product-1',
-  slug: 'test-product',
-  name: 'Test Product',
-  description: 'Test product description',
+  id: "product-1",
+  slug: "test-product",
+  name: "Test Product",
+  description: "Test product description",
   price: 100,
   salePrice: 80,
-  currency: 'INR',
-  categorySlug: 'test-category',
-  tags: ['test'],
-  isFeatured: false,
-  isHero: false,
-  isOnOffer: false,
+  currency: "INR",
+  categorySlug: "test-category",
+  tags: ["test"],
+  flags: [ProductFlag.FEATURED],
   rating: 4.5,
   reviewsCount: 10,
-  images: ['https://example.com/image.jpg'],
-  thumbnail: 'https://example.com/thumb.jpg',
+  images: ["https://example.com/image.jpg"],
+  thumbnail: "https://example.com/thumb.jpg",
   options: {
-    sizes: ['M', 'L', 'XL'],
-    colors: ['Red', 'Blue'],
+    sizes: ["M", "L", "XL"],
+    colors: ["Red", "Blue"],
   },
   stock: 10,
   lowStockThreshold: 5,
@@ -43,30 +42,33 @@ export const createMockProduct = (overrides?: Partial<Product>): Product => ({
  */
 export const createMockCartItem = (overrides?: Partial<CartItem>): CartItem => ({
   id: `cart-item-${Date.now()}-${Math.random()}`,
-  productId: 'product-1',
-  name: 'Test Product',
-  thumbnail: 'https://example.com/thumb.jpg',
+  productId: "product-1",
+  productName: "Test Product",
+  productSlug: "test-product",
+  thumbnail: "https://example.com/thumb.jpg",
   price: 100,
   salePrice: 80,
   quantity: 1,
-  size: 'M',
-  color: 'Red',
+  size: "M",
+  color: "Red",
   ...overrides,
 });
 
 /**
  * Create mock order address
  */
-export const createMockOrderAddress = (overrides?: Partial<OrderAddress>): OrderAddress => ({
-  fullName: 'John Doe',
-  phone: '9876543210',
-  email: 'john@example.com',
-  line1: '123 Test Street',
-  line2: 'Apt 4B',
-  city: 'Mumbai',
-  state: 'Maharashtra',
-  postalCode: '400001',
-  country: 'India',
+export const createMockOrderAddress = (
+  overrides?: Partial<OrderAddress>
+): OrderAddress => ({
+  fullName: "John Doe",
+  mobile: "9876543210",
+  email: "john@example.com",
+  addressLine1: "123 Test Street",
+  addressLine2: "Apt 4B",
+  city: "Mumbai",
+  state: "Maharashtra",
+  pincode: "400001",
+  country: "India",
   ...overrides,
 });
 
@@ -74,9 +76,10 @@ export const createMockOrderAddress = (overrides?: Partial<OrderAddress>): Order
  * Create mock order item
  */
 export const createMockOrderItem = (overrides?: Partial<OrderItem>): OrderItem => ({
-  productId: 'product-1',
-  name: 'Test Product',
-  thumbnail: 'https://example.com/thumb.jpg',
+  productId: "product-1",
+  productName: "Test Product",
+  productSlug: "test-product",
+  thumbnail: "https://example.com/thumb.jpg",
   price: 100,
   salePrice: 80,
   quantity: 1,

@@ -8,6 +8,8 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import type { AuthUser } from "@/lib/auth";
+import { useProfileContext } from "@/context/ProfileContext";
+import { ShieldAlert } from "lucide-react";
 
 interface ProfileMenuProps {
   user: AuthUser;
@@ -15,6 +17,7 @@ interface ProfileMenuProps {
 
 export function ProfileMenu({ user }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
+  const { isEmailVerified } = useProfileContext();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -38,9 +41,12 @@ export function ProfileMenu({ user }: ProfileMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/80 text-xs font-semibold uppercase tracking-[0.15em]"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/80 text-xs font-semibold uppercase tracking-[0.15em] relative"
       >
         {user.name?.charAt(0)?.toUpperCase() ?? "B"}
+        {!isEmailVerified && (
+          <span className="absolute -top-1 -right-1 h-3 w-3 bg-amber-500 rounded-full border-2 border-background" />
+        )}
       </button>
       {open && (
         <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-border/70 bg-popover/95 p-2 text-xs shadow-lg">
@@ -56,6 +62,14 @@ export function ProfileMenu({ user }: ProfileMenuProps) {
               <p className="text-[0.7rem] text-muted-foreground">
                 {user.email}
               </p>
+            )}
+            {!isEmailVerified && (
+              <div className="mt-2 flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <ShieldAlert className="h-3 w-3" />
+                <span className="text-[0.65rem] font-medium">
+                  Email not verified
+                </span>
+              </div>
             )}
           </Link>
           <Link

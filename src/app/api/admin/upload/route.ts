@@ -17,7 +17,6 @@ import { verifyAdminSession } from "@/lib/admin-auth";
 const UPLOAD_TYPES = {
   products: "products",
   categories: "categories",
-  reviews: "reviews",
 } as const;
 
 type UploadType = keyof typeof UPLOAD_TYPES;
@@ -33,20 +32,21 @@ const ALLOWED_TYPES = [
 
 // Max file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
 export async function POST(request: NextRequest) {
   const session = await verifyAdminSession();
   if (session instanceof NextResponse) return session;
 
   try {
-    // Get upload type from query parameter
     const { searchParams } = new URL(request.url);
     const uploadType = (searchParams.get("type") || "products") as UploadType;
 
-    // Validate upload type
     if (!UPLOAD_TYPES[uploadType]) {
       return NextResponse.json(
-        { error: `Invalid upload type. Allowed types: ${Object.keys(UPLOAD_TYPES).join(", ")}` },
+        {
+          error: `Invalid upload type. Allowed types: ${Object.keys(
+            UPLOAD_TYPES
+          ).join(", ")}`,
+        },
         { status: 400 }
       );
     }
@@ -54,21 +54,39 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
 
+    // Get context for naming (optional but recommended)
+    const productSlug = formData.get("productSlug") as string | null;
+    const categorySlug = formData.get("categorySlug") as string | null;
+
     if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: "No files provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
 
     const uploadedUrls: string[] = [];
     const folder = UPLOAD_TYPES[uploadType];
 
+    // Helper to sanitize names for filenames
+    const sanitizeName = (name: string) =>
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .substring(0, 50);
+
+    let identifier = "unnamed";
+    if (uploadType === "products" && productSlug) {
+      identifier = sanitizeName(productSlug);
+    } else if (uploadType === "categories" && categorySlug) {
+      identifier = sanitizeName(categorySlug);
+    }
+
     for (const file of files) {
       // Validate file type
       if (!ALLOWED_TYPES.includes(file.type)) {
         return NextResponse.json(
-          { error: `Invalid file type: ${file.name}. Allowed: JPEG, PNG, WebP, GIF` },
+          {
+            error: `Invalid file type: ${file.name}. Allowed: JPEG, PNG, WebP, GIF`,
+          },
           { status: 400 }
         );
       }
@@ -81,11 +99,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate unique filename
+      // Generate admin-friendly filename
       const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 15);
       const extension = file.name.split(".").pop();
-      const filename = `${folder}/${timestamp}-${randomString}.${extension}`;
+      const filename = `${folder}/${identifier}-${timestamp}.${extension}`;
 
       // Upload to Vercel Blob
       const blob = await put(filename, file, {

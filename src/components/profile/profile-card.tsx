@@ -10,6 +10,8 @@ import { ProfilePicUpload } from "./profile-pic-upload";
 import { LoadingSpinner } from "../shared/states/LoadingSpinner";
 import { SectionHeader } from "../shared/SectionHeader";
 import { FormActions } from "../shared/button-groups/FormActions";
+import { ChangePasswordModal } from "./change-password-modal";
+
 interface ProfileCardProps {
   user: User | null;
   profilePic?: string | null;
@@ -212,6 +214,9 @@ export function ProfileCard({
                 }
                 placeholder="10-digit mobile number"
               />
+            </div>
+            <div className="flex gap-2">
+              <ChangePasswordModal />
             </div>
             <FormActions
               onCancel={handleCancel}
