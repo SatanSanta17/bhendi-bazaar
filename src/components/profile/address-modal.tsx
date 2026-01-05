@@ -107,15 +107,15 @@ function AddressViewMode({
           {address.isDefault && <DefaultBadge />}
         </div>
         <p className="text-xs text-muted-foreground">
-          {address.name} · {address.phone}
+          {address.fullName} · {address.mobile}
         </p>
       </div>
 
       <div className="space-y-0.5 text-xs text-muted-foreground">
-        <p>{address.line1}</p>
-        {address.line2 && <p>{address.line2}</p>}
+        <p>{address.addressLine1}</p>
+        {address.addressLine2 && <p>{address.addressLine2}</p>}
         <p>
-          {[address.city, address.state, address.postalCode]
+          {[address.city, address.state, address.pincode]
             .filter(Boolean)
             .join(", ")}
         </p>

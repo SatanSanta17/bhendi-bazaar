@@ -57,16 +57,18 @@ export const createMockCartItem = (overrides?: Partial<CartItem>): CartItem => (
 /**
  * Create mock order address
  */
-export const createMockOrderAddress = (overrides?: Partial<OrderAddress>): OrderAddress => ({
-  fullName: 'John Doe',
-  phone: '9876543210',
-  email: 'john@example.com',
-  line1: '123 Test Street',
-  line2: 'Apt 4B',
-  city: 'Mumbai',
-  state: 'Maharashtra',
-  postalCode: '400001',
-  country: 'India',
+export const createMockOrderAddress = (
+  overrides?: Partial<OrderAddress>
+): OrderAddress => ({
+  fullName: "John Doe",
+  mobile: "9876543210",
+  email: "john@example.com",
+  addressLine1: "123 Test Street",
+  addressLine2: "Apt 4B",
+  city: "Mumbai",
+  state: "Maharashtra",
+  pincode: "400001",
+  country: "India",
   ...overrides,
 });
 
@@ -74,9 +76,10 @@ export const createMockOrderAddress = (overrides?: Partial<OrderAddress>): Order
  * Create mock order item
  */
 export const createMockOrderItem = (overrides?: Partial<OrderItem>): OrderItem => ({
-  productId: 'product-1',
-  name: 'Test Product',
-  thumbnail: 'https://example.com/thumb.jpg',
+  productId: "product-1",
+  productName: "Test Product",
+  productSlug: "test-product",
+  thumbnail: "https://example.com/thumb.jpg",
   price: 100,
   salePrice: 80,
   quantity: 1,

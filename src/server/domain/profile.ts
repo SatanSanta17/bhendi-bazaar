@@ -15,7 +15,7 @@ export interface ProfileAddress {
   city: string;
   state: string;
   pincode: string;
-  country?: string;
+  country: string;
   isDefault?: boolean;
 }
 
