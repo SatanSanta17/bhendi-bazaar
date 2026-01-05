@@ -10,6 +10,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    # Add this section:
+    env:
+      BHENDI_BAZAAR_DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+      SKIP_ENV_VALIDATION: "true"
+
     strategy:
       matrix:
         node-version: [20.x]
