@@ -7,7 +7,7 @@
 
 export interface ProfileAddress {
   id: string;
-  label: string;
+  label?: string;
   fullName: string;
   mobile: string;
   addressLine1: string;

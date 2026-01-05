@@ -3,8 +3,8 @@ import { nameSchema, emailSchema, phoneSchema, uuidSchema, postalCodeSchema } fr
 
 // Profile address schema (includes ID and default flag)
 const profileAddressSchema = z.object({
-  id: uuidSchema,
-  label: z.string().min(1).max(100),
+  id: z.string().min(1),
+  label: z.string().max(100).optional(),
   fullName: nameSchema, // Required for profile addresses
   mobile: phoneSchema,
   addressLine1: z

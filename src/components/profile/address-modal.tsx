@@ -196,6 +196,7 @@ function AddressForm({
         errors={errors}
         includeEmail={false}
         includeNotes={false}
+        includeLabel={true}
       />
 
       <div className="flex items-center justify-between gap-2 pt-2">

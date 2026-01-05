@@ -10,6 +10,7 @@ interface AddressFieldsProps {
   namePrefix?: string; // For nested forms like "shippingAddress."
   includeEmail?: boolean;
   includeNotes?: boolean;
+  includeLabel?: boolean;
 }
 
 export function AddressFields({
@@ -18,23 +19,24 @@ export function AddressFields({
   namePrefix = "",
   includeEmail = false,
   includeNotes = false,
+  includeLabel = false,
 }: AddressFieldsProps) {
   const getFieldName = (field: string) => `${namePrefix}${field}`;
 
   const getError = (field: string): string | undefined => {
     if (!errors) return undefined;
-  
+
     try {
       if (namePrefix) {
         // Safely access nested error
         const nestedErrors = errors[namePrefix];
-        if (nestedErrors && typeof nestedErrors === 'object') {
+        if (nestedErrors && typeof nestedErrors === "object") {
           const fieldError = (nestedErrors as Record<string, any>)[field];
           return fieldError?.message;
         }
         return undefined;
       }
-      
+
       // Direct field access
       const fieldError = errors[field];
       return fieldError?.message as string | undefined;
@@ -42,10 +44,18 @@ export function AddressFields({
       return undefined;
     }
   };
-  
+
   return (
     <>
-      {/* Name and Phone Row */}
+      {/* Label (optional) */}
+      {includeLabel && (
+        <FormInput
+          label="Label"
+          placeholder="Home, Office, Other."
+          {...register(getFieldName("label"))}
+          error={getError("label")}
+        />
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <FormInput
           label="Full Name"

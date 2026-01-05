@@ -2,24 +2,40 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { categoryService } from "@/services/categoryService";
 import { LoadingSpinner } from "@/components/shared/states/LoadingSpinner";
+import { usePathname } from "next/navigation";
 
 export function CategoriesDropdown() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  const { data: categories, loading } = useAsyncData(
-    () => categoryService.getCategories()
+  const pathname = usePathname();
+
+  const { data: categories, loading } = useAsyncData(() =>
+    categoryService.getCategories()
   );
 
   useClickOutside(dropdownRef as React.RefObject<HTMLElement>, () =>
     setOpen(false)
   );
+
+  // Find the currently selected category based on pathname
+  const selectedCategory = useMemo(() => {
+    if (!categories || !pathname.startsWith("/category/")) {
+      return null;
+    }
+
+    // Extract slug from pathname: /category/[slug]
+    const slug = pathname.split("/category/")[1]?.split("/")[0];
+    return categories.find((cat) => cat.slug === slug);
+  }, [categories, pathname]);
+
+  // Button label: show selected category name or "Categories"
+  const buttonLabel = selectedCategory?.name || "Categories";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -28,7 +44,7 @@ export function CategoriesDropdown() {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1 rounded-full border border-border/70 bg-card/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
       >
-        Categories
+        {buttonLabel}
         <span className="text-[0.6rem] leading-none">▾</span>
       </button>
       {open && (
