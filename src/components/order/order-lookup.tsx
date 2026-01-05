@@ -65,7 +65,7 @@ export function OrderLookup() {
 
       {order && (
         <div className="space-y-4">
-          <OrderSummary order={order} />
+          <OrderSummary order={order} showShare={true} />
           <OrderTracking order={order} />
         </div>
       )}
