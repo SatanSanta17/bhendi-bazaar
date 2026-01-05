@@ -78,11 +78,27 @@ export class OrderService {
       throw new Error("Order not found");
     }
 
+    // Check if payment status is changing to "paid"
+    const isPaymentCompleted =
+      input.paymentStatus === "paid" && existingOrder.paymentStatus !== "paid";
+
     // Update the order
     const updated = await orderRepository.update(orderId, input);
 
     if (!updated) {
       throw new Error("Failed to update order");
+    }
+
+    // Send purchase confirmation email when payment is completed
+    if (isPaymentCompleted && updated.address.email) {
+      const { emailService } = await import("./emailService");
+
+      emailService
+        .sendPurchaseConfirmationEmail(updated, updated.address.email)
+        .catch((error) => {
+          console.error("Failed to send purchase confirmation email:", error);
+          // Don't throw - email failure shouldn't block order update
+        });
     }
 
     return updated;
