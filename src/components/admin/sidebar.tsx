@@ -15,6 +15,7 @@ import {
   FolderTree,
   Star,
   ShoppingBag,
+  Truck,
 } from "lucide-react";
 
 const navItems = [
@@ -52,6 +53,11 @@ const navItems = [
     title: "Abandoned Carts",
     href: "/admin/carts",
     icon: ShoppingBag,
+  },
+  {
+    title: "Shipping Providers",
+    href: "/admin/shipping/providers",
+    icon: Truck,
   },
 ];
 
