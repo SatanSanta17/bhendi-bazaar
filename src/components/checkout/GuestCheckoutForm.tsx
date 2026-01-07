@@ -96,7 +96,16 @@ export function GuestCheckoutForm({ buyNowProduct }: GuestCheckoutFormProps) {
         totals: {
           subtotal: displaySubtotal,
           discount: displayDiscount,
+          shipping: 0,
           total: displayTotal,
+        },
+        shipping: {
+          providerId: "",
+          courierName: "",
+          shippingCost: 0,
+          estimatedDays: 0,
+          mode: "prepaid",
+          packageWeight: 0,
         },
         address: addressData,
         notes: values.notes,

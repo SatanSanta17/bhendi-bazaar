@@ -21,7 +21,7 @@ function computeTotals(items: CartItem[]) {
       (item.salePrice ? (item.price - item.salePrice) * item.quantity : 0),
     0
   );
-  return { subtotal, discount, total: subtotal - discount };
+  return { subtotal, discount, shipping: 0, total: subtotal - discount };
 }
 
 /**
@@ -92,6 +92,7 @@ export const useCartStore = create<CartStoreState>()(
       totals: {
         subtotal: 0,
         discount: 0,
+        shipping: 0,
         total: 0,
       },
       updatedAt: new Date(),
@@ -162,6 +163,7 @@ export const useCartStore = create<CartStoreState>()(
           totals: {
             subtotal: 0,
             discount: 0,
+            shipping: 0,
             total: 0,
           },
           updatedAt: new Date(),

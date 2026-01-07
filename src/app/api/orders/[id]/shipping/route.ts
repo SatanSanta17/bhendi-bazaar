@@ -9,11 +9,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // ← Changed to Promise
 ) {
   try {
+    const { id } = await params; // ← Await params here
+
     const order = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id }, // ← Use the awaited id
       select: {
         id: true,
         code: true,
@@ -45,7 +47,7 @@ export async function GET(
             createdAt: true,
           },
           orderBy: {
-            createdAt: 'desc',
+            createdAt: "desc",
           },
           take: 20,
         },
@@ -87,4 +89,3 @@ export async function GET(
     );
   }
 }
-
