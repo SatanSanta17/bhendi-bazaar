@@ -124,11 +124,36 @@ export interface ServiceabilityCheckRequest {
 /**
  * Serviceability check response
  */
-export interface ServiceabilityCheckResponse {
+export interface ServiceabilityResponse {
+  success: boolean;
   serviceable: boolean;
-  providers: string[];      // Names of providers that service this area
-  estimatedDays?: number;   // Estimated delivery days
-  message?: string;         // "Delivery available" or "Not serviceable"
+  providers: Array<{
+    id: string;
+    name: string;
+    code: string;
+  }>;
+  pincode: string;
+  message: string;
+}
+
+/**
+ * Tracking information
+ */
+export interface TrackingInfo {
+  success: boolean;
+  trackingNumber: string;
+  courierName: string;
+  currentStatus: string;
+  statusDate?: string;
+  estimatedDelivery?: string;
+  deliveredAt?: string;
+  trackingUrl?: string;
+  history: Array<{
+    status: string;
+    location?: string;
+    timestamp: string;
+    description?: string;
+  }>;
 }
 
 // ============================================================================

@@ -46,7 +46,7 @@ export async function initializeShippingModule(): Promise<{
 
       // Register available provider factories
       await shippingOrchestrator.loadProviders({
-        shiprocket: (config) => new ShiprocketProvider(),
+        shiprocket: () => new ShiprocketProvider(),
         // Add more providers here as you implement them:
         // delhivery: (config) => new DelhiveryProvider(),
         // bluedart: (config) => new BlueDartProvider(),

@@ -3,7 +3,7 @@
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { orderService } from "@/services/orderService";
 import { OrderSummary } from "@/components/order/order-summary";
-import { OrderTracking } from "@/components/order/order-tracking";
+import { OrderTrackingWithShipping as OrderTracking } from "@/components/order/OrderTrackingWithShipping";
 import { LoadingSpinner } from "../shared/states/LoadingSpinner";
 import { ErrorState } from "../shared/states/ErrorState";
 import { SectionHeader } from "../shared/SectionHeader";

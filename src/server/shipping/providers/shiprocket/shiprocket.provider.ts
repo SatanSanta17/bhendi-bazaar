@@ -78,20 +78,23 @@ export class ShiprocketProvider extends BaseShippingProvider {
    */
   private async authenticate(): Promise<void> {
     try {
-      const email = process.env.SHIPROCKET_EMAIL || this.getConfigValue<string>("email");
-      const password = process.env.SHIPROCKET_PASSWORD || this.getConfigValue<string>("password");
-  
+      const email = this.getConfigValue<string>("email");
+      const password = this.getConfigValue<string>("password");
+
       if (!email || !password) {
         throw new Error(
           "Shiprocket credentials not found. Set SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD environment variables."
         );
       }
-  
-      const response = await fetch(`${this.baseUrl}${SHIPROCKET_ENDPOINTS.AUTH}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+
+      const response = await fetch(
+        `${this.baseUrl}${SHIPROCKET_ENDPOINTS.AUTH}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Authentication failed: ${response.statusText}`);

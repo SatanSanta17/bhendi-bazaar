@@ -1,9 +1,20 @@
 // src/domain/cart.ts
 
+import type { ShippingMode } from "@/domain/shipping";
+
 export interface Cart {
   items: CartItem[];
   totals: CartTotals;
   updatedAt: Date;
+}
+
+export interface Shipping {
+  providerId: string;
+  courierName: string;
+  shippingCost: number;
+  estimatedDays: number;
+  mode: ShippingMode;
+  packageWeight: number;
 }
 
 export interface CartItem {
@@ -22,6 +33,7 @@ export interface CartItem {
 export interface CartTotals {
   subtotal: number;
   discount: number;
+  shipping: number;
   total: number;
 }
 

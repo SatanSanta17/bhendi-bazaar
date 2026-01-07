@@ -31,36 +31,53 @@ const cartItemSchema = z.object({
   color: z.string().max(50).optional(),
 });
 
+// Shipping method schema
+const shippingMethodSchema = z.object({
+  providerId: z.string(),
+  courierName: z.string(),
+  shippingCost: z.number().min(0),
+  estimatedDays: z.number().int().min(0),
+  mode: z.string(),
+  packageWeight: z.number().min(0).optional(),
+}).optional();
+
 // Order totals schema
 const orderTotalsSchema = z.object({
   subtotal: priceSchema,
   discount: z.number().min(0).max(1000000),
+  shipping: z.number().min(0).optional(),
   total: priceSchema,
 });
 
 // Create order schema
-export const createOrderSchema = z.object({
-  items: z
-    .array(cartItemSchema)
-    .min(1, 'Order must contain at least one item')
-    .max(100, 'Order cannot contain more than 100 items'),
-  totals: orderTotalsSchema,
-  address: orderAddressSchema,
-  notes: z.string().max(1000, 'Notes too long').optional(),
-  paymentMethod: z.enum(['razorpay']).optional(),
-  paymentStatus: z.enum(['pending', 'paid', 'failed']).optional(),
-  userId: uuidSchema.optional(),
-}).refine(
-  (data) => {
-    // Validate totals match items
-    const calculatedSubtotal = data.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    return Math.abs(calculatedSubtotal - data.totals.subtotal) < 0.01;
-  },
-  { message: 'Order totals do not match items', path: ['totals'] }
-);
+export const createOrderSchema = z
+  .object({
+    items: z
+      .array(cartItemSchema)
+      .min(1, "Order must contain at least one item")
+      .max(100, "Order cannot contain more than 100 items"),
+    totals: orderTotalsSchema,
+    address: orderAddressSchema,
+    shipping: shippingMethodSchema,
+    notes: z.string().max(1000, "Notes too long").optional(),
+    paymentMethod: z.enum(["razorpay"]).optional(),
+    paymentStatus: z.enum(["pending", "paid", "failed"]).optional(),
+    userId: uuidSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      // Validate totals match items + shipping
+      const calculatedSubtotal = data.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
+      const shippingCost = data.totals.shipping || 0;
+      const expectedTotal =
+        calculatedSubtotal - data.totals.discount + shippingCost;
+      return Math.abs(expectedTotal - data.totals.total) < 0.01;
+    },
+    { message: "Order totals do not match items", path: ["totals"] }
+  );
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 

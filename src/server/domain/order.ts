@@ -37,7 +37,17 @@ export interface OrderItem {
 export interface OrderTotals {
   subtotal: number;
   discount: number;
+  shipping?: number;
   total: number;
+}
+
+export interface ShippingInfo {
+  providerId: string;
+  courierName: string;
+  shippingCost: number;
+  estimatedDays: number;
+  mode: string;
+  packageWeight?: number;
 }
 
 export interface ServerOrder {
@@ -54,6 +64,13 @@ export interface ServerOrder {
   paymentMethod?: PaymentMethod;
   paymentStatus?: PaymentStatus;
   paymentId?: string;
+  // Shipping fields
+  shippingProviderId?: string;
+  shippingCost?: number;
+  courierName?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  packageWeight?: number;
 }
 
 export interface CreateOrderInput {
@@ -65,6 +82,7 @@ export interface CreateOrderInput {
   paymentMethod?: PaymentMethod;
   paymentStatus?: PaymentStatus;
   paymentId?: string;
+  shipping?: ShippingInfo;
 }
 
 export interface UpdateOrderInput {

@@ -9,11 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AddressModal } from "@/components/profile/address-modal";
 import { AddressSelector } from "./AddressSelector";
+import { PincodeChecker } from "@/components/shipping/PincodeChecker";
+import { ShippingMethodSelector } from "@/components/shipping/ShippingMethodSelector";
 import { useCheckoutPayment } from "./hooks/useCheckoutPayment";
 import { useDisplayItems } from "./hooks/useDisplayItems";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { calculateCartWeight } from "@/utils/shipping";
 import type { ProfileAddress } from "@/domain/profile";
 import type { Product } from "@/domain/product";
+import type { ShippingRate } from "@/domain/shipping";
 
 interface AuthenticatedCheckoutProps {
   buyNowProduct: Product | null;
@@ -40,11 +44,18 @@ export function AuthenticatedCheckout({
   const [showAddressSelector, setShowAddressSelector] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [orderNotes, setOrderNotes] = useState("");
+  
+  // Shipping state
+  const [isServiceable, setIsServiceable] = useState(false);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<ShippingRate | null>(null);
+  const [packageWeight, setPackageWeight] = useState(0);
+
   // Helper function to strip +91 country code
   const stripCountryCode = (phone: string): string => {
     // Remove +91, +, spaces, and hyphens
     return phone.replace(/^\+91/, "").replace(/[\s\-+]/g, "");
   };
+
   // Auto-select default address
   useEffect(() => {
     if (profile?.addresses?.length) {
@@ -54,6 +65,12 @@ export function AuthenticatedCheckout({
       setSelectedAddress(defaultAddress);
     }
   }, [profile]);
+
+  // Calculate package weight from cart items
+  useEffect(() => {
+    const weight = calculateCartWeight(displayItems);
+    setPackageWeight(weight);
+  }, [displayItems]);
 
   const handleSaveNewAddress = async (address: ProfileAddress) => {
     if (!profile) return;
@@ -69,12 +86,34 @@ export function AuthenticatedCheckout({
     setShowAddressModal(false);
   };
 
-  const handleCheckout = async () => {
-    console.log("🔍 [DEBUG] selectedAddress:", selectedAddress);
-    console.log("🔍 [DEBUG] displayItems:", displayItems);
+  const handleServiceabilityChange = (serviceable: boolean) => {
+    setIsServiceable(serviceable);
+    if (!serviceable) {
+      setSelectedShippingMethod(null);
+    }
+  };
 
+  const handleShippingMethodSelect = (rate: ShippingRate | null) => {
+    setSelectedShippingMethod(rate);
+  };
+
+  // Calculate final total including shipping
+  const shippingCost = selectedShippingMethod?.rate || 0;
+  const finalTotal = displayTotal + shippingCost;
+
+  const handleCheckout = async () => {
     if (!selectedAddress || !displayItems.length) {
-      console.error("❌ Guard check failed: no address or items");
+      return;
+    }
+
+    // Validate shipping selection
+    if (!isServiceable) {
+      setError("Please enter a serviceable pincode");
+      return;
+    }
+
+    if (!selectedShippingMethod) {
+      setError("Please select a shipping method");
       return;
     }
 
@@ -93,8 +132,6 @@ export function AuthenticatedCheckout({
         country: selectedAddress.country,
       };
 
-      console.log("📦 [DEBUG] Address data being sent:", addressData);
-
       const stockCheck = await fetch("/api/products/check-stock", {
         method: "POST",
         body: JSON.stringify({
@@ -104,6 +141,7 @@ export function AuthenticatedCheckout({
           })),
         }),
       }).then((r) => r.json());
+      
       if (!stockCheck.available) {
         const messages = stockCheck.issues
           .map((i: any) => i.message)
@@ -119,9 +157,18 @@ export function AuthenticatedCheckout({
         totals: {
           subtotal: displaySubtotal,
           discount: displayDiscount,
-          total: displayTotal,
+          shipping: shippingCost,
+          total: finalTotal,
         },
         address: { ...addressData, country: "India" },
+        shipping: {
+          providerId: selectedShippingMethod.providerId,
+          courierName: selectedShippingMethod.courierName,
+          shippingCost: shippingCost,
+          estimatedDays: selectedShippingMethod.estimatedDays,
+          mode: selectedShippingMethod.mode,
+          packageWeight: packageWeight,
+        },
         notes: orderNotes,
         paymentMethod: "razorpay",
         paymentStatus: "pending",
@@ -153,6 +200,32 @@ export function AuthenticatedCheckout({
         />
       </div>
 
+      {/* Pincode Serviceability Check */}
+      {selectedAddress && selectedAddress.pincode && (
+        <div className="space-y-3">
+          <label className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+            Check Availability
+          </label>
+          <PincodeChecker
+            pincode={selectedAddress.pincode}
+            onServiceabilityChange={handleServiceabilityChange}
+            autoCheck={true}
+          />
+        </div>
+      )}
+
+      {/* Shipping Method Selection */}
+      {isServiceable && selectedAddress && (
+        <div className="space-y-3">
+          <ShippingMethodSelector
+            pincode={selectedAddress.pincode}
+            weight={packageWeight}
+            onMethodSelect={handleShippingMethodSelect}
+            autoFetch={true}
+          />
+        </div>
+      )}
+
       {/* Order Notes */}
       <div className="space-y-2">
         <label className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
@@ -171,12 +244,24 @@ export function AuthenticatedCheckout({
       <Button
         type="button"
         onClick={handleCheckout}
-        disabled={!displayItems.length || !selectedAddress || isProcessing}
+        disabled={!displayItems.length || !selectedAddress || !selectedShippingMethod || isProcessing}
         className="w-full rounded-full text-xs font-semibold uppercase tracking-[0.2em]"
         size="lg"
       >
-        {isProcessing ? "Processing..." : "Place Order & Pay"}
+        {isProcessing ? "Processing..." : `Pay ₹${finalTotal.toFixed(2)}`}
       </Button>
+
+      {!isServiceable && selectedAddress?.pincode && (
+        <p className="text-xs text-amber-600 text-center">
+          Please check if delivery is available to your pincode
+        </p>
+      )}
+
+      {isServiceable && !selectedShippingMethod && (
+        <p className="text-xs text-amber-600 text-center">
+          Please select a shipping method to continue
+        </p>
+      )}
 
       {/* Address Modal */}
       {showAddressModal && (

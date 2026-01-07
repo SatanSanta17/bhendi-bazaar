@@ -6,6 +6,7 @@
  */
 
 import type { CartItem, CartTotals } from "./cart";
+import type { OrderShippingInfo } from "./shipping";
 
 export type OrderStatus = "processing" | "packed" | "shipped" | "delivered";
 
@@ -33,6 +34,7 @@ export interface Order {
   totals: CartTotals;
   status: OrderStatus;
   address: OrderAddress;
+  shipping: OrderShippingInfo;
   notes?: string;
   placedAt: string;
   estimatedDelivery?: string;

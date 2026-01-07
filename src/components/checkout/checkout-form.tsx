@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { GuestCheckoutForm } from "./GuestCheckoutForm";
+import { GuestCheckoutFormWithShipping } from "./GuestCheckoutFormWithShipping";
 import { AuthenticatedCheckout } from "./AuthenticatedCheckout";
 import { LoadingSpinner } from "@/components/shared/states/LoadingSpinner";
 import type { Product } from "@/domain/product";
@@ -24,6 +24,6 @@ export function CheckoutForm({ buyNowProduct }: CheckoutFormProps) {
   return session?.user ? (
     <AuthenticatedCheckout buyNowProduct={buyNowProduct} />
   ) : (
-    <GuestCheckoutForm buyNowProduct={buyNowProduct} />
+    <GuestCheckoutFormWithShipping buyNowProduct={buyNowProduct} />
   );
 }

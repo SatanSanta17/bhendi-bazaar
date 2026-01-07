@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
-import { CheckoutSummary } from "@/components/checkout/checkout-summary";
+import { CheckoutSummaryWithShipping } from "@/components/checkout/CheckoutSummaryWithShipping";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { LoadingSpinner } from "@/components/shared/states/LoadingSpinner";
 import { productService } from "@/services/productService";
@@ -100,7 +100,7 @@ export default function CheckoutPage() {
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <CheckoutForm buyNowProduct={buyNowProduct} />
-        <CheckoutSummary buyNowProduct={buyNowProduct} />
+        <CheckoutSummaryWithShipping buyNowProduct={buyNowProduct} />
       </div>
     </div>
   );

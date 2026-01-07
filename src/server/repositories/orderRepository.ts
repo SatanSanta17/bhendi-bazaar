@@ -84,6 +84,12 @@ export class OrderRepository {
       paymentMethod: order.paymentMethod as PaymentMethod | undefined,
       paymentStatus: order.paymentStatus as PaymentStatus | undefined,
       paymentId: order.paymentId ?? undefined,
+      shippingProviderId: order.shippingProviderId ?? undefined,
+      shippingCost: order.shippingCost,
+      courierName: order.courierName ?? undefined,
+      trackingNumber: order.trackingNumber ?? undefined,
+      trackingUrl: order.trackingUrl ?? undefined,
+      packageWeight: order.packageWeight ?? undefined,
     }));
   }
 
@@ -142,6 +148,12 @@ export class OrderRepository {
       paymentMethod: order.paymentMethod as PaymentMethod | undefined,
       paymentStatus: order.paymentStatus as PaymentStatus | undefined,
       paymentId: order.paymentId ?? undefined,
+      shippingProviderId: order.shippingProviderId ?? undefined,
+      shippingCost: order.shippingCost,
+      courierName: order.courierName ?? undefined,
+      trackingNumber: order.trackingNumber ?? undefined,
+      trackingUrl: order.trackingUrl ?? undefined,
+      packageWeight: order.packageWeight ?? undefined,
     };
   }
 
@@ -172,7 +184,12 @@ export class OrderRepository {
       // Step 2: Generate code
       const code = generateOrderCode();
 
-      // Step 3: Create the order
+      // Step 3: Calculate estimated delivery
+      const estimatedDelivery = input.shipping?.estimatedDays
+        ? new Date(Date.now() + input.shipping.estimatedDays * 24 * 60 * 60 * 1000)
+        : calculateEstimatedDelivery();
+
+      // Step 4: Create the order
       const order = await tx.order.create({
         data: {
           code,
@@ -185,11 +202,16 @@ export class OrderRepository {
           paymentMethod: input.paymentMethod ?? null,
           paymentStatus: input.paymentStatus ?? "pending",
           paymentId: input.paymentId ?? null,
-          estimatedDelivery: calculateEstimatedDelivery(),
+          estimatedDelivery,
+          // Shipping fields
+          shippingProviderId: input.shipping?.providerId ?? null,
+          shippingCost: input.shipping?.shippingCost ?? 0,
+          courierName: input.shipping?.courierName ?? null,
+          packageWeight: input.shipping?.packageWeight ?? null,
         },
       });
 
-      // Step 4: Decrement stock for each item
+      // Step 5: Decrement stock for each item
       for (const item of input.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -219,6 +241,12 @@ export class OrderRepository {
       paymentMethod: result.paymentMethod as PaymentMethod | undefined,
       paymentStatus: result.paymentStatus as PaymentStatus | undefined,
       paymentId: result.paymentId ?? undefined,
+      shippingProviderId: result.shippingProviderId ?? undefined,
+      shippingCost: result.shippingCost,
+      courierName: result.courierName ?? undefined,
+      trackingNumber: result.trackingNumber ?? undefined,
+      trackingUrl: result.trackingUrl ?? undefined,
+      packageWeight: result.packageWeight ?? undefined,
     };
   }
 
@@ -253,6 +281,12 @@ export class OrderRepository {
       paymentMethod: order.paymentMethod as PaymentMethod | undefined,
       paymentStatus: order.paymentStatus as PaymentStatus | undefined,
       paymentId: order.paymentId ?? undefined,
+      shippingProviderId: order.shippingProviderId ?? undefined,
+      shippingCost: order.shippingCost,
+      courierName: order.courierName ?? undefined,
+      trackingNumber: order.trackingNumber ?? undefined,
+      trackingUrl: order.trackingUrl ?? undefined,
+      packageWeight: order.packageWeight ?? undefined,
     };
   }
 
