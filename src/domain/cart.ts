@@ -1,7 +1,5 @@
 // src/domain/cart.ts
 
-import type { PaymentMode } from "@/domain/shipping";
-
 export interface Cart {
   items: CartItem[];
   totals: CartTotals;

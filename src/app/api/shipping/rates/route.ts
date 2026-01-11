@@ -38,27 +38,48 @@ export async function POST(request: NextRequest) {
       weight: weight,
     };
 
-    // Get rates from all providers
-    const rates = await shippingOrchestrator.getRatesFromAllProviders(
+    // Get best rates using two-step filtering
+    const bestRates = await shippingOrchestrator.getBestRatesByDeliveryDays(
       rateRequest,
-      { useCache: true }
+      { useCache: false }
     );
 
-    // Select default rate using "balanced" strategy
-    const defaultSelection = await shippingOrchestrator.getBestRate(
-      rateRequest,
-      { strategy: "balanced" }
+    // Debug logging
+    console.log("📦 Shipping Rates Debug:");
+    console.log(`- Total rates returned: ${bestRates.length}`);
+    console.log(
+      `- Rates:`,
+      bestRates.map((r) => ({
+        courier: r.courierName,
+        days: r.estimatedDays,
+        rate: r.rate,
+      }))
     );
 
+    if (bestRates.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "No shipping options available for this location",
+        },
+        { status: 404 }
+      );
+    }
+
+    // Return best rates (one per delivery day group)
     return NextResponse.json({
       success: true,
-      rates,
-      defaultRate: defaultSelection?.selectedRate,
-      fromPincode: validated.fromPincode,
-      toPincode: validated.toPincode,
+      rates: bestRates, // Array of best rates (one per delivery day)
+      defaultRate: bestRates[0], // First one is fastest/cheapest
+      fromPincode: rateRequest.fromPincode,
+      toPincode: rateRequest.toPincode,
       metadata: {
-        totalProviders: rates.length,
-        selectionReason: defaultSelection?.reason,
+        totalOptions: bestRates.length,
+        deliveryDays: bestRates.map((r) => r.estimatedDays),
+        priceRange: {
+          min: Math.min(...bestRates.map((r) => r.rate)),
+          max: Math.max(...bestRates.map((r) => r.rate)),
+        },
       },
     });
   } catch (error) {
@@ -87,4 +108,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

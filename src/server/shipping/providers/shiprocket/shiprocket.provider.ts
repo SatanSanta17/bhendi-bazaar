@@ -118,7 +118,11 @@ export class ShiprocketProvider extends BaseShippingProvider {
    * Ensure token is valid, refresh if needed
    */
   private async ensureAuthenticated(): Promise<void> {
-    if (!this.authToken || !this.tokenExpiry || new Date() >= this.tokenExpiry) {
+    if (
+      !this.authToken ||
+      !this.tokenExpiry ||
+      new Date() >= this.tokenExpiry
+    ) {
       await this.authenticate();
     }
   }
@@ -129,7 +133,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
   private getAuthHeaders(): Record<string, string> {
     return {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${this.authToken}`,
+      Authorization: `Bearer ${this.authToken}`,
     };
   }
 
@@ -150,7 +154,10 @@ export class ShiprocketProvider extends BaseShippingProvider {
 
     try {
       // Use a minimal weight for checking serviceability
-      const warehousePincode = this.getConfigValue<string>("warehousePincode", "110001");
+      const warehousePincode = this.getConfigValue<string>(
+        "warehousePincode",
+        "110001"
+      );
 
       const params: ShiprocketServiceabilityRequest = {
         pickup_postcode: warehousePincode,
@@ -178,9 +185,9 @@ export class ShiprocketProvider extends BaseShippingProvider {
       return false;
     }
   }
-
   /**
    * Get shipping rates from Shiprocket
+   * Returns all couriers with rating >= 4
    */
   async getRates(request: ShippingRateRequest): Promise<ShippingRate[]> {
     this.ensureInitialized();
@@ -207,58 +214,41 @@ export class ShiprocketProvider extends BaseShippingProvider {
       }
 
       const res: ShiprocketServiceabilityResponse = await response.json();
-      // console.log("RATE RESPONSE: ", JSON.stringify(res, null, 2));
-      // Capture Shiprocket's recommended courier ID
-      const recommendedCourierId = res.data.shiprocket_recommended_courier_id;
-      const childCourierId = res.data.child_courier_id;
-      // Find the recommended courier from available couriers
-      const recommendedCourier = res.data.available_courier_companies.find(
+
+      // Filter couriers: non-blocked AND rating >= 4
+      const filteredCouriers = res.data.available_courier_companies.filter(
         (courier) =>
           courier.blocked === 0 && // Must be non-blocked
-          (courier.id === recommendedCourierId ||
-            courier.courier_company_id === recommendedCourierId ||
-            courier.id === childCourierId)
+          courier.rating >= 4 // Must have rating >= 4
       );
 
-      // If no recommended courier found, fallback to first available courier
-      if (!recommendedCourier) {
-        const fallbackCourier = res.data.available_courier_companies.find(
-          (courier) => courier.blocked === 0
-        );
+      console.log("🚚 Shiprocket Rates Debug:");
+      console.log(
+        `- Total couriers from API: ${res.data.available_courier_companies.length}`
+      );
+      console.log(`- Filtered (rating >= 4): ${filteredCouriers.length}`);
+      console.log(
+        `- Delivery days breakdown:`,
+        filteredCouriers.reduce((acc, c) => {
+          const days = Number(c.estimated_delivery_days) || 3;
+          acc[days] = (acc[days] || 0) + 1;
+          return acc;
+        }, {} as Record<number, number>)
+      );
 
-        if (!fallbackCourier) {
-          // No couriers available
-          return [];
-        }
-
-        // Return fallback courier
-        const rate = mapShiprocketRateToShippingRate(
-          fallbackCourier,
-          this.config.id
+      if (filteredCouriers.length === 0) {
+        console.warn(
+          `No couriers available with rating >= 4 for pincode ${request.toPincode}`
         );
-        rate.metadata = {
-          ...rate.metadata,
-          isRecommended: false,
-          shiprocketRecommendedId: recommendedCourierId,
-          childCourierId: childCourierId,
-          isFallback: true,
-        };
-        return [rate];
+        return [];
       }
 
-      // Return only the recommended courier rate
-      const rate = mapShiprocketRateToShippingRate(
-        recommendedCourier,
-        this.config.id
-      );
-      rate.metadata = {
-        ...rate.metadata,
-        isRecommended: true,
-        shiprocketRecommendedId: recommendedCourierId,
-        childCourierId: childCourierId,
-      };
+      // Map all filtered couriers to our ShippingRate format
+      const rates = filteredCouriers.map((courier) => {
+        return mapShiprocketRateToShippingRate(courier, this.config.id);
+      });
 
-      return [rate];
+      return rates;
     } catch (error) {
       this.handleError(error, "get rates");
     }
@@ -414,7 +404,9 @@ export class ShiprocketProvider extends BaseShippingProvider {
 
     try {
       // Get shipment IDs from tracking numbers (you'd need to store this mapping)
-      const shipmentIds = await this.getShipmentIdsByAWB(params.trackingNumbers);
+      const shipmentIds = await this.getShipmentIdsByAWB(
+        params.trackingNumbers
+      );
 
       const payload: ShiprocketSchedulePickupRequest = {
         shipment_id: shipmentIds,
@@ -484,7 +476,9 @@ export class ShiprocketProvider extends BaseShippingProvider {
   /**
    * Generate manifest for multiple shipments
    */
-  async generateManifest(trackingNumbers: string[]): Promise<{ manifestUrl: string }> {
+  async generateManifest(
+    trackingNumbers: string[]
+  ): Promise<{ manifestUrl: string }> {
     this.ensureInitialized();
     await this.ensureAuthenticated();
 
@@ -529,7 +523,10 @@ export class ShiprocketProvider extends BaseShippingProvider {
     request: CreateShipmentRequest
   ): ShiprocketCreateOrderRequest {
     const dimensions = request.package.dimensions || DEFAULT_PACKAGE_DIMENSIONS;
-    const pickupLocation = this.getConfigValue<string>("pickupLocationName", "Primary");
+    const pickupLocation = this.getConfigValue<string>(
+      "pickupLocationName",
+      "Primary"
+    );
 
     // Split name into first and last
     const nameParts = request.toAddress.name.split(" ");
@@ -633,7 +630,9 @@ export class ShiprocketProvider extends BaseShippingProvider {
   private async getShipmentIdByAWB(awbCode: string): Promise<number> {
     // TODO: Implement this by storing shipment_id in order metadata
     // or by querying Shiprocket's shipment list API
-    throw new Error("getShipmentIdByAWB not implemented - store shipmentId in order metadata");
+    throw new Error(
+      "getShipmentIdByAWB not implemented - store shipmentId in order metadata"
+    );
   }
 
   /**

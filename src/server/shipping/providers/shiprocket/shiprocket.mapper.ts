@@ -6,7 +6,6 @@
 
 import type {
   ShippingRate,
-  ShippingRateRequest,
   Shipment,
   TrackingInfo,
   TrackingStatus,
@@ -29,10 +28,7 @@ export function mapShiprocketRateToShippingRate(
 ): ShippingRate {
   // Parse estimated delivery days from ETD string
   // etd is in date form so we need to convert it to number of days and subtract from the current date
-  const estimatedDays = Math.ceil(
-    (new Date(courier.etd).getTime() - new Date().getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
+  const estimatedDays = Number(courier.estimated_delivery_days);
 
   return {
     providerId,

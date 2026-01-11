@@ -9,7 +9,6 @@
 // ENUMS & CONSTANTS
 // ============================================================================
 
-export type PaymentMode = "prepaid" | "cod";
 
 export type ShipmentStatus =
   | "pending"

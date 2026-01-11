@@ -37,12 +37,13 @@ export class ShippingOrchestratorService {
   ): Promise<void> {
     try {
       // Get enabled providers from database
-      const enabledProviders = await shippingProviderRepository.getEnabledProviders();
+      const enabledProviders =
+        await shippingProviderRepository.getEnabledProviders();
 
       // Initialize each provider
       for (const providerConfig of enabledProviders) {
         const factory = providerFactories[providerConfig.code];
-        
+
         if (!factory) {
           console.warn(
             `No factory found for provider: ${providerConfig.code}. Skipping.`
@@ -54,8 +55,7 @@ export class ShippingOrchestratorService {
           const provider = factory(providerConfig);
           await provider.initialize(providerConfig as ProviderConfig);
           this.providers.set(providerConfig.id, provider);
-          
-          
+
           console.log(
             `✓ Initialized shipping provider: ${provider.getProviderName()}`
           );
@@ -84,8 +84,10 @@ export class ShippingOrchestratorService {
     providerId: string,
     factory: (config: any) => IShippingProvider
   ): Promise<void> {
-    const providerConfig = await shippingProviderRepository.getById(providerId) as ProviderConfig;
-    
+    const providerConfig = (await shippingProviderRepository.getById(
+      providerId
+    )) as ProviderConfig;
+
     if (!providerConfig || !providerConfig.isEnabled) {
       this.providers.delete(providerId);
       return;
@@ -117,38 +119,40 @@ export class ShippingOrchestratorService {
 
     // Get rates from each provider
     await Promise.all(
-      Array.from(this.providers.entries()).map(async ([providerId, provider]) => {
-        try {
-          // Try cache first
-          if (useCache) {
-            const cachedRate = await shippingCacheService.getCachedRate(
-              request,
-              providerId
-            );
-            
-            if (cachedRate) {
-              cachedRate.providerName = provider.getProviderName();
-              allRates.push(cachedRate);
-              return;
+      Array.from(this.providers.entries()).map(
+        async ([providerId, provider]) => {
+          try {
+            // Try cache first
+            if (useCache) {
+              const cachedRate = await shippingCacheService.getCachedRate(
+                request,
+                providerId
+              );
+
+              if (cachedRate) {
+                cachedRate.providerName = provider.getProviderName();
+                allRates.push(cachedRate);
+                return;
+              }
             }
-          }
 
-          // Call provider API
-          const rates = await provider.getRates(request);
-          allRates.push(...rates);
+            // Call provider API
+            const rates = await provider.getRates(request);
+            allRates.push(...rates);
 
-          // Cache the results
-          if (useCache) {
-            await shippingCacheService.cacheRates(rates, request);
+            // Cache the results
+            if (useCache) {
+              await shippingCacheService.cacheRates(rates, request);
+            }
+          } catch (error) {
+            console.error(
+              `Error getting rates from ${provider.getProviderName()}:`,
+              error
+            );
+            // Continue with other providers even if one fails
           }
-        } catch (error) {
-          console.error(
-            `Error getting rates from ${provider.getProviderName()}:`,
-            error
-          );
-          // Continue with other providers even if one fails
         }
-      })
+      )
     );
 
     return allRates;
@@ -163,6 +167,54 @@ export class ShippingOrchestratorService {
   ): Promise<SelectionResult | null> {
     const allRates = await this.getRatesFromAllProviders(request);
     return providerSelectorService.selectBestProvider(allRates, criteria);
+  }
+  /**
+   * Get best rates with two-step filtering:
+   * 1. Group by delivery days, pick cheapest in each group
+   * 2. Return winners sorted by fastest delivery
+   */
+  async getBestRatesByDeliveryDays(
+    request: ShippingRateRequest,
+    options?: {
+      useCache?: boolean;
+      timeout?: number;
+    }
+  ): Promise<ShippingRate[]> {
+    this.ensureInitialized();
+
+    // Step 1: Get all rates from all providers
+    const allRates = await this.getRatesFromAllProviders(request, options);
+
+    if (allRates.length === 0) {
+      return [];
+    }
+
+    // Step 2: Filter out unavailable rates
+    const availableRates = allRates.filter((rate) => rate.available);
+
+    if (availableRates.length === 0) {
+      return [];
+    }
+
+    // Step 3: Group rates by estimatedDays and find cheapest for each day
+    const cheapestByDays = new Map<number, ShippingRate>();
+
+    for (const rate of availableRates) {
+      const days = rate.estimatedDays;
+      const existingCheapest = cheapestByDays.get(days);
+
+      // If no rate for this day yet, or current rate is cheaper, update it
+      if (!existingCheapest || rate.rate < existingCheapest.rate) {
+        cheapestByDays.set(days, rate);
+      }
+    }
+
+    // Step 4: Convert map to array and sort by fastest delivery (days ascending)
+    const winners = Array.from(cheapestByDays.values()).sort(
+      (a, b) => a.estimatedDays - b.estimatedDays
+    );
+
+    return winners;
   }
 
   // ============================================================================
@@ -180,7 +232,7 @@ export class ShippingOrchestratorService {
 
     // Get provider from request or use first available
     const providerId = request.selectedRate?.providerId;
-    
+
     if (!providerId) {
       throw new Error("No provider specified in request");
     }
@@ -198,7 +250,10 @@ export class ShippingOrchestratorService {
             console.log(`Trying fallback provider: ${fallbackId}`);
             return await this.createShipment(fallbackId, request);
           } catch (fallbackError) {
-            console.error(`Fallback provider ${fallbackId} failed:`, fallbackError);
+            console.error(
+              `Fallback provider ${fallbackId} failed:`,
+              fallbackError
+            );
           }
         }
       }
@@ -216,7 +271,7 @@ export class ShippingOrchestratorService {
     request: CreateShipmentRequest
   ): Promise<Shipment> {
     const provider = this.providers.get(providerId);
-    
+
     if (!provider) {
       throw new Error(`Provider ${providerId} not found or not enabled`);
     }
@@ -291,7 +346,7 @@ export class ShippingOrchestratorService {
 
     // Try all providers until one succeeds
     const errors: Error[] = [];
-    
+
     for (const [id, provider] of this.providers.entries()) {
       try {
         return await provider.trackShipment(trackingNumber);
@@ -318,7 +373,7 @@ export class ShippingOrchestratorService {
     orderId: string
   ): Promise<boolean> {
     const provider = this.providers.get(providerId);
-    
+
     if (!provider) {
       throw new Error(`Provider ${providerId} not found`);
     }
@@ -414,7 +469,7 @@ export class ShippingOrchestratorService {
     status: any;
   }> {
     const provider = this.providers.get(providerId);
-    
+
     if (!provider) {
       throw new Error(`Provider ${providerId} not found`);
     }
