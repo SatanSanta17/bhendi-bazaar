@@ -9,7 +9,6 @@
 // ENUMS & CONSTANTS
 // ============================================================================
 
-export type ShippingMode = "Air" | "Surface";
 
 export type ShipmentStatus =
   | "pending" // Shipment not yet created
@@ -80,18 +79,18 @@ export interface ShippingRateRequest {
 
 export interface ShippingRate {
   providerId: string;
-  providerName: string;     // "Shiprocket"
-  courierName: string;      // "BlueDart Surface"
-  courierCode?: string;     // Provider's internal courier code
-  rate: number;             // Shipping cost in INR
-  estimatedDays: number;    // Estimated delivery days
-  mode: ShippingMode;
+  providerName: string; // "Shiprocket"
+  courierName: string; // "BlueDart Surface"
+  courierCode?: string; // Provider's internal courier code
+  rate: number; // Shipping cost in INR
+  estimatedDays: number; // Estimated delivery days
+  mode: String;
   available: boolean;
   features?: {
     insurance?: boolean;
     cod?: boolean;
     tracking?: boolean;
-    rto?: boolean;          // Return to origin
+    rto?: boolean; // Return to origin
   };
   metadata?: Record<string, any>; // Provider-specific data
 }
@@ -102,13 +101,13 @@ export interface ShippingRate {
 
 export interface CreateShipmentRequest {
   orderId: string;
-  orderCode: string;                    // BB-1001
+  orderCode: string; // BB-1001
   fromAddress: ShippingAddress;
   toAddress: ShippingAddress;
   package: ShippingPackage;
-  mode: ShippingMode;
+  mode: String;
   codAmount?: number;
-  selectedRate?: ShippingRate;          // Pre-selected rate from rate check
+  selectedRate?: ShippingRate; // Pre-selected rate from rate check
   preferences?: {
     preferredDeliveryDate?: Date;
     specialInstructions?: string;
@@ -118,16 +117,16 @@ export interface CreateShipmentRequest {
 
 export interface Shipment {
   providerId: string;
-  providerShipmentId?: string;  // Provider's internal shipment ID
-  trackingNumber: string;       // AWB number
+  providerShipmentId?: string; // Provider's internal shipment ID
+  trackingNumber: string; // AWB number
   courierName: string;
   courierCode?: string;
   trackingUrl: string;
   estimatedDelivery?: Date;
   labels?: {
-    shippingLabel?: string;     // PDF URL or base64
-    invoice?: string;           // PDF URL or base64
-    manifest?: string;          // PDF URL or base64
+    shippingLabel?: string; // PDF URL or base64
+    invoice?: string; // PDF URL or base64
+    manifest?: string; // PDF URL or base64
   };
   pickupScheduled?: {
     pickupId?: string;
@@ -142,9 +141,9 @@ export interface Shipment {
 // ============================================================================
 
 export interface TrackingStatus {
-  status: ShipmentStatus;      // Normalized status
-  providerStatus: string;      // Original provider status
-  location?: string;           // Current location
+  status: ShipmentStatus; // Normalized status
+  providerStatus: string; // Original provider status
+  location?: string; // Current location
   timestamp: Date;
   description?: string;
   remarks?: string;
@@ -158,7 +157,7 @@ export interface TrackingInfo {
   estimatedDelivery?: Date;
   deliveredAt?: Date;
   recipientName?: string;
-  recipientSignature?: string;  // URL to signature image
+  recipientSignature?: string; // URL to signature image
 }
 
 // ============================================================================
@@ -167,12 +166,12 @@ export interface TrackingInfo {
 
 export interface ProviderConfig {
   id: string;
-  code: string;                 // 'shiprocket', 'delhivery'
-  name: string;                 // 'Shiprocket', 'Delhivery'
+  code: string; // 'shiprocket', 'delhivery'
+  name: string; // 'Shiprocket', 'Delhivery'
   isEnabled: boolean;
-  priority: number;             // Higher = preferred
-  supportedModes: ShippingMode[];
-  config: Record<string, any>;  // API credentials & settings
+  priority: number; // Higher = preferred
+  supportedModes: String[];
+  config: Record<string, any>; // API credentials & settings
   features?: Record<string, boolean>;
   serviceablePincodes?: string[];
 }

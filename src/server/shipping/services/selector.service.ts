@@ -1,6 +1,6 @@
 /**
  * Provider Selector Service
- * 
+ *
  * Implements smart provider selection strategies based on various criteria.
  * Selects the best shipping provider from available options.
  */
@@ -29,7 +29,7 @@ export class ProviderSelectorService {
 
     // Filter rates based on criteria
     const filtered = this.filterRates(rates, criteria);
-    
+
     if (filtered.validRates.length === 0) {
       return null;
     }
@@ -90,9 +90,7 @@ export class ProviderSelectorService {
     return {
       selectedRate,
       reason,
-      alternativeRates: filtered.validRates.filter(
-        (r) => r !== selectedRate
-      ),
+      alternativeRates: filtered.validRates.filter((r) => r !== selectedRate),
       metadata: {
         totalRatesEvaluated: rates.length,
         ratesFiltered: filtered.filteredRates.length,
@@ -249,7 +247,10 @@ export class ProviderSelectorService {
   /**
    * Compare two rates
    */
-  compareRates(rate1: ShippingRate, rate2: ShippingRate): {
+  compareRates(
+    rate1: ShippingRate,
+    rate2: ShippingRate
+  ): {
     cheaper: ShippingRate;
     faster: ShippingRate;
     costDifference: number;
@@ -298,4 +299,3 @@ export class ProviderSelectorService {
 
 // Singleton instance
 export const providerSelectorService = new ProviderSelectorService();
-

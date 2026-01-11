@@ -9,7 +9,7 @@
 // ENUMS & CONSTANTS
 // ============================================================================
 
-export type ShippingMode = "prepaid" | "cod";
+export type PaymentMode = "prepaid" | "cod";
 
 export type ShipmentStatus =
   | "pending"
@@ -31,11 +31,11 @@ export type ShipmentStatus =
  */
 export interface ShippingRate {
   providerId: string;
-  providerName: string;      // "Shiprocket"
-  courierName: string;       // "BlueDart Surface"
-  rate: number;              // ₹85.50
-  estimatedDays: number;     // 3 days
-  mode: ShippingMode;
+  providerName: string; // "Shiprocket"
+  courierName: string; // "BlueDart Surface"
+  rate: number; // ₹85.50
+  estimatedDays: number; // 3 days
+  mode: String;
   available: boolean;
   features?: {
     insurance?: boolean;
@@ -49,9 +49,9 @@ export interface ShippingRate {
  */
 export interface GetShippingRatesRequest {
   pincode: string;
-  weight?: number;         // Optional, calculated from cart
-  mode: ShippingMode;
-  codAmount?: number;      // For COD orders
+  weight?: number; // Optional, calculated from cart
+  mode: String;
+  codAmount?: number; // For COD orders
 }
 
 /**

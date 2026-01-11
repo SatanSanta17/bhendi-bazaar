@@ -187,13 +187,8 @@ export class ShiprocketProvider extends BaseShippingProvider {
     await this.ensureAuthenticated();
 
     try {
-      const warehousePincode = this.getConfigValue<string>(
-        "warehousePincode",
-        "560083"
-      );
-
       const params: ShiprocketServiceabilityRequest = {
-        pickup_postcode: warehousePincode,
+        pickup_postcode: request.fromPincode,
         delivery_postcode: request.toPincode,
         weight: request.weight,
         cod: request.cod as 0 | 1,
@@ -211,16 +206,59 @@ export class ShiprocketProvider extends BaseShippingProvider {
         throw new Error(`Failed to get rates: ${response.statusText}`);
       }
 
-      const data: ShiprocketServiceabilityResponse = await response.json();
+      const res: ShiprocketServiceabilityResponse = await response.json();
+      // console.log("RATE RESPONSE: ", JSON.stringify(res, null, 2));
+      // Capture Shiprocket's recommended courier ID
+      const recommendedCourierId = res.data.shiprocket_recommended_courier_id;
+      const childCourierId = res.data.child_courier_id;
+      // Find the recommended courier from available couriers
+      const recommendedCourier = res.data.available_courier_companies.find(
+        (courier) =>
+          courier.blocked === 0 && // Must be non-blocked
+          (courier.id === recommendedCourierId ||
+            courier.courier_company_id === recommendedCourierId ||
+            courier.id === childCourierId)
+      );
 
-      // Map Shiprocket couriers to our ShippingRate format
-      const rates = data.data.available_courier_companies
-        .filter((courier) => courier.blocked === 0) // Only non-blocked couriers
-        .map((courier) =>
-          mapShiprocketRateToShippingRate(courier, request, this.config.id)
+      // If no recommended courier found, fallback to first available courier
+      if (!recommendedCourier) {
+        const fallbackCourier = res.data.available_courier_companies.find(
+          (courier) => courier.blocked === 0
         );
 
-      return rates;
+        if (!fallbackCourier) {
+          // No couriers available
+          return [];
+        }
+
+        // Return fallback courier
+        const rate = mapShiprocketRateToShippingRate(
+          fallbackCourier,
+          this.config.id
+        );
+        rate.metadata = {
+          ...rate.metadata,
+          isRecommended: false,
+          shiprocketRecommendedId: recommendedCourierId,
+          childCourierId: childCourierId,
+          isFallback: true,
+        };
+        return [rate];
+      }
+
+      // Return only the recommended courier rate
+      const rate = mapShiprocketRateToShippingRate(
+        recommendedCourier,
+        this.config.id
+      );
+      rate.metadata = {
+        ...rate.metadata,
+        isRecommended: true,
+        shiprocketRecommendedId: recommendedCourierId,
+        childCourierId: childCourierId,
+      };
+
+      return [rate];
     } catch (error) {
       this.handleError(error, "get rates");
     }

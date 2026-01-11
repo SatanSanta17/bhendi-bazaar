@@ -1,6 +1,6 @@
 // src/domain/cart.ts
 
-import type { ShippingMode } from "@/domain/shipping";
+import type { PaymentMode } from "@/domain/shipping";
 
 export interface Cart {
   items: CartItem[];
@@ -13,7 +13,7 @@ export interface Shipping {
   courierName: string;
   shippingCost: number;
   estimatedDays: number;
-  mode: ShippingMode;
+  mode: String;
   packageWeight: number;
 }
 

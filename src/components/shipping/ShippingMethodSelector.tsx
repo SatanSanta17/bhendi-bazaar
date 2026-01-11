@@ -96,8 +96,9 @@ export function ShippingMethodSelector({
 
       <div className="space-y-2">
         {rates.map((rate) => {
-          const isSelected = selectedRate?.providerId === rate.providerId && 
-                            selectedRate?.courierName === rate.courierName;
+          const isSelected =
+            selectedRate?.providerId === rate.providerId &&
+            selectedRate?.courierName === rate.courierName;
           const deliveryDate = getEstimatedDeliveryDate(rate.estimatedDays);
           const isFree = rate.rate === 0;
 
@@ -108,9 +109,10 @@ export function ShippingMethodSelector({
               onClick={() => handleSelectRate(rate)}
               className={`
                 w-full text-left p-4 border-2 rounded-lg transition-all
-                ${isSelected
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300 bg-white"
+                ${
+                  isSelected
+                    ? "border-blue-600 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
                 }
               `}
             >
@@ -118,12 +120,20 @@ export function ShippingMethodSelector({
                 {/* Left: Method info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <Truck className={`h-4 w-4 flex-shrink-0 ${isSelected ? "text-blue-600" : "text-gray-400"}`} />
-                    <span className={`font-medium text-sm ${isSelected ? "text-blue-900" : "text-gray-900"}`}>
+                    <Truck
+                      className={`h-4 w-4 flex-shrink-0 ${
+                        isSelected ? "text-blue-600" : "text-gray-400"
+                      }`}
+                    />
+                    <span
+                      className={`font-medium text-sm ${
+                        isSelected ? "text-blue-900" : "text-gray-900"
+                      }`}
+                    >
                       {rate.courierName}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
                     <Clock className="h-3 w-3" />
                     <span>
@@ -153,7 +163,11 @@ export function ShippingMethodSelector({
                 {/* Right: Price & selection */}
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className={`font-semibold ${isSelected ? "text-blue-900" : "text-gray-900"}`}>
+                    <div
+                      className={`font-semibold ${
+                        isSelected ? "text-blue-900" : "text-gray-900"
+                      }`}
+                    >
                       {isFree ? (
                         <span className="text-green-600">FREE</span>
                       ) : (
@@ -161,11 +175,17 @@ export function ShippingMethodSelector({
                       )}
                     </div>
                   </div>
-                  
-                  <div className={`
+
+                  <div
+                    className={`
                     w-5 h-5 rounded-full border-2 flex items-center justify-center
-                    ${isSelected ? "border-blue-600 bg-blue-600" : "border-gray-300"}
-                  `}>
+                    ${
+                      isSelected
+                        ? "border-blue-600 bg-blue-600"
+                        : "border-gray-300"
+                    }
+                  `}
+                  >
                     {isSelected && <Check className="h-3 w-3 text-white" />}
                   </div>
                 </div>

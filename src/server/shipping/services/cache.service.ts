@@ -1,6 +1,6 @@
 /**
  * Shipping Cache Service
- * 
+ *
  * Manages rate caching to improve performance and reduce API calls.
  * Implements intelligent caching with TTL and cache warming.
  */
@@ -28,8 +28,8 @@ export class ShippingCacheService {
         providerId,
         fromPincode: request.fromPincode,
         toPincode: request.toPincode,
-        weight: request.package.weight,
-        mode: request.mode,
+        weight: request.weight,
+        mode: request.cod === 1 ? "COD" : "PREPAID",
       });
 
       if (!cache) return null;
@@ -41,7 +41,7 @@ export class ShippingCacheService {
         courierName: cache.courierName,
         rate: cache.rate,
         estimatedDays: cache.estimatedDays,
-        mode: request.mode,
+        mode: request.cod === 1 ? "COD" : "PREPAID",
         available: true,
         metadata: cache.metadata as Record<string, any>,
       };
@@ -89,8 +89,8 @@ export class ShippingCacheService {
         providerId: rate.providerId,
         fromPincode: request.fromPincode,
         toPincode: request.toPincode,
-        weight: request.package.weight,
-        mode: request.mode,
+        weight: request.weight,
+        mode: request.cod === 1 ? "COD" : "PREPAID",
         rate: rate.rate,
         courierName: rate.courierName,
         estimatedDays: rate.estimatedDays,
@@ -204,11 +204,8 @@ export class ShippingCacheService {
             const request: ShippingRateRequest = {
               fromPincode: route.fromPincode,
               toPincode: route.toPincode,
-              package: {
-                weight,
-                declaredValue: 1000, // Default value
-              },
-              mode,
+              weight,
+              cod: mode.toLowerCase() === "cod" ? 1 : 0,
             };
 
             // Skip if already cached
@@ -241,7 +238,9 @@ export class ShippingCacheService {
    * Get cache key for a request
    */
   getCacheKey(request: ShippingRateRequest, providerId: string): string {
-    return `${providerId}_${request.fromPincode}_${request.toPincode}_${request.package.weight}_${request.mode}`;
+    return `${providerId}_${request.fromPincode}_${request.toPincode}_${
+      request.weight
+    }_${request.cod === 1 ? "COD" : "PREPAID"}`;
   }
 
   /**
@@ -267,4 +266,3 @@ export class ShippingCacheService {
 
 // Singleton instance
 export const shippingCacheService = new ShippingCacheService();
-

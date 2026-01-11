@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
           sku: item.productId,
         })),
       },
-      mode: order.paymentMethod === "cod" ? ("cod" as const) : ("prepaid" as const),
+      mode: order.paymentMethod === "cod" ? "COD" : "PREPAID",
       codAmount: order.paymentMethod === "cod" ? totals.total : undefined,
       selectedRate: validated.courierCode
         ? {
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
             courierCode: validated.courierCode,
             rate: order.shippingCost || 0,
             estimatedDays: 3,
-            mode: order.paymentMethod === "cod" ? ("cod" as const) : ("prepaid" as const),
+            mode: order.paymentMethod === "cod" ? "COD" : "PREPAID",
             available: true,
           }
         : undefined,

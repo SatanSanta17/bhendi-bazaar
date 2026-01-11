@@ -23,7 +23,7 @@ src/server/shipping/
 - ✓ `domain/index.ts` - Exports
 
 **Key Types Defined:**
-- ShippingMode, ShipmentStatus
+- PaymentMode, ShipmentStatus
 - ShippingAddress, ShippingPackage
 - ShippingRate, ShippingRateRequest
 - CreateShipmentRequest, Shipment
