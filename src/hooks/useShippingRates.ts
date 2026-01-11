@@ -32,8 +32,10 @@ export function useShippingRates(): UseShippingRatesResult {
 
     try {
       const fetchedRates = await shippingService.getRates({
+        fromPincode: process.env.WAREHOUSE_PINCODE || "560083",
         toPincode: pincode,
         weight,
+        cod: 1,
       });
 
       setRates(fetchedRates);

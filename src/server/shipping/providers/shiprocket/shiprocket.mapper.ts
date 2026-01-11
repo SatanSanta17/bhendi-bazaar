@@ -11,6 +11,7 @@ import type {
   TrackingInfo,
   TrackingStatus,
   ShipmentStatus,
+  ShippingMode,
 } from "../../domain";
 import type {
   ShiprocketCourierServiceability,
@@ -30,9 +31,7 @@ export function mapShiprocketRateToShippingRate(
 ): ShippingRate {
   // Parse estimated delivery days from ETD string
   const etdMatch = courier.etd.match(/(\d+)-?(\d+)?/);
-  const estimatedDays = etdMatch
-    ? parseInt(etdMatch[2] || etdMatch[1])
-    : 3;
+  const estimatedDays = etdMatch ? parseInt(etdMatch[2] || etdMatch[1]) : 3;
 
   return {
     providerId,
@@ -41,7 +40,7 @@ export function mapShiprocketRateToShippingRate(
     courierCode: courier.id.toString(),
     rate: courier.rate,
     estimatedDays,
-    mode: request.mode,
+    mode: courier.mode as ShippingMode,
     available: courier.blocked === 0,
     features: {
       insurance: false,

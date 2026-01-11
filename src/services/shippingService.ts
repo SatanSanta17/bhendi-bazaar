@@ -18,11 +18,11 @@ export const shippingService = {
     const response = await fetch(
       `/api/shipping/serviceability?pincode=${pincode}`
     );
-    
+
     if (!response.ok) {
       throw new Error("Failed to check serviceability");
     }
-    
+
     return response.json();
   },
 
@@ -30,19 +30,21 @@ export const shippingService = {
    * Get available shipping rates for a delivery
    */
   async getRates(params: {
+    fromPincode: string;
     toPincode: string;
     weight: number;
-    mode?: "STANDARD" | "EXPRESS" | "ECONOMY";
+    cod: number;
   }): Promise<ShippingRate[]> {
+    const body = {
+      fromPincode: params.fromPincode,
+      toPincode: params.toPincode,
+      weight: params.weight,
+      cod: params.cod,
+    };
     const response = await fetch("/api/shipping/rates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fromPincode: "110001", // Default warehouse pincode - TODO: Make configurable
-        toPincode: params.toPincode,
-        weight: params.weight,
-        mode: params.mode || "ALL",
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -58,7 +60,7 @@ export const shippingService = {
    */
   async trackShipment(trackingNumber: string): Promise<TrackingInfo> {
     const response = await fetch(`/api/shipping/track/${trackingNumber}`);
-    
+
     if (!response.ok) {
       throw new Error("Failed to fetch tracking information");
     }
@@ -71,7 +73,7 @@ export const shippingService = {
    */
   async getOrderShipping(orderId: string) {
     const response = await fetch(`/api/orders/${orderId}/shipping`);
-    
+
     if (!response.ok) {
       throw new Error("Failed to fetch order shipping details");
     }

@@ -187,13 +187,16 @@ export class ShiprocketProvider extends BaseShippingProvider {
     await this.ensureAuthenticated();
 
     try {
-      const warehousePincode = this.getConfigValue<string>("warehousePincode", "110001");
+      const warehousePincode = this.getConfigValue<string>(
+        "warehousePincode",
+        "560083"
+      );
 
       const params: ShiprocketServiceabilityRequest = {
         pickup_postcode: warehousePincode,
         delivery_postcode: request.toPincode,
-        weight: request.package.weight,
-        cod: request.mode === "cod" ? 1 : 0,
+        weight: request.weight,
+        cod: request.cod as 0 | 1,
       };
 
       const queryString = new URLSearchParams(params as any).toString();
@@ -523,7 +526,8 @@ export class ShiprocketProvider extends BaseShippingProvider {
           selling_price: request.package.declaredValue,
         },
       ],
-      payment_method: request.mode === "cod" ? "COD" : "Prepaid",
+      // payment_method: request.cod === 1 ? "COD" : "Prepaid",
+      payment_method: "Prepaid",
       sub_total: request.package.declaredValue,
       length: dimensions.length,
       breadth: dimensions.breadth,

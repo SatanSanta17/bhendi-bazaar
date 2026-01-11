@@ -38,14 +38,9 @@ export function GuestCheckoutForm({ buyNowProduct }: GuestCheckoutFormProps) {
     isBuyNow,
   } = useDisplayItems(buyNowProduct);
   const { processPayment, error, setError } = useCheckoutPayment();
-  // Helper function to strip +91 country code
-  const stripCountryCode = (phone: string): string => {
-    // Remove +91, +, spaces, and hyphens
-    return phone.replace(/^\+91/, "").replace(/[\s\-+]/g, "");
-  };
+
   const onSubmit = async (values: GuestCheckoutFormValues) => {
     if (!displayItems.length) return;
-
     setError(null);
 
     try {

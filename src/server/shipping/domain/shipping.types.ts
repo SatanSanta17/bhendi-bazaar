@@ -9,18 +9,18 @@
 // ENUMS & CONSTANTS
 // ============================================================================
 
-export type ShippingMode = "prepaid" | "cod";
+export type ShippingMode = "Air" | "Surface";
 
-export type ShipmentStatus = 
-  | "pending"           // Shipment not yet created
-  | "created"           // Shipment created, awaiting pickup
-  | "picked_up"         // Picked up from warehouse
-  | "in_transit"        // In transit to destination
-  | "out_for_delivery"  // Out for delivery
-  | "delivered"         // Successfully delivered
-  | "failed"            // Delivery failed
-  | "returned"          // Returned to origin
-  | "cancelled";        // Shipment cancelled
+export type ShipmentStatus =
+  | "pending" // Shipment not yet created
+  | "created" // Shipment created, awaiting pickup
+  | "picked_up" // Picked up from warehouse
+  | "in_transit" // In transit to destination
+  | "out_for_delivery" // Out for delivery
+  | "delivered" // Successfully delivered
+  | "failed" // Delivery failed
+  | "returned" // Returned to origin
+  | "cancelled"; // Shipment cancelled
 
 export type ShippingEventType =
   | "rate_check"
@@ -49,16 +49,16 @@ export interface ShippingAddress {
 }
 
 export interface PackageDimensions {
-  length: number;  // cm
-  breadth: number;   // cm
-  height: number;  // cm
+  length: number; // cm
+  breadth: number; // cm
+  height: number; // cm
 }
 
 export interface ShippingPackage {
-  weight: number;                 // kg
+  weight: number; // kg
   dimensions?: PackageDimensions;
-  declaredValue: number;          // INR
-  description?: string;           // "Clothing items"
+  declaredValue: number; // INR
+  description?: string; // "Clothing items"
   items?: Array<{
     name: string;
     quantity: number;
@@ -72,11 +72,10 @@ export interface ShippingPackage {
 // ============================================================================
 
 export interface ShippingRateRequest {
-  fromPincode: string;      // Warehouse pincode
-  toPincode: string;        // Customer pincode
-  package: ShippingPackage;
-  mode: ShippingMode;
-  codAmount?: number;       // COD collection amount
+  fromPincode: string; // Warehouse pincode
+  toPincode: string; // Customer pincode
+  weight: number;
+  cod: number; // COD mode (0 or 1)
 }
 
 export interface ShippingRate {
