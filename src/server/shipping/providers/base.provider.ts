@@ -6,20 +6,34 @@
  */
 
 import type { IShippingProvider } from "../domain/provider.interface";
-import type { ProviderConfig } from "../domain/shipping.types";
+import type {
+  ConnectionRequestBody,
+  ProviderConnectionResult,
+  ShippingRate,
+} from "../domain/shipping.types";
 
 export abstract class BaseShippingProvider implements IShippingProvider {
-  protected config!: ProviderConfig;
+  protected providerId!: string;
   protected initialized = false;
 
   // ============================================================================
   // ABSTRACT METHODS (Must be implemented by subclasses)
   // ============================================================================
 
+  /**
+   * Connect provider account with credentials
+   * Each provider implements their own connection logic
+   * @param credentials Provider-specific credentials
+   * @returns Connection result with token and account info
+   */
+  abstract connect(
+    requestBody: ConnectionRequestBody
+  ): Promise<ProviderConnectionResult>;
+
   abstract getProviderId(): string;
   abstract getProviderName(): string;
-  abstract checkServiceability(pincode: string): Promise<boolean>;
-  abstract getRates(request: any): Promise<any[]>;
+  abstract checkServiceability(payload: any): Promise<any>;
+  abstract getRates(request: any): Promise<ShippingRate[]>;
   abstract createShipment(request: any): Promise<any>;
   abstract trackShipment(trackingNumber: string): Promise<any>;
   abstract cancelShipment(trackingNumber: string): Promise<boolean>;
@@ -32,8 +46,8 @@ export abstract class BaseShippingProvider implements IShippingProvider {
   /**
    * Initialize provider with configuration
    */
-  async initialize(config: ProviderConfig): Promise<void> {
-    this.config = config;
+  async initialize(providerId: string): Promise<void> {
+    this.providerId = providerId;
     this.initialized = true;
   }
 }

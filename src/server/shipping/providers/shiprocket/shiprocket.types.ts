@@ -26,12 +26,11 @@ export interface ShiprocketAuthResponse {
 // ============================================================================
 // SERVICEABILITY
 // ============================================================================
-
-export interface ShiprocketServiceabilityRequest {
-  pickup_postcode: string;
-  delivery_postcode: string;
-  weight: number;  // in kg
-  cod: 0 | 1;     // 0 = prepaid, 1 = COD
+import { ServiceabilityCheckRequest } from "@/domain/shipping";
+export interface ShiprocketServiceabilityRequest
+  extends ServiceabilityCheckRequest {
+  weight: number; // in kg
+  cod: 0 | 1; // 0 = prepaid, 1 = COD
 }
 
 export interface ShiprocketCourierServiceability {

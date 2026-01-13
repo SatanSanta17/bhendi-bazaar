@@ -119,12 +119,7 @@ export class ShippingProviderRepository {
       password: string; // Plain password (will be encrypted)
       authToken: string; // Plain token (will be encrypted)
       tokenExpiresAt: Date;
-      accountInfo: {
-        email: string;
-        firstName: string;
-        lastName: string;
-        companyId: number;
-      };
+      accountInfo: any;
       connectedBy: string; // Admin user ID
     }
   ): Promise<ShippingProvider> {

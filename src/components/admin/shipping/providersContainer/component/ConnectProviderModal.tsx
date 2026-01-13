@@ -2,18 +2,20 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { ConnectionRequestBody } from "../types";
 
 interface ConnectProviderModalProps {
   providerId: string;
   providerName: string;
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onConnect: (requestBody: ConnectionRequestBody) => Promise<boolean>;
+  isConnecting?: boolean;
 }
 
 export function ConnectProviderModal({
@@ -21,43 +23,38 @@ export function ConnectProviderModal({
   providerName,
   open,
   onClose,
-  onSuccess,
+  onConnect,
+  isConnecting = false,
 }: ConnectProviderModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [warehousePincode, setWarehousePincode] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      setEmail("");
+      setPassword("");
+      setError(null);
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch(`/api/admin/shipping/providers/${providerId}/connect`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          warehousePincode: warehousePincode || undefined,
-        }),
-      });
+    const requestBody: ConnectionRequestBody = {
+      type: "email_password",
+      email,
+      password,
+    };
 
-      const data = await response.json();
+    const success = await onConnect(requestBody);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to connect provider");
-      }
-
-      onSuccess();
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect");
-    } finally {
-      setLoading(false);
+    if (!success) {
+      setError("Failed to connect. Please check your credentials.");
     }
+    // If successful, modal will be closed by parent
   };
 
   return (
@@ -76,6 +73,7 @@ export function ConnectProviderModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isConnecting}
             />
           </div>
 
@@ -87,18 +85,7 @@ export function ConnectProviderModal({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="warehousePincode">Warehouse Pincode (Optional)</Label>
-            <Input
-              id="warehousePincode"
-              type="text"
-              value={warehousePincode}
-              onChange={(e) => setWarehousePincode(e.target.value)}
-              placeholder="400001"
-              maxLength={6}
+              disabled={isConnecting}
             />
           </div>
 
@@ -109,11 +96,16 @@ export function ConnectProviderModal({
           )}
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isConnecting}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Connecting..." : "Connect"}
+            <Button type="submit" disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Connect"}
             </Button>
           </div>
         </form>

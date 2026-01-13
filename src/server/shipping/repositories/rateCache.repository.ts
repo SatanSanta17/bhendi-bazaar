@@ -42,16 +42,19 @@ export class ShippingRateCacheRepository {
    */
   async findValidCachedRate(params: {
     providerId: string;
-    fromPincode: string;
-    toPincode: string;
-    weight: number;
-    mode: string;
+    request: any;
   }): Promise<ShippingRateCache | null> {
-    const cache = await this.findCachedRate(params);
-    
+    const cache = await this.findCachedRate({
+      providerId: params.providerId,
+      fromPincode: params.request.fromPincode,
+      toPincode: params.request.toPincode,
+      weight: params.request.weight ?? 0,
+      mode: params.request.cod ? "COD" : "PREPAID",
+    });
+
     if (!cache) return null;
     if (!this.isCacheValid(cache)) return null;
-    
+
     return cache;
   }
 

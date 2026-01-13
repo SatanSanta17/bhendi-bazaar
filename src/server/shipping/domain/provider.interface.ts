@@ -6,12 +6,10 @@
  */
 
 import type {
-  ShippingRateRequest,
   ShippingRate,
   CreateShipmentRequest,
   Shipment,
   TrackingInfo,
-  ProviderConfig,
   WebhookEvent,
 } from "./shipping.types";
 
@@ -41,7 +39,7 @@ export interface IShippingProvider {
    * Called once when provider is loaded
    * @param config Provider configuration including API credentials
    */
-  initialize(config: ProviderConfig): Promise<void>;
+  initialize(providerId: string): Promise<void>;
 
   // ============================================================================
   // SERVICEABILITY
@@ -52,7 +50,7 @@ export interface IShippingProvider {
    * @param pincode Delivery pincode to check
    * @returns true if serviceable, false otherwise
    */
-  checkServiceability(pincode: string): Promise<boolean>;
+  checkServiceability(request: any): Promise<boolean>;
 
   // ============================================================================
   // RATE CALCULATION
@@ -64,7 +62,7 @@ export interface IShippingProvider {
    * @param request Rate calculation parameters
    * @returns Array of available shipping rates
    */
-  getRates(request: ShippingRateRequest): Promise<ShippingRate[]>;
+  getRates(request: any): Promise<ShippingRate[]>;
 
   // ============================================================================
   // SHIPMENT CREATION
@@ -149,5 +147,5 @@ export interface IShippingProvider {
  * Provider Factory Type
  * Used to create provider instances
  */
-export type ProviderFactory = (config: ProviderConfig) => IShippingProvider;
+export type ProviderFactory = (providerId: string) => IShippingProvider;
 

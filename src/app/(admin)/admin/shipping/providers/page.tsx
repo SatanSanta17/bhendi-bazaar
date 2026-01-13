@@ -1,6 +1,9 @@
+// src/app/(admin)/admin/shipping/providers/page.tsx
+
 import { Metadata } from "next";
-import { ProvidersList } from "@/components/admin/shipping/ProvidersList";
+import { ProvidersContainer } from "@/components/admin/shipping/providersContainer";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+
 export const metadata: Metadata = {
   title: "Shipping Providers | Admin",
   description: "Manage shipping providers",
@@ -19,18 +22,17 @@ export default function ShippingProvidersPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="font-semibold text-blue-900 mb-2">💡 How it works</h3>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Enable providers to use them for shipping orders</li>
-          <li>• Disable providers to temporarily stop using them</li>
+          <li>• Connect your shipping provider accounts to enable them</li>
+          <li>• Disconnect providers to temporarily stop using them</li>
           <li>
             • Priority determines which provider is preferred (higher = better)
           </li>
-          <li>• Provider configuration is handled by developers</li>
-          <li>• Only configured providers can be enabled</li>
+          <li>• Only connected providers will be used for shipping orders</li>
         </ul>
       </div>
 
-      {/* Providers List */}
-      <ProvidersList />
+      {/* Container Component */}
+      <ProvidersContainer />
     </div>
   );
 }

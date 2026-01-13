@@ -117,7 +117,8 @@ export interface OrderShippingInfo {
  * Check if delivery is available to a pincode
  */
 export interface ServiceabilityCheckRequest {
-  pincode: string;
+  fromPincode: string;
+  toPincode: string;
 }
 
 /**

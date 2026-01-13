@@ -2,13 +2,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminShippingService } from "@/server/services/admin/shippingService";
+import { adminConnectionService } from "@/server/services/admin/shipping/connection/service";
 import { z } from "zod";
 
 const connectSchema = z.object({
+  type: z.enum(["email_password", "api_key", "oauth"]),
   email: z.string().email(),
   password: z.string().min(1),
-  warehousePincode: z.string().length(6).optional(),
 });
 
 export async function POST(
@@ -27,20 +27,22 @@ export async function POST(
     const validated = connectSchema.parse(body);
 
     // Connect provider via service
-    const provider = await adminShippingService.connectProvider(
+    const result = await adminConnectionService.connect(
       id,
       {
-        email: validated.email,
-        password: validated.password,
-        warehousePincode: validated.warehousePincode,
+        requestBody: {
+          type: validated.type as "email_password",
+          email: validated.email,
+          password: validated.password,
+        },
       },
       session.user.id
     );
 
     return NextResponse.json({
       success: true,
-      provider,
-      message: `${provider.name} connected successfully`,
+      provider: result.provider,
+      message: `${result.provider.name} connected successfully`,
     });
   } catch (error) {
     console.error("Connect provider error:", error);
@@ -62,7 +64,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to connect provider",
+        error:
+          error instanceof Error ? error.message : "Failed to connect provider",
       },
       { status: 500 }
     );

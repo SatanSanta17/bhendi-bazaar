@@ -6,10 +6,30 @@
  */
 
 // ============================================================================
-// ENUMS & CONSTANTS
+// PROVIDER CONNECTION
 // ============================================================================
 
+/**
+ * Connection request body (discriminated union)
+ */
+export type ConnectionRequestBody =
+  | {
+      type: "email_password";
+      email: string;
+      password: string;
+    }
 
+
+/**
+ * Result of connecting a provider account
+ */
+export interface ProviderConnectionResult {
+  success: boolean;
+  token: string;
+  tokenExpiresAt: Date;
+  accountInfo: any;
+  metadata?: Record<string, any>;
+}
 export type ShipmentStatus =
   | "pending" // Shipment not yet created
   | "created" // Shipment created, awaiting pickup
@@ -73,8 +93,8 @@ export interface ShippingPackage {
 export interface ShippingRateRequest {
   fromPincode: string; // Warehouse pincode
   toPincode: string; // Customer pincode
-  weight: number;
-  cod: number; // COD mode (0 or 1)
+  weight?: number;
+  cod?: boolean;
 }
 
 export interface ShippingRate {
@@ -158,18 +178,6 @@ export interface TrackingInfo {
   deliveredAt?: Date;
   recipientName?: string;
   recipientSignature?: string; // URL to signature image
-}
-
-// ============================================================================
-// PROVIDER CONFIGURATION
-// ============================================================================
-
-export interface ProviderConfig {
-  id: string;
-  code: string; // 'shiprocket', 'delhivery'
-  name: string; // 'Shiprocket', 'Delhivery'
-  priority: number; // Higher = preferred
-  supportedModes: String[];
 }
 
 // ============================================================================

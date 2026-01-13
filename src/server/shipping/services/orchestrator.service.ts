@@ -14,9 +14,11 @@ import type {
   TrackingInfo,
   SelectionCriteria,
   SelectionResult,
-  ProviderConfig,
 } from "../domain";
-import { shippingProviderRepository, shippingEventRepository } from "../repositories";
+import {
+  shippingProviderRepository,
+  shippingEventRepository,
+} from "../repositories";
 import { shippingCacheService } from "./cache.service";
 import { providerSelectorService } from "./selector.service";
 
@@ -53,9 +55,7 @@ export class ShippingOrchestratorService {
 
         try {
           const provider = factory(providerConfig);
-          await provider.initialize(
-            providerConfig as unknown as ProviderConfig
-          );
+          await provider.initialize(providerConfig.id);
           this.providers.set(providerConfig.id, provider);
 
           console.log(
@@ -86,9 +86,7 @@ export class ShippingOrchestratorService {
     providerId: string,
     factory: (config: any) => IShippingProvider
   ): Promise<void> {
-    const providerConfig = (await shippingProviderRepository.getById(
-      providerId
-    )) as unknown as ProviderConfig;
+    const providerConfig = await shippingProviderRepository.getById(providerId);
 
     if (!providerConfig || !providerConfig.isEnabled) {
       this.providers.delete(providerId);
@@ -96,7 +94,7 @@ export class ShippingOrchestratorService {
     }
 
     const provider = factory(providerConfig);
-    await provider.initialize(providerConfig);
+    await provider.initialize(providerConfig.id);
     this.providers.set(providerId, provider);
   }
 
@@ -176,7 +174,7 @@ export class ShippingOrchestratorService {
    * 2. Return winners sorted by fastest delivery
    */
   async getBestRatesByDeliveryDays(
-    request: ShippingRateRequest,
+    request: any,
     options?: {
       useCache?: boolean;
       timeout?: number;

@@ -6,15 +6,15 @@
  */
 
 import { Card } from "@/components/ui/card";
-import type { ProviderStats } from "@/server/services/admin/shippingService";
+import type { ShippingProviderStats } from "../types";
 
 interface ProviderStatsCardsProps {
-  stats: ProviderStats;
-  loading?: boolean;
+  stats: ShippingProviderStats;
+  isLoading?: boolean;
 }
 
-export function ProviderStatsCards({ stats, loading }: ProviderStatsCardsProps) {
-  if (loading) {
+export function ProviderStatsCards({ stats, isLoading }: ProviderStatsCardsProps) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (

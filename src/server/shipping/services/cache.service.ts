@@ -26,10 +26,7 @@ export class ShippingCacheService {
     try {
       const cache = await shippingRateCacheRepository.findValidCachedRate({
         providerId,
-        fromPincode: request.fromPincode,
-        toPincode: request.toPincode,
-        weight: request.weight,
-        mode: request.cod === 1 ? "COD" : "PREPAID",
+        request,
       });
 
       if (!cache) return null;
@@ -41,7 +38,7 @@ export class ShippingCacheService {
         courierName: cache.courierName,
         rate: cache.rate,
         estimatedDays: cache.estimatedDays,
-        mode: request.cod === 1 ? "COD" : "PREPAID",
+        mode: request.cod ? "COD" : "PREPAID",
         available: true,
         metadata: cache.metadata as Record<string, any>,
       };
@@ -89,8 +86,8 @@ export class ShippingCacheService {
         providerId: rate.providerId,
         fromPincode: request.fromPincode,
         toPincode: request.toPincode,
-        weight: request.weight,
-        mode: request.cod === 1 ? "COD" : "PREPAID",
+        weight: request.weight ?? 0,
+        mode: request.cod ? "COD" : "PREPAID",
         rate: rate.rate,
         courierName: rate.courierName,
         estimatedDays: rate.estimatedDays,
@@ -205,7 +202,7 @@ export class ShippingCacheService {
               fromPincode: route.fromPincode,
               toPincode: route.toPincode,
               weight,
-              cod: mode.toLowerCase() === "cod" ? 1 : 0,
+              cod: mode.toLowerCase() === "cod" ? true : false,
             };
 
             // Skip if already cached
@@ -240,7 +237,7 @@ export class ShippingCacheService {
   getCacheKey(request: ShippingRateRequest, providerId: string): string {
     return `${providerId}_${request.fromPincode}_${request.toPincode}_${
       request.weight
-    }_${request.cod === 1 ? "COD" : "PREPAID"}`;
+    }_${request.cod ? "COD" : "PREPAID"}`;
   }
 
   /**

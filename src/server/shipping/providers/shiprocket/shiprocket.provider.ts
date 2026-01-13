@@ -7,10 +7,8 @@
 
 import { BaseShippingProvider } from "../base.provider";
 import type {
-  ShippingRateRequest,
   ShippingRate,
   CreateShipmentRequest,
-  Shipment,
   TrackingInfo,
   WebhookEvent,
 } from "../../domain";
@@ -45,6 +43,12 @@ import {
 } from "./shiprocket.config";
 import { shippingProviderRepository } from "../../repositories/provider.repository";
 import { encryptionService } from "../../utils/encryption";
+import type {
+  ConnectionRequestBody,
+  ProviderConnectionResult,
+} from "../../domain/shipping.types";
+import { adminLogRepository } from "@/server/repositories/admin/logRepository";
+
 export class ShiprocketProvider extends BaseShippingProvider {
   private authToken?: string;
   private tokenExpiry?: Date;
@@ -68,7 +72,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
 
   protected async onInitialize(): Promise<void> {
     // Get base URL from config if provided
-    this.baseUrl = this.getConfigValue("baseUrl", SHIPROCKET_CONFIG.BASE_URL);
+    this.baseUrl = SHIPROCKET_CONFIG.BASE_URL;
 
     // Don't auto-authenticate - check if connected and use stored token
     await this.loadStoredAuth();
@@ -78,7 +82,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
    * Load stored authentication token from database
    */
   private async loadStoredAuth(): Promise<void> {
-    const provider = await shippingProviderRepository.getById(this.config.id);
+    const provider = await shippingProviderRepository.getById(this.providerId);
 
     if (!provider?.isConnected || !provider.authToken) {
       return; // Not connected, will authenticate on-demand
@@ -116,7 +120,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
    * Authenticate with Shiprocket (uses stored credentials)
    */
   private async authenticate(): Promise<void> {
-    const provider = await shippingProviderRepository.getById(this.config.id);
+    const provider = await shippingProviderRepository.getById(this.providerId);
 
     if (!provider?.isConnected) {
       throw new Error(
@@ -203,26 +207,17 @@ export class ShiprocketProvider extends BaseShippingProvider {
   /**
    * Check if Shiprocket can deliver to a pincode
    */
-  async checkServiceability(pincode: string): Promise<boolean> {
-    this.ensureInitialized();
+  async checkServiceability(
+    payload: ShiprocketServiceabilityRequest
+  ): Promise<any> {
     await this.ensureAuthenticated();
 
-    if (!this.validatePincode(pincode)) {
-      return false;
-    }
-
     try {
-      // Use a minimal weight for checking serviceability
-      const warehousePincode = this.getConfigValue<string>(
-        "warehousePincode",
-        "110001"
-      );
-
-      const params: ShiprocketServiceabilityRequest = {
-        pickup_postcode: warehousePincode,
-        delivery_postcode: pincode,
-        weight: 0.5,
-        cod: 0,
+      const params = {
+        pickup_postcode: payload.fromPincode,
+        delivery_postcode: payload.toPincode,
+        weight: payload.weight,
+        cod: payload.cod,
       };
 
       const queryString = new URLSearchParams(params as any).toString();
@@ -248,16 +243,17 @@ export class ShiprocketProvider extends BaseShippingProvider {
    * Get shipping rates from Shiprocket
    * Returns all couriers with rating >= 4
    */
-  async getRates(request: ShippingRateRequest): Promise<ShippingRate[]> {
-    this.ensureInitialized();
+  async getRates(
+    request: ShiprocketServiceabilityRequest
+  ): Promise<ShippingRate[]> {
     await this.ensureAuthenticated();
 
     try {
-      const params: ShiprocketServiceabilityRequest = {
+      const params = {
         pickup_postcode: request.fromPincode,
         delivery_postcode: request.toPincode,
         weight: request.weight,
-        cod: request.cod as 0 | 1,
+        cod: request.cod,
       };
 
       const queryString = new URLSearchParams(params as any).toString();
@@ -304,20 +300,20 @@ export class ShiprocketProvider extends BaseShippingProvider {
 
       // Map all filtered couriers to our ShippingRate format
       const rates = filteredCouriers.map((courier) => {
-        return mapShiprocketRateToShippingRate(courier, this.config.id);
+        return mapShiprocketRateToShippingRate(courier, this.providerId);
       });
 
       return rates;
     } catch (error) {
-      this.handleError(error, "get rates");
+      console.error("Failed to get rates:", error);
+      return [];
     }
   }
 
   /**
    * Create shipment in Shiprocket
    */
-  async createShipment(request: CreateShipmentRequest): Promise<Shipment> {
-    this.ensureInitialized();
+  async createShipment(request: CreateShipmentRequest): Promise<any> {
     await this.ensureAuthenticated();
 
     try {
@@ -334,17 +330,18 @@ export class ShiprocketProvider extends BaseShippingProvider {
       // Step 3: Map to our Shipment format
       const shipment = mapShiprocketAWBToShipment(
         awbResponse,
-        this.config.id,
+        this.providerId,
         request.orderId
       );
 
       // Log success
-      await this.logSuccess({
-        orderId: request.orderId,
-        eventType: "shipment_created",
-        request: orderData,
-        response: awbResponse,
+      await adminLogRepository.createLog({
+        adminId: this.providerId,
+        action: "shipment_created",
+        resource: "shipment",
+        resourceId: request.orderId,
         metadata: {
+          orderId: request.orderId,
           shipmentId: orderResponse.shipment_id,
           awbCode: awbResponse.response.data.awb_code,
         },
@@ -352,13 +349,17 @@ export class ShiprocketProvider extends BaseShippingProvider {
 
       return shipment;
     } catch (error) {
-      await this.logFailure({
-        orderId: request.orderId,
-        eventType: "shipment_created",
-        error: error as Error,
-        request,
+      await adminLogRepository.createLog({
+        adminId: this.providerId,
+        action: "shipment_created",
+        resource: "shipment",
+        resourceId: request.orderId,
+        metadata: {
+          orderId: request.orderId,
+          error: (error as Error).message,
+        },
       });
-      throw error;
+      console.error("Failed to create shipment:", error);
     }
   }
 
@@ -366,7 +367,6 @@ export class ShiprocketProvider extends BaseShippingProvider {
    * Track shipment by AWB code
    */
   async trackShipment(trackingNumber: string): Promise<TrackingInfo> {
-    this.ensureInitialized();
     await this.ensureAuthenticated();
 
     try {
@@ -384,7 +384,8 @@ export class ShiprocketProvider extends BaseShippingProvider {
       const data: ShiprocketTrackingResponse = await response.json();
       return mapShiprocketTrackingToTrackingInfo(data, trackingNumber);
     } catch (error) {
-      this.handleError(error, "track shipment");
+      console.error("Failed to track shipment:", error);
+      return undefined as unknown as TrackingInfo;
     }
   }
 
@@ -392,7 +393,6 @@ export class ShiprocketProvider extends BaseShippingProvider {
    * Cancel shipment
    */
   async cancelShipment(trackingNumber: string): Promise<boolean> {
-    this.ensureInitialized();
     await this.ensureAuthenticated();
 
     try {
@@ -451,14 +451,70 @@ export class ShiprocketProvider extends BaseShippingProvider {
   // ============================================================================
 
   /**
+   * Connect Shiprocket account (implements BaseShippingProvider.connect)
+   */
+  async connect(
+    requestBody: ConnectionRequestBody
+  ): Promise<ProviderConnectionResult> {
+    // Validate credentials type
+    if (requestBody.type !== "email_password") {
+      throw new Error(
+        `Shiprocket requires email_password credentials, got ${requestBody.type}`
+      );
+    }
+
+    const { email, password } = requestBody;
+
+    // Call Shiprocket auth API
+    const response = await fetch(
+      `${this.baseUrl}${SHIPROCKET_ENDPOINTS.AUTH}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ message: response.statusText }));
+      throw new Error(
+        `Shiprocket authentication failed: ${
+          error.message || response.statusText
+        }`
+      );
+    }
+
+    const data: ShiprocketAuthResponse = await response.json();
+
+    // Calculate token expiry (10 days for Shiprocket)
+    const tokenExpiresAt = new Date(
+      Date.now() + SHIPROCKET_CONFIG.TOKEN_EXPIRY_HOURS * 60 * 60 * 1000
+    );
+
+    return {
+      success: true,
+      token: data.token,
+      tokenExpiresAt,
+      accountInfo: {
+        id: data.id,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        email: data.email,
+        companyId: data.company_id,
+      },
+    };
+  }
+
+  /**
    * Schedule pickup for shipments
    */
   async schedulePickup(params: {
     trackingNumbers: string[];
     pickupDate: Date;
     pickupTime?: string;
-  }): Promise<{ pickupId: string }> {
-    this.ensureInitialized();
+  }): Promise<any> {
     await this.ensureAuthenticated();
 
     try {
@@ -491,7 +547,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
         pickupId: data.pickup_token_number,
       };
     } catch (error) {
-      this.handleError(error, "schedule pickup");
+      console.error("Failed to schedule pickup:", error);
     }
   }
 
@@ -499,7 +555,6 @@ export class ShiprocketProvider extends BaseShippingProvider {
    * Generate shipping label
    */
   async generateLabel(trackingNumber: string): Promise<{ labelUrl: string }> {
-    this.ensureInitialized();
     await this.ensureAuthenticated();
 
     try {
@@ -528,7 +583,8 @@ export class ShiprocketProvider extends BaseShippingProvider {
         labelUrl: data.label_url,
       };
     } catch (error) {
-      this.handleError(error, "generate label");
+      console.error("Failed to generate label:", error);
+      return { labelUrl: "" };
     }
   }
 
@@ -538,7 +594,6 @@ export class ShiprocketProvider extends BaseShippingProvider {
   async generateManifest(
     trackingNumbers: string[]
   ): Promise<{ manifestUrl: string }> {
-    this.ensureInitialized();
     await this.ensureAuthenticated();
 
     try {
@@ -567,7 +622,8 @@ export class ShiprocketProvider extends BaseShippingProvider {
         manifestUrl: data.manifest_url,
       };
     } catch (error) {
-      this.handleError(error, "generate manifest");
+      console.error("Failed to generate manifest:", error);
+      return { manifestUrl: "" };
     }
   }
 
@@ -582,10 +638,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
     request: CreateShipmentRequest
   ): ShiprocketCreateOrderRequest {
     const dimensions = request.package.dimensions || DEFAULT_PACKAGE_DIMENSIONS;
-    const pickupLocation = this.getConfigValue<string>(
-      "pickupLocationName",
-      "Primary"
-    );
+    const pickupLocation = "Primary";
 
     // Split name into first and last
     const nameParts = request.toAddress.name.split(" ");
