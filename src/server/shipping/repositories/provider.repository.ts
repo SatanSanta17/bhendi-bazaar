@@ -7,7 +7,7 @@
 
 import { prisma } from "@/lib/prisma";
 import type { ShippingProvider, Prisma } from "@prisma/client";
-
+import { encryptionService } from "../utils/encryption";
 export class ShippingProviderRepository {
   // ============================================================================
   // QUERY OPERATIONS
@@ -16,15 +16,15 @@ export class ShippingProviderRepository {
   /**
    * Get all enabled providers ordered by priority (highest first)
    */
-  async getEnabledProviders(): Promise<ShippingProvider[]> {
+  async getConnectedProviders(): Promise<ShippingProvider[]> {
     return await prisma.shippingProvider.findMany({
-      where: { isEnabled: true },
+      where: { isConnected: true },
       orderBy: { priority: "desc" },
     });
   }
 
   /**
-   * Get all providers (enabled and disabled)
+   * Get all providers (connected and disconnected)
    */
   async getAllProviders(): Promise<ShippingProvider[]> {
     return await prisma.shippingProvider.findMany({
@@ -56,39 +56,13 @@ export class ShippingProviderRepository {
   async getProvidersByMode(mode: string): Promise<ShippingProvider[]> {
     return await prisma.shippingProvider.findMany({
       where: {
-        isEnabled: true,
+        isConnected: true,
         supportedModes: {
           has: mode,
         },
       },
       orderBy: { priority: "desc" },
     });
-  }
-
-  // ============================================================================
-  // CREATE OPERATIONS
-  // ============================================================================
-
-  /**
-   * Create a new shipping provider
-   */
-  async create(
-    data: Prisma.ShippingProviderCreateInput
-  ): Promise<ShippingProvider> {
-    return await prisma.shippingProvider.create({ data });
-  }
-
-  /**
-   * Bulk create providers (useful for seeding)
-   */
-  async createMany(
-    data: Prisma.ShippingProviderCreateManyInput[]
-  ): Promise<number> {
-    const result = await prisma.shippingProvider.createMany({
-      data,
-      skipDuplicates: true,
-    });
-    return result.count;
   }
 
   // ============================================================================
@@ -108,107 +82,143 @@ export class ShippingProviderRepository {
     });
   }
 
-  /**
-   * Toggle provider enabled/disabled status
-   */
-  async toggleEnabled(
-    id: string,
-    isEnabled: boolean
-  ): Promise<ShippingProvider> {
-    return await prisma.shippingProvider.update({
-      where: { id },
-      data: { isEnabled },
-    });
-  }
-
-  /**
-   * Update provider priority
-   */
-  async updatePriority(id: string, priority: number): Promise<ShippingProvider> {
-    return await prisma.shippingProvider.update({
-      where: { id },
-      data: { priority },
-    });
-  }
-
-  /**
-   * Update provider configuration (API keys, settings)
-   */
-  async updateConfig(
-    id: string,
-    config: Prisma.InputJsonValue
-  ): Promise<ShippingProvider> {
-    return await prisma.shippingProvider.update({
-      where: { id },
-      data: { config },
-    });
-  }
-
-  // ============================================================================
-  // DELETE OPERATIONS
-  // ============================================================================
-
-  /**
-   * Delete a provider (use with caution - may have related records)
-   */
-  async delete(id: string): Promise<void> {
-    await prisma.shippingProvider.delete({
-      where: { id },
-    });
-  }
-
   // ============================================================================
   // UTILITY OPERATIONS
   // ============================================================================
-
-  /**
-   * Check if provider can service a specific pincode
-   * @returns true if serviceable, false otherwise
-   */
-  async canServicePincode(
-    providerId: string,
-    pincode: string
-  ): Promise<boolean> {
-    const provider = await this.getById(providerId);
-    if (!provider || !provider.isEnabled) return false;
-
-    // Empty array means all India is serviceable
-    if (provider.serviceablePincodes.length === 0) return true;
-
-    // Check if pincode is in serviceable list
-    return provider.serviceablePincodes.includes(pincode);
-  }
-
-  /**
-   * Check if provider exists
-   */
-  async exists(code: string): Promise<boolean> {
-    const count = await prisma.shippingProvider.count({
-      where: { code },
-    });
-    return count > 0;
-  }
 
   /**
    * Get provider count by status
    */
   async getProviderStats(): Promise<{
     total: number;
-    enabled: number;
-    disabled: number;
+    connected: number;
+    disconnected: number;
   }> {
-    const [total, enabled] = await Promise.all([
+    const [total, connected] = await Promise.all([
       prisma.shippingProvider.count(),
-      prisma.shippingProvider.count({ where: { isEnabled: true } }),
+      prisma.shippingProvider.count({ where: { isConnected: true } }),
     ]);
 
     return {
       total,
-      enabled,
-      disabled: total - enabled,
+      connected,
+      disconnected: total - connected,
     };
   }
+  // src/server/shipping/repositories/provider.repository.ts
+
+  // Add these methods:
+
+  /**
+   * Connect provider account (store encrypted credentials)
+   */
+  async connectAccount(
+    id: string,
+    data: {
+      email: string;
+      password: string; // Plain password (will be encrypted)
+      authToken: string; // Plain token (will be encrypted)
+      tokenExpiresAt: Date;
+      accountInfo: {
+        email: string;
+        firstName: string;
+        lastName: string;
+        companyId: number;
+      };
+      connectedBy: string; // Admin user ID
+    }
+  ): Promise<ShippingProvider> {
+    return await prisma.shippingProvider.update({
+      where: { id },
+      data: {
+        isConnected: true,
+        connectedAt: new Date(),
+        connectedBy: data.connectedBy,
+        lastAuthAt: new Date(),
+        authError: null,
+        authToken: encryptionService.encrypt(data.authToken),
+        tokenExpiresAt: data.tokenExpiresAt,
+        accountInfo: {
+          ...data.accountInfo,
+          password: encryptionService.encrypt(data.password), // Encrypt password
+        },
+      },
+    });
+  }
+
+  /**
+   * Disconnect provider account (clear all auth data)
+   */
+  async disconnectAccount(id: string): Promise<ShippingProvider> {
+    return await prisma.shippingProvider.update({
+      where: { id },
+      data: {
+        isConnected: false,
+        connectedAt: null,
+        connectedBy: null,
+        lastAuthAt: null,
+        authError: null,
+        authToken: null,
+        tokenExpiresAt: null,
+        accountInfo: undefined,
+      },
+    });
+  }
+
+  /**
+   * Update auth token (for refresh)
+   */
+  async updateAuthToken(
+    id: string,
+    token: string,
+    expiresAt: Date
+  ): Promise<ShippingProvider> {
+    return await prisma.shippingProvider.update({
+      where: { id },
+      data: {
+        authToken: encryptionService.encrypt(token),
+        tokenExpiresAt: expiresAt,
+        lastAuthAt: new Date(),
+        authError: null,
+      },
+    });
+  }
+
+  /**
+   * Get decrypted auth token
+   */
+  async getDecryptedAuthToken(id: string): Promise<string | null> {
+    const provider = await this.getById(id);
+    if (!provider?.authToken) return null;
+
+    try {
+      return encryptionService.decrypt(provider.authToken);
+    } catch (error) {
+      console.error("Failed to decrypt auth token:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Get decrypted password
+   */
+  async getDecryptedPassword(id: string): Promise<string | null> {
+    const provider = await this.getById(id);
+    if (!provider?.accountInfo) return null;
+
+    const accountInfo = provider.accountInfo as any;
+    if (!accountInfo.password) return null;
+
+    try {
+      return encryptionService.decrypt(accountInfo.password);
+    } catch (error) {
+      console.error("Failed to decrypt password:", error);
+      return null;
+    }
+  }
 }
+
+
 
 // Singleton instance
 export const shippingProviderRepository = new ShippingProviderRepository();

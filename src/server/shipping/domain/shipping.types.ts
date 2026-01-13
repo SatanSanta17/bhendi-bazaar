@@ -168,12 +168,8 @@ export interface ProviderConfig {
   id: string;
   code: string; // 'shiprocket', 'delhivery'
   name: string; // 'Shiprocket', 'Delhivery'
-  isEnabled: boolean;
   priority: number; // Higher = preferred
   supportedModes: String[];
-  config: Record<string, any>; // API credentials & settings
-  features?: Record<string, boolean>;
-  serviceablePincodes?: string[];
 }
 
 // ============================================================================

@@ -43,7 +43,8 @@ import {
   SHIPROCKET_ENDPOINTS,
   DEFAULT_PACKAGE_DIMENSIONS,
 } from "./shiprocket.config";
-
+import { shippingProviderRepository } from "../../repositories/provider.repository";
+import { encryptionService } from "../../utils/encryption";
 export class ShiprocketProvider extends BaseShippingProvider {
   private authToken?: string;
   private tokenExpiry?: Date;
@@ -69,49 +70,107 @@ export class ShiprocketProvider extends BaseShippingProvider {
     // Get base URL from config if provided
     this.baseUrl = this.getConfigValue("baseUrl", SHIPROCKET_CONFIG.BASE_URL);
 
-    // Authenticate with Shiprocket
+    // Don't auto-authenticate - check if connected and use stored token
+    await this.loadStoredAuth();
+  }
+
+  /**
+   * Load stored authentication token from database
+   */
+  private async loadStoredAuth(): Promise<void> {
+    const provider = await shippingProviderRepository.getById(this.config.id);
+
+    if (!provider?.isConnected || !provider.authToken) {
+      return; // Not connected, will authenticate on-demand
+    }
+
+    // Check if token is expired
+    if (provider.tokenExpiresAt && new Date() >= provider.tokenExpiresAt) {
+      // Token expired, try to refresh
+      await this.refreshToken();
+      return;
+    }
+
+    // Use stored token
+    try {
+      this.authToken = encryptionService.decrypt(provider.authToken);
+      this.tokenExpiry = provider.tokenExpiresAt || undefined;
+    } catch (error) {
+      console.error(
+        "Failed to decrypt stored token, re-authenticating:",
+        error
+      );
+      await this.authenticate();
+    }
+  }
+
+  /**
+   * Refresh token if expired
+   */
+  private async refreshToken(): Promise<void> {
+    // For Shiprocket, we need to re-authenticate with credentials
     await this.authenticate();
   }
 
   /**
-   * Authenticate with Shiprocket and store token
+   * Authenticate with Shiprocket (uses stored credentials)
    */
   private async authenticate(): Promise<void> {
-    try {
-      const email = this.getConfigValue<string>("email");
-      const password = this.getConfigValue<string>("password");
+    const provider = await shippingProviderRepository.getById(this.config.id);
 
-      if (!email || !password) {
-        throw new Error(
-          "Shiprocket credentials not found. Set SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD environment variables."
-        );
-      }
-
-      const response = await fetch(
-        `${this.baseUrl}${SHIPROCKET_ENDPOINTS.AUTH}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
+    if (!provider?.isConnected) {
+      throw new Error(
+        "Provider account is not connected. Please connect your account in admin panel."
       );
-
-      if (!response.ok) {
-        throw new Error(`Authentication failed: ${response.statusText}`);
-      }
-
-      const data: ShiprocketAuthResponse = await response.json();
-      this.authToken = data.token;
-
-      // Token expires in 10 days
-      this.tokenExpiry = new Date(
-        Date.now() + SHIPROCKET_CONFIG.TOKEN_EXPIRY_HOURS * 60 * 60 * 1000
-      );
-
-      console.log(`✓ Shiprocket authenticated successfully`);
-    } catch (error) {
-      this.handleError(error, "authentication");
     }
+
+    const accountInfo = provider.accountInfo as any;
+
+    if (!accountInfo?.email || !accountInfo?.password) {
+      throw new Error(
+        "Provider credentials not found. Please reconnect your account."
+      );
+    }
+
+    const email = accountInfo.email;
+    const password = encryptionService.decrypt(accountInfo.password);
+
+    const response = await fetch(
+      `${this.baseUrl}${SHIPROCKET_ENDPOINTS.AUTH}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ message: response.statusText }));
+
+      // Update error in database
+      await shippingProviderRepository.update(provider.id, {
+        authError: error.message || response.statusText,
+      });
+
+      throw new Error(
+        `Authentication failed: ${error.message || response.statusText}`
+      );
+    }
+
+    const data: ShiprocketAuthResponse = await response.json();
+    this.authToken = data.token;
+    this.tokenExpiry = new Date(
+      Date.now() + SHIPROCKET_CONFIG.TOKEN_EXPIRY_HOURS * 60 * 60 * 1000
+    );
+
+    // Update token in database
+    await shippingProviderRepository.updateAuthToken(
+      provider.id,
+      data.token,
+      this.tokenExpiry
+    );
   }
 
   /**

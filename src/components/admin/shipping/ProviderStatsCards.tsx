@@ -34,12 +34,16 @@ export function ProviderStatsCards({ stats, loading }: ProviderStatsCardsProps) 
         <div className="text-2xl font-bold mt-1">{stats.total}</div>
       </Card>
       <Card className="p-4">
-        <div className="text-sm text-gray-600">Enabled</div>
-        <div className="text-2xl font-bold text-green-600 mt-1">{stats.enabled}</div>
+        <div className="text-sm text-gray-600">Connected</div>
+        <div className="text-2xl font-bold text-green-600 mt-1">
+          {stats.connected}
+        </div>
       </Card>
       <Card className="p-4">
-        <div className="text-sm text-gray-600">Disabled</div>
-        <div className="text-2xl font-bold text-gray-400 mt-1">{stats.disabled}</div>
+        <div className="text-sm text-gray-600">Disconnected</div>
+        <div className="text-2xl font-bold text-gray-400 mt-1">
+          {stats.disconnected}
+        </div>
       </Card>
     </div>
   );

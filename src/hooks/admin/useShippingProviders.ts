@@ -13,25 +13,23 @@ export interface UseShippingProvidersReturn {
   // Data
   providers: AdminProviderSummary[];
   stats: ProviderStats;
-  
+
   // Loading states
   loading: boolean;
-  toggling: string | null; // ID of provider being toggled
-  
+
   // Error state
   error: string | null;
-  
+
   // Actions
   refreshProviders: () => Promise<void>;
-  toggleProvider: (providerId: string, currentStatus: boolean) => Promise<boolean>;
 }
 
 export function useShippingProviders(): UseShippingProvidersReturn {
   const [providers, setProviders] = useState<AdminProviderSummary[]>([]);
   const [stats, setStats] = useState<ProviderStats>({
     total: 0,
-    enabled: 0,
-    disabled: 0,
+    connected: 0,
+    disconnected: 0,
   });
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
@@ -60,49 +58,6 @@ export function useShippingProviders(): UseShippingProvidersReturn {
     }
   }, []);
 
-  /**
-   * Toggle provider enabled/disabled status
-   */
-  const toggleProvider = useCallback(
-    async (providerId: string, currentStatus: boolean): Promise<boolean> => {
-      const newStatus = !currentStatus;
-      setToggling(providerId);
-      setError(null);
-
-      try {
-        const response = await shippingService.toggleProvider(providerId, newStatus);
-
-        if (response.success && response.provider) {
-          // Update local state optimistically
-          setProviders((prev) =>
-            prev.map((p) =>
-              p.id === providerId ? { ...p, isEnabled: newStatus } : p
-            )
-          );
-
-          // Update stats
-          setStats((prev) => ({
-            ...prev,
-            enabled: newStatus ? prev.enabled + 1 : prev.enabled - 1,
-            disabled: newStatus ? prev.disabled - 1 : prev.disabled + 1,
-          }));
-
-          return true;
-        } else {
-          setError(response.error || "Failed to toggle provider");
-          return false;
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "An error occurred";
-        setError(errorMessage);
-        return false;
-      } finally {
-        setToggling(null);
-      }
-    },
-    []
-  );
-
   // Initial load
   useEffect(() => {
     refreshProviders();
@@ -112,10 +67,8 @@ export function useShippingProviders(): UseShippingProvidersReturn {
     providers,
     stats,
     loading,
-    toggling,
     error,
     refreshProviders,
-    toggleProvider,
   };
 }
 

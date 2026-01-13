@@ -1,10 +1,3 @@
-/**
- * Shipping Providers Management Page
- * 
- * Admin page for viewing and managing shipping providers.
- * Admins can enable/disable providers configured by developers.
- */
-
 import { Metadata } from "next";
 import { ProvidersList } from "@/components/admin/shipping/ProvidersList";
 import { SectionHeader } from "@/components/shared/SectionHeader";
@@ -17,7 +10,10 @@ export default function ShippingProvidersPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <SectionHeader title="Shipping Providers" description="Manage shipping providers and their availability" />
+      <SectionHeader
+        title="Shipping Providers"
+        description="Manage shipping providers and their availability"
+      />
 
       {/* Info Card */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -25,7 +21,9 @@ export default function ShippingProvidersPage() {
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Enable providers to use them for shipping orders</li>
           <li>• Disable providers to temporarily stop using them</li>
-          <li>• Priority determines which provider is preferred (higher = better)</li>
+          <li>
+            • Priority determines which provider is preferred (higher = better)
+          </li>
           <li>• Provider configuration is handled by developers</li>
           <li>• Only configured providers can be enabled</li>
         </ul>
@@ -36,4 +34,3 @@ export default function ShippingProvidersPage() {
     </div>
   );
 }
-

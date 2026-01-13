@@ -29,19 +29,19 @@ export class ShippingOrchestratorService {
   // ============================================================================
 
   /**
-   * Load and initialize all enabled providers
+   * Load and initialize all connected providers
    * Should be called once at application startup
    */
   async loadProviders(
     providerFactories: Record<string, (config: any) => IShippingProvider>
   ): Promise<void> {
     try {
-      // Get enabled providers from database
-      const enabledProviders =
-        await shippingProviderRepository.getEnabledProviders();
+      // Get connected providers from database
+      const connectedProviders =
+        await shippingProviderRepository.getConnectedProviders();
 
       // Initialize each provider
-      for (const providerConfig of enabledProviders) {
+      for (const providerConfig of connectedProviders) {
         const factory = providerFactories[providerConfig.code];
 
         if (!factory) {
@@ -53,7 +53,9 @@ export class ShippingOrchestratorService {
 
         try {
           const provider = factory(providerConfig);
-          await provider.initialize(providerConfig as ProviderConfig);
+          await provider.initialize(
+            providerConfig as unknown as ProviderConfig
+          );
           this.providers.set(providerConfig.id, provider);
 
           console.log(
@@ -86,7 +88,7 @@ export class ShippingOrchestratorService {
   ): Promise<void> {
     const providerConfig = (await shippingProviderRepository.getById(
       providerId
-    )) as ProviderConfig;
+    )) as unknown as ProviderConfig;
 
     if (!providerConfig || !providerConfig.isEnabled) {
       this.providers.delete(providerId);

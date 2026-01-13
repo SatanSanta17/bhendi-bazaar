@@ -14,13 +14,6 @@ export interface GetProvidersResponse {
   error?: string;
 }
 
-export interface ToggleProviderResponse {
-  success: boolean;
-  provider?: AdminProviderSummary;
-  message?: string;
-  error?: string;
-}
-
 export class ShippingService {
   /**
    * Get all shipping providers (Admin)
@@ -47,43 +40,9 @@ export class ShippingService {
       return {
         success: false,
         providers: [],
-        stats: { total: 0, enabled: 0, disabled: 0 },
-        error: error instanceof Error ? error.message : "Failed to fetch providers",
-      };
-    }
-  }
-
-  /**
-   * Toggle provider enabled/disabled status (Admin)
-   */
-  async toggleProvider(
-    providerId: string,
-    isEnabled: boolean
-  ): Promise<ToggleProviderResponse> {
-    try {
-      const response = await fetch(
-        `/api/admin/shipping/providers/${providerId}/toggle`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ isEnabled }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to toggle provider");
-      }
-
-      return data;
-    } catch (error) {
-      console.error("ShippingService.toggleProvider error:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to toggle provider",
+        stats: { total: 0, connected: 0, disconnected: 0 },
+        error:
+          error instanceof Error ? error.message : "Failed to fetch providers",
       };
     }
   }

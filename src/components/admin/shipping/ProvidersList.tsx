@@ -14,15 +14,8 @@ import { ProviderCard } from "./ProviderCard";
 import { Button } from "@/components/ui/button";
 
 export function ProvidersList() {
-  const {
-    providers,
-    stats,
-    loading,
-    toggling,
-    error,
-    refreshProviders,
-    toggleProvider,
-  } = useShippingProviders();
+  const { providers, stats, loading, error, refreshProviders } =
+    useShippingProviders();
 
   // Loading state
   if (loading) {
@@ -78,12 +71,7 @@ export function ProvidersList() {
       {/* Providers */}
       <div className="space-y-3">
         {providers.map((provider) => (
-          <ProviderCard
-            key={provider.id}
-            provider={provider}
-            isToggling={toggling === provider.id}
-            onToggle={toggleProvider}
-          />
+          <ProviderCard key={provider.id} provider={provider} />
         ))}
       </div>
     </div>

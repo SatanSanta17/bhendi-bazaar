@@ -1,20 +1,17 @@
-/**
- * Toggle Shipping Provider Status - Admin
- * PATCH /api/admin/shipping/providers/[id]/toggle
- * 
- * Enable or disable a shipping provider (Admin only)
- */
+// src/app/api/admin/shipping/providers/[id]/connect/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
 import { adminShippingService } from "@/server/services/admin/shippingService";
 import { z } from "zod";
 
-const toggleSchema = z.object({
-  isEnabled: z.boolean(),
+const connectSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+  warehousePincode: z.string().length(6).optional(),
 });
 
-export async function PATCH(
+export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -27,22 +24,26 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const validated = toggleSchema.parse(body);
+    const validated = connectSchema.parse(body);
 
-    // Toggle provider via service
-    const provider = await adminShippingService.toggleProvider(
+    // Connect provider via service
+    const provider = await adminShippingService.connectProvider(
       id,
-      validated.isEnabled,
+      {
+        email: validated.email,
+        password: validated.password,
+        warehousePincode: validated.warehousePincode,
+      },
       session.user.id
     );
 
     return NextResponse.json({
       success: true,
       provider,
-      message: `${provider.name} ${validated.isEnabled ? "enabled" : "disabled"} successfully`,
+      message: `${provider.name} connected successfully`,
     });
   } catch (error) {
-    console.error("Toggle provider error:", error);
+    console.error("Connect provider error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -61,10 +62,9 @@ export async function PATCH(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to toggle provider",
+        error: error instanceof Error ? error.message : "Failed to connect provider",
       },
       { status: 500 }
     );
   }
 }
-
