@@ -5,30 +5,11 @@
  * Used by hooks and components to communicate with backend.
  */
 
-import type { ShippingProvider, ShippingProviderStats, ConnectionRequestBody } from "@/components/admin/shipping/providersContainer/types";
-
-export interface GetProvidersResponse {
-  success: boolean;
-  providers: ShippingProvider[]; // Use client type
-  stats: ShippingProviderStats; // Use client type
-  error?: string;
-}
-
-export interface ConnectProviderRequest {
-  requestBody: ConnectionRequestBody;
-}
-
-export interface ConnectProviderResponse {
-  success: boolean;
-  provider?: ShippingProvider; // Use client type
-  error?: string;
-}
-
-export interface DisconnectProviderResponse {
-  success: boolean;
-  provider?: ShippingProvider; // Use client type
-  error?: string;
-}
+import type {
+  GetProvidersResponse,
+  ConnectionRequestBody,
+  ConnectionResponse,
+} from "@/components/admin/shipping/providersContainer/types";
 
 export class ShippingProviderService {
   /**
@@ -54,7 +35,6 @@ export class ShippingProviderService {
       return {
         success: false,
         providers: [],
-        stats: { total: 0, connected: 0, disconnected: 0 },
         error:
           error instanceof Error ? error.message : "Failed to fetch providers",
       };
@@ -66,8 +46,8 @@ export class ShippingProviderService {
    */
   async connectProvider(
     providerId: string,
-    requestBody: {}
-  ): Promise<ConnectProviderResponse> {
+    requestBody: ConnectionRequestBody
+  ): Promise<ConnectionResponse> {
     try {
       const response = await fetch(
         `/api/admin/shipping/providers/${providerId}/connect`,
@@ -80,7 +60,7 @@ export class ShippingProviderService {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response) {
         throw new Error(data.error || "Failed to connect provider");
       }
 
@@ -98,9 +78,7 @@ export class ShippingProviderService {
   /**
    * Disconnect a provider account
    */
-  async disconnectProvider(
-    providerId: string
-  ): Promise<DisconnectProviderResponse> {
+  async disconnectProvider(providerId: string): Promise<ConnectionResponse> {
     try {
       const response = await fetch(
         `/api/admin/shipping/providers/${providerId}/disconnect`,

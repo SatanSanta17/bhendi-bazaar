@@ -128,27 +128,13 @@ export class CartService {
     localItems: CartItem[],
     remoteItems: CartItem[]
   ): CartItem[] {
-    console.log(
-      "🔄 [MERGE DEBUG] Local items:",
-      localItems.length,
-      localItems.map((i) => ({ id: i.productId, qty: i.quantity }))
-    );
-    console.log(
-      "🔄 [MERGE DEBUG] Remote items:",
-      remoteItems.length,
-      remoteItems.map((i) => ({ id: i.productId, qty: i.quantity }))
-    );
-
     const mergedMap = new Map<string, Omit<CartItem, "id">>();
 
     // Add remote items (without ID)
     for (const item of remoteItems) {
       const key = this.getItemKey(item);
-      console.log("🔄 [MERGE DEBUG] Adding remote item with key:", key);
       mergedMap.set(key, item);
     }
-
-    console.log("🔄 [MERGE DEBUG] Map after remote items:", mergedMap.size);
 
     // Merge local items
     for (const item of localItems) {
@@ -156,37 +142,20 @@ export class CartService {
       const existing = mergedMap.get(key);
 
       if (existing) {
-        console.log(
-          "🔄 [MERGE DEBUG] Updating existing item:",
-          key,
-          "qty:",
-          existing.quantity,
-          "→",
-          item.quantity
-        );
         mergedMap.set(key, {
           ...existing,
           quantity: item.quantity,
         });
       } else {
-        console.log("🔄 [MERGE DEBUG] Adding new local item:", key);
         mergedMap.set(key, item);
       }
     }
-
-    console.log("🔄 [MERGE DEBUG] Final merged map size:", mergedMap.size);
 
     // Generate fresh IDs for all merged items
     const result = Array.from(mergedMap.values()).map((item) => ({
       ...item,
       id: crypto.randomUUID(),
     }));
-
-    console.log(
-      "🔄 [MERGE DEBUG] Final result:",
-      result.length,
-      result.map((i) => ({ id: i.productId, qty: i.quantity }))
-    );
 
     return result;
   }

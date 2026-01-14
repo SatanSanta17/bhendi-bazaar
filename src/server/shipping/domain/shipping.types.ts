@@ -12,23 +12,23 @@
 /**
  * Connection request body (discriminated union)
  */
-export type ConnectionRequestBody =
-  | {
-      type: "email_password";
-      email: string;
-      password: string;
-    }
 
+export interface ConnectionRequestBody {
+  type: "email_password" | "api_key" | "oauth";
+  email?: string;
+  password?: string;
+}
 
 /**
  * Result of connecting a provider account
  */
 export interface ProviderConnectionResult {
   success: boolean;
-  token: string;
-  tokenExpiresAt: Date;
-  accountInfo: any;
-  metadata?: Record<string, any>;
+  error?: string;
+  token?: string;
+  tokenExpiresAt?: Date;
+  lastAuthAt?: Date;
+  accountInfo?: Record<string, string | number>;
 }
 export type ShipmentStatus =
   | "pending" // Shipment not yet created

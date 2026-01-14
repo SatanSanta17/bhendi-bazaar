@@ -22,8 +22,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      provider: result.provider,
-      message: `${result.provider.name} disconnected successfully`,
+      message: `disconnected successfully`,
     });
   } catch (error) {
     console.error("Disconnect provider error:", error);

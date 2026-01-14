@@ -7,8 +7,8 @@ import { z } from "zod";
 
 const connectSchema = z.object({
   type: z.enum(["email_password", "api_key", "oauth"]),
-  email: z.string().email(),
-  password: z.string().min(1),
+  email: z.string().email().optional(),
+  password: z.string().min(1).optional(),
 });
 
 export async function POST(
@@ -18,6 +18,7 @@ export async function POST(
   try {
     // Verify admin access
     const session = await verifyAdminSession();
+
     if (session instanceof NextResponse) {
       return session;
     }
@@ -29,21 +30,18 @@ export async function POST(
     // Connect provider via service
     const result = await adminConnectionService.connect(
       id,
-      {
-        requestBody: {
-          type: validated.type as "email_password",
-          email: validated.email,
-          password: validated.password,
-        },
-      },
+      validated,
       session.user.id
     );
 
-    return NextResponse.json({
-      success: true,
-      provider: result.provider,
-      message: `${result.provider.name} connected successfully`,
-    });
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {
     console.error("Connect provider error:", error);
 

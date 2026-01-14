@@ -147,5 +147,5 @@ export interface IShippingProvider {
  * Provider Factory Type
  * Used to create provider instances
  */
-export type ProviderFactory = (providerId: string) => IShippingProvider;
+export type ProviderFactory = () => IShippingProvider;
 

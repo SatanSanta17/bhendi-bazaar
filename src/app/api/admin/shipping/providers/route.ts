@@ -5,11 +5,11 @@
  * Fetch all shipping providers with statistics (Admin only)
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminShippingService } from "@/server/services/admin/shippingService";
+import { adminShippingService } from "@/server/services/admin/shipping/admin.shippingService";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Verify admin access
     const session = await verifyAdminSession();
@@ -18,23 +18,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get providers and stats
-    const [providers, stats] = await Promise.all([
-      adminShippingService.getAllProviders(),
-      adminShippingService.getProviderStats(),
-    ]);
+    const response = await adminShippingService.getAllProviders();
 
-    return NextResponse.json({
-      success: true,
-      providers,
-      stats,
-    });
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Get providers error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch providers",
+        providers: [],
+        error:
+          error instanceof Error ? error.message : "Failed to fetch providers",
       },
       { status: 500 }
     );

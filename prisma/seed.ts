@@ -23,7 +23,8 @@ import {
   seedOrders,
   seedReviews,
   seedCarts,
-} from "../src/data/seed";
+  seedShippingProviders,
+} from "./seed/index";
 
 // Use the same adapter configuration as the main app
 const pool = new Pool({
@@ -239,6 +240,18 @@ async function main() {
     );
   }
   console.log(`✅ ${seedCarts.length} abandoned carts seeded\n`);
+
+  // ====================
+  // SEED SHIPPING PROVIDERS
+  // ====================
+  console.log("🚚 Seeding shipping providers...");
+  for (const shippingProviderData of seedShippingProviders) {
+    const shippingProvider = await prisma.shippingProvider.create({
+      data: shippingProviderData as any,
+    });
+    console.log(`  ✓ ${shippingProvider.name}`);
+  }
+  console.log(`✅ ${seedShippingProviders.length} shipping providers seeded\n`);
 
   // ====================
   // SUMMARY

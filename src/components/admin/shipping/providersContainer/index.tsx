@@ -4,7 +4,6 @@
 
 import { useShippingProviders } from "@/components/admin/shipping/providersContainer/hooks/useShippingProviders";
 import { ProviderCard } from "./component/ProviderCard";
-import { ProviderStatsCards } from "./component/ProviderStatsCards";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -12,17 +11,15 @@ import { ConnectProviderModal } from "./component/ConnectProviderModal";
 import type { ConnectionRequestBody } from "./types";
 /**
  * Container Component
- * 
+ *
  * Manages all state, business logic, and coordinates between:
  * - Hook (data fetching & mutations)
  * - Service layer (API calls)
  * - Presentational components (Cards)
  */
 export function ProvidersContainer() {
-
   const {
     providers,
-    stats,
     isLoading,
     isConnecting,
     isDisconnecting,
@@ -36,11 +33,11 @@ export function ProvidersContainer() {
   const [connectModalState, setConnectModalState] = useState<{
     open: boolean;
     providerId: string | null;
-    providerName: string;
+    providerName: string | null;
   }>({
     open: false,
     providerId: null,
-    providerName: "",
+    providerName: null,
   });
 
   // Handlers
@@ -60,17 +57,17 @@ export function ProvidersContainer() {
     });
   };
 
-  const handleConnect = async (requestBody: ConnectionRequestBody) => {
-    if (!connectModalState.providerId) return false;
-
-    const success = await connectProvider(
-      connectModalState.providerId,
-      requestBody
-    );
-    if (success) {
-      handleCloseConnectModal();
+  const handleConnect = async (
+    providerId: string,
+    requestBody: ConnectionRequestBody
+  ) => {
+    if (requestBody.type === "email_password") {
+      const provider = providers.find((p) => p.id === providerId);
+      if (!provider) return false;
+      handleOpenConnectModal(providerId, provider.name);
+    } else {
+      connectProvider(providerId, requestBody);
     }
-    return success;
   };
 
   const handleDisconnect = async (providerId: string) => {
@@ -81,7 +78,6 @@ export function ProvidersContainer() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <ProviderStatsCards stats={stats} isLoading={isLoading} />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="p-6 animate-pulse">
@@ -113,7 +109,6 @@ export function ProvidersContainer() {
   if (providers.length === 0) {
     return (
       <div className="space-y-4">
-        <ProviderStatsCards stats={stats} />
         <Card className="p-8 text-center">
           <p className="text-gray-600 mb-2">
             No shipping providers configured yet.
@@ -130,9 +125,6 @@ export function ProvidersContainer() {
   return (
     <>
       <div className="space-y-4">
-        {/* Stats */}
-        <ProviderStatsCards stats={stats}/>
-
         {/* Error banner (if any, but providers exist) */}
         {error && (
           <Card className="p-4 border-yellow-200 bg-yellow-50">
@@ -141,19 +133,22 @@ export function ProvidersContainer() {
         )}
 
         {/* Providers */}
-        <div className="space-y-3">
-          {providers.map((provider) => (
-            <ProviderCard
-              key={provider.id}
-              provider={provider}
-              onConnect={() =>
-                handleOpenConnectModal(provider.id, provider.name)
-              }
-              onDisconnect={() => handleDisconnect(provider.id)}
-              isConnecting={isConnecting}
-              isDisconnecting={isDisconnecting}
-            />
-          ))}
+        <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {providers.length > 0 &&
+            providers.map((provider) => (
+              <ProviderCard
+                key={provider.id}
+                provider={provider}
+                onConnect={() =>
+                  handleConnect(provider.id, {
+                    type: provider.connectionType,
+                  })
+                }
+                onDisconnect={() => handleDisconnect(provider.id)}
+                isConnecting={isConnecting}
+                isDisconnecting={isDisconnecting}
+              />
+            ))}
         </div>
       </div>
 
@@ -161,10 +156,10 @@ export function ProvidersContainer() {
       {connectModalState.providerId && (
         <ConnectProviderModal
           providerId={connectModalState.providerId}
-          providerName={connectModalState.providerName}
+          providerName={connectModalState.providerName ?? ""}
           open={connectModalState.open}
           onClose={handleCloseConnectModal}
-          onConnect={handleConnect}
+          onConnect={connectProvider}
           isConnecting={isConnecting}
         />
       )}

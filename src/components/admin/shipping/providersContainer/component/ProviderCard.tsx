@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import type { ShippingProvider } from "../types";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface ProviderCardProps {
   provider: ShippingProvider;
@@ -16,12 +18,6 @@ interface ProviderCardProps {
   isDisconnecting?: boolean;
 }
 
-/**
- * Pure Presentational Component
- * 
- * Receives all data and handlers as props.
- * No internal state or business logic.
- */
 export function ProviderCard({
   provider,
   onConnect,
@@ -34,34 +30,45 @@ export function ProviderCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           {/* Provider Header */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="text-lg font-semibold">{provider.name}</h3>
-            <Badge variant={provider.isConnected ? "default" : "secondary"}>
-              {provider.isConnected ? "Connected" : "Not Connected"}
-            </Badge>
-            <Badge variant="outline">Priority: {provider.priority}</Badge>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {provider.logoUrl && (
+                <Image
+                  src={provider.logoUrl}
+                  alt={provider.name}
+                  width={32}
+                  height={32}
+                />
+              )}
+              <h3 className="text-lg font-semibold">{provider.name}</h3>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <div
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  provider.isConnected ? "bg-green-500" : "bg-red-500"
+                )}
+              />
+              <span className="text-sm text-gray-600">
+                {provider.isConnected ? "Connected" : "Not Connected"}
+              </span>
+            </div>
           </div>
 
           {/* Description */}
           {provider.description && (
-            <p className="text-sm text-gray-600 mt-2">
-              {provider.description}
-            </p>
+            <p className="text-sm text-gray-600 mt-2">{provider.description}</p>
           )}
 
           {/* Connection Status */}
           <div className="mt-3">
             {provider.isConnected ? (
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-green-500 rounded-full" />
-                  <span className="text-sm text-gray-600">Connected</span>
-                </div>
-                {provider.accountEmail && (
+                {provider.accountInfo && "email" in provider.accountInfo ? (
                   <p className="text-xs text-gray-500">
-                    {provider.accountEmail}
+                    {provider.accountInfo.email as string}
                   </p>
-                )}
+                ) : null}
                 <Button
                   variant="outline"
                   size="sm"
@@ -72,19 +79,10 @@ export function ProviderCard({
                 </Button>
               </div>
             ) : (
-              <Button
-                size="sm"
-                onClick={onConnect}
-                disabled={isConnecting}
-              >
+              <Button size="sm" onClick={onConnect} disabled={isConnecting}>
                 {isConnecting ? "Connecting..." : "Connect Account"}
               </Button>
             )}
-          </div>
-
-          {/* Details */}
-          <div className="flex items-center gap-6 mt-3 text-sm flex-wrap">
-            
           </div>
 
           {/* Website Link */}

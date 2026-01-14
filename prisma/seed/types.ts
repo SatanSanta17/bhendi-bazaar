@@ -2,6 +2,8 @@
  * Type definitions for seed data
  */
 
+import { cuid } from "zod";
+
 export interface SeedUser {
   id: string;
   email: string;
@@ -112,3 +114,39 @@ export interface SeedCart {
   updatedAt: Date;
 }
 
+export interface SeedShippingProvider {
+  id: string;
+  code: string;
+  name: string; // Display name: "Shiprocket", "Delhivery"
+  description?: string; // Provider description
+
+  priority: number; // Higher number = higher priority
+
+  // Authentication & Connection Status
+  isConnected: boolean; // Is account connected?
+  connectedAt?: Date; // When was it connected?
+  connectedBy?: string; // Admin user ID who connected it
+  connectionType: "email_password" | "api_key" | "oauth"; // [ 'email_password', 'api_key', 'oauth' ]
+  lastAuthAt?: Date; // Last successful authentication
+  authError?: string; // Last auth error message
+
+  // Encrypted sensitive data
+  authToken?: string; // Encrypted JWT token
+  tokenExpiresAt?: Date; // Token expiry timestamp
+
+  // Account info (includes encrypted password)
+  accountInfo?: Record<string, string | number>; 
+  
+  // Capabilities
+  paymentOptions: string[]; // ['prepaid', 'cod']
+  deliveryModes: string[]; // ['air', 'surface']
+  features?: Record<string, boolean>; // {tracking: true, label: true, scheduling: true}
+
+  // Metadata
+  logoUrl?: string; // Provider logo
+  websiteUrl?: string; // Provider website
+
+  createdAt: Date;
+  updatedAt: Date;
+
+}

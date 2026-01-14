@@ -57,8 +57,8 @@ export class ShippingProviderRepository {
     return await prisma.shippingProvider.findMany({
       where: {
         isConnected: true,
-        supportedModes: {
-          has: mode,
+        deliveryModes: {
+          hasSome: [mode],
         },
       },
       orderBy: { priority: "desc" },
@@ -144,20 +144,25 @@ export class ShippingProviderRepository {
   /**
    * Disconnect provider account (clear all auth data)
    */
-  async disconnectAccount(id: string): Promise<ShippingProvider> {
-    return await prisma.shippingProvider.update({
+  async disconnectAccount(
+    id: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const response = await prisma.shippingProvider.update({
       where: { id },
       data: {
         isConnected: false,
         connectedAt: null,
         connectedBy: null,
-        lastAuthAt: null,
         authError: null,
         authToken: null,
         tokenExpiresAt: null,
-        accountInfo: undefined,
+        accountInfo: null as any,
       },
     });
+    if (!response) {
+      return { success: false, error: "Failed to disconnect provider" };
+    }
+    return { success: true, error: undefined };
   }
 
   /**

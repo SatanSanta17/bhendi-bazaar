@@ -10,17 +10,18 @@
 import { shippingProviderRepository } from "@/server/shipping/repositories";
 import { PROVIDER_FACTORIES } from "@/server/shipping";
 import { adminLogRepository } from "@/server/repositories/admin/logRepository";
-import { encryptionService } from "@/server/shipping/utils/encryption";
-import type { ProviderConnectionResult,ConnectionRequestBody } from "@/server/shipping/domain/shipping.types";
-import type { AdminConnectionRequest, AdminConnectionResult, AdminDisconnectionRequest } from "./types";
-
+import type {
+  ProviderConnectionResult,
+  ConnectionRequestBody,
+} from "@/server/shipping/domain/shipping.types";
+import type { AdminConnectionResult } from "./types";
 export class AdminConnectionService {
   /**
    * Connect a provider account (Admin operation)
    */
   async connect(
     providerId: string,
-    request: AdminConnectionRequest,
+    requestBody: ConnectionRequestBody,
     adminId: string
   ): Promise<AdminConnectionResult> {
     // 1. Validate provider exists
@@ -30,80 +31,90 @@ export class AdminConnectionService {
     }
 
     // 2. Get provider factory and create instance
-    const factory = PROVIDER_FACTORIES[provider.code as keyof typeof PROVIDER_FACTORIES];
+    const factory =
+      PROVIDER_FACTORIES[provider.code as keyof typeof PROVIDER_FACTORIES];
+
     if (!factory) {
       throw new Error(`Provider implementation not found: ${provider.code}`);
     }
-
-    const providerInstance = factory();
-
-    // 3. Convert admin request to provider credentials
-    const credentials = this.mapToProviderCredentials(request.requestBody);
-
-    // 4. Call provider's connect method (shipping layer)
     let connectionResult: ProviderConnectionResult;
+
     try {
-      connectionResult = await providerInstance.connect(credentials);
+      const providerInstance = factory();
+
+      switch (requestBody.type) {
+        case "email_password": {
+          connectionResult = await providerInstance.connect(requestBody);
+          await shippingProviderRepository.update(providerId, {
+            isConnected: true,
+            connectedAt: new Date(),
+            connectedBy: "admin",
+            authToken: connectionResult.token,
+            tokenExpiresAt: connectionResult.tokenExpiresAt,
+            lastAuthAt: new Date(),
+            authError: null,
+            accountInfo: {
+              id: connectionResult.accountInfo?.id,
+              firstName: connectionResult.accountInfo?.firstName,
+              lastName: connectionResult.accountInfo?.lastName,
+              email: connectionResult.accountInfo?.email,
+              password: connectionResult.accountInfo?.password,
+              companyId: connectionResult.accountInfo?.companyId,
+            },
+          });
+          break;
+        }
+        default:
+          throw new Error(`Unsupported connection type: ${requestBody.type}`);
+      }
+      if (connectionResult.success) {
+        // 6. Log admin action
+        await adminLogRepository.createLog({
+          adminId,
+          action: "PROVIDER_CONNECTED",
+          resource: "ShippingProvider",
+          resourceId: providerId,
+          metadata: {
+            providerCode: provider.code,
+            accountInfo: connectionResult.accountInfo,
+          },
+        });
+      } else {
+        await adminLogRepository.createLog({
+          adminId,
+          action: "PROVIDER_CONNECTION_FAILED",
+          resource: "ShippingProvider",
+          resourceId: providerId,
+          metadata: {
+            providerCode: provider.code,
+            error: connectionResult.error,
+          },
+        });
+      }
+      return connectionResult;
     } catch (error) {
-      // Update error in database
-      await shippingProviderRepository.update(providerId, {
-        authError: error instanceof Error ? error.message : "Connection failed",
+      await adminLogRepository.createLog({
+        adminId,
+        action: "PROVIDER_CONNECTION_FAILED",
+        resource: "ShippingProvider",
+        resourceId: providerId,
+        metadata: {
+          providerCode: provider.code,
+          error: error instanceof Error ? error.message : "Connection failed",
+        },
       });
+
       throw error;
     }
-
-    // 5. Store encrypted credentials in database
-    const updated = await shippingProviderRepository.connectAccount(providerId, {
-      email: connectionResult.accountInfo.email,
-      password: credentials.type === "email_password" ? credentials.password : "",
-      authToken: connectionResult.token,
-      tokenExpiresAt: connectionResult.tokenExpiresAt,
-      accountInfo: connectionResult.accountInfo,
-      connectedBy: adminId,
-    });
-
-    // 6. Log admin action
-    await adminLogRepository.createLog({
-      adminId,
-      action: "PROVIDER_CONNECTED",
-      resource: "ShippingProvider",
-      resourceId: providerId,
-      metadata: {
-        providerCode: provider.code,
-        email: connectionResult.accountInfo.email,
-      },
-    });
-    // 7. Return admin-safe result
-    return {
-      success: true,
-      provider: {
-        id: updated.id,
-        code: updated.code,
-        name: updated.name,
-        description: updated.description,
-        isConnected: updated.isConnected,
-        connectedAt: updated.connectedAt,
-        isAuthenticated: updated.tokenExpiresAt && updated.tokenExpiresAt > new Date() ? true : false,
-        authenticatedBy:adminId,
-        lastAuthAt: updated.lastAuthAt,
-        accountEmail: connectionResult.accountInfo.email,
-        accountName: connectionResult.accountInfo.firstName && connectionResult.accountInfo.lastName
-          ? `${connectionResult.accountInfo.firstName} ${connectionResult.accountInfo.lastName}`
-          : null,
-        priority: updated.priority,
-        supportedModes: updated.supportedModes,
-        logoUrl: updated.logoUrl,
-        websiteUrl: updated.websiteUrl,
-        updatedAt: updated.updatedAt,
-        createdAt: updated.createdAt,
-      },
-    };
   }
 
   /**
    * Disconnect a provider account (Admin operation)
    */
-  async disconnect(providerId: string, adminId: string): Promise<AdminDisconnectionRequest> {
+  async disconnect(
+    providerId: string,
+    adminId: string
+  ): Promise<{ success: boolean; error?: string }> {
     const provider = await shippingProviderRepository.getById(providerId);
     if (!provider) {
       throw new Error("Provider not found");
@@ -113,7 +124,13 @@ export class AdminConnectionService {
       throw new Error("Provider is not connected");
     }
 
-    const updated = await shippingProviderRepository.disconnectAccount(providerId);
+    const result = await shippingProviderRepository.disconnectAccount(
+      providerId
+    );
+
+    if (!result) {
+      throw new Error("Failed to disconnect provider");
+    }
 
     await adminLogRepository.createLog({
       adminId,
@@ -124,30 +141,7 @@ export class AdminConnectionService {
         providerCode: provider.code,
       },
     });
-    return {
-      success: true,
-      provider: {
-        id: updated.id,
-        code: updated.code,
-        name: updated.name,
-        description: updated.description,
-        isConnected: updated.isConnected,
-        websiteUrl: updated.websiteUrl,
-        updatedAt: updated.updatedAt,
-        createdAt: updated.createdAt,
-      },
-    };
-  }
-
-  /**
-   * Map admin request to provider credentials format
-   */
-  private mapToProviderCredentials(
-    requestCredentials: ConnectionRequestBody
-  ): ConnectionRequestBody {
-    // This handles the mapping from admin request to provider format
-    // Can be extended for different credential types
-    return requestCredentials;
+    return result;
   }
 }
 

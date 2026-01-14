@@ -7,12 +7,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { shippingProviderService } from "@/components/admin/shipping/providersContainer/services/shippingProviderService";
-import type { ConnectionRequestBody, ShippingProvider, ShippingProviderStats } from "../types";
+import type {
+  ConnectionRequestBody,
+  ShippingProvider,
+  ConnectionResponse,
+} from "../types";
 
 export interface UseShippingProvidersReturn {
   // Data
   providers: ShippingProvider[];
-  stats: ShippingProviderStats;
 
   // Loading states
   isLoading: boolean;
@@ -24,17 +27,15 @@ export interface UseShippingProvidersReturn {
 
   // Actions
   refreshProviders: () => Promise<void>;
-  connectProvider: (providerId: string, requestBody: ConnectionRequestBody) => Promise<boolean>;
-  disconnectProvider: (providerId: string) => Promise<boolean>;
+  connectProvider: (
+    providerId: string,
+    requestBody: ConnectionRequestBody
+  ) => Promise<ConnectionResponse>;
+  disconnectProvider: (providerId: string) => Promise<void>;
 }
 
 export function useShippingProviders(): UseShippingProvidersReturn {
   const [providers, setProviders] = useState<ShippingProvider[]>([]);
-  const [stats, setStats] = useState<ShippingProviderStats>({
-    total: 0,
-    connected: 0,
-    disconnected: 0,
-  });
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -52,7 +53,6 @@ export function useShippingProviders(): UseShippingProvidersReturn {
 
       if (response.success) {
         setProviders(response.providers);
-        setStats(response.stats);
       } else {
         setError(response.error || "Failed to fetch providers");
       }
@@ -67,7 +67,10 @@ export function useShippingProviders(): UseShippingProvidersReturn {
    * Connect a provider account
    */
   const connectProvider = useCallback(
-    async (providerId: string, requestBody: ConnectionRequestBody) => {
+    async (
+      providerId: string,
+      requestBody: ConnectionRequestBody
+    ): Promise<ConnectionResponse> => {
       setIsConnecting(true);
       setError(null);
 
@@ -76,25 +79,31 @@ export function useShippingProviders(): UseShippingProvidersReturn {
           providerId,
           requestBody
         );
-        if (response.success && response.provider) {
+        if (response.success) {
           setProviders((prev) =>
             prev.map((provider) =>
-              provider.id === providerId ? response.provider as ShippingProvider : provider
+              provider.id === providerId
+                ? {
+                    ...provider,
+                    accountInfo: response.provider?.accountInfo,
+                    lastAuthAt: response.provider?.lastAuthAt,
+                    connectedBy: response.provider?.connectedBy,
+                    isConnected: true,
+                  }
+                : provider
             )
           );
-          setStats((prev) => ({
-            ...prev,
-            connected: prev.connected + 1,
-            disconnected: prev.disconnected - 1,
-          }));
-          return true;
+          return response;
         } else {
           setError(response.error || "Failed to connect provider");
-          return false;
+          return response;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
-        return false;
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : "An error occurred",
+        };
       } finally {
         setIsConnecting(false);
       }
@@ -108,28 +117,29 @@ export function useShippingProviders(): UseShippingProvidersReturn {
   const disconnectProvider = useCallback(async (providerId: string) => {
     setIsDisconnecting(true);
     setError(null);
-
     try {
-      const response = await shippingProviderService.disconnectProvider(providerId);
-      if (response.success && response.provider) {
+      const response = await shippingProviderService.disconnectProvider(
+        providerId
+      );
+      if (response.success) {
         setProviders((prev) =>
           prev.map((provider) =>
-            provider.id === providerId ? response.provider as ShippingProvider : provider
+            provider.id === providerId
+              ? {
+                  ...provider,
+                  accountInfo: response.provider?.accountInfo,
+                  lastAuthAt: response.provider?.lastAuthAt,
+                  connectedBy: response.provider?.connectedBy,
+                  isConnected: false,
+                }
+              : provider
           )
         );
-        setStats((prev) => ({
-          ...prev,
-          connected: prev.connected - 1,
-          disconnected: prev.disconnected + 1,
-        }));
-        return true;
       } else {
         setError(response.error || "Failed to disconnect provider");
-        return false;
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
-      return false;
     } finally {
       setIsDisconnecting(false);
     }
@@ -142,7 +152,6 @@ export function useShippingProviders(): UseShippingProvidersReturn {
 
   return {
     providers,
-    stats,
     isLoading,
     isConnecting,
     isDisconnecting,

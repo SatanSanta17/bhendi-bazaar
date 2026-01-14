@@ -7,14 +7,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ConnectionRequestBody } from "../types";
+import type { ConnectionRequestBody, ConnectionResponse } from "../types";
 
 interface ConnectProviderModalProps {
   providerId: string;
   providerName: string;
   open: boolean;
   onClose: () => void;
-  onConnect: (requestBody: ConnectionRequestBody) => Promise<boolean>;
+  onConnect: (
+    providerId: string,
+    requestBody: ConnectionRequestBody
+  ) => Promise<ConnectionResponse>;
   isConnecting?: boolean;
 }
 
@@ -49,12 +52,17 @@ export function ConnectProviderModal({
       password,
     };
 
-    const success = await onConnect(requestBody);
+    const response = await onConnect(providerId, requestBody);
 
-    if (!success) {
-      setError("Failed to connect. Please check your credentials.");
+    if (response.success) {
+      onClose();
     }
-    // If successful, modal will be closed by parent
+
+    if (!response.success) {
+      setError(
+        response.error ?? "Failed to connect. Please check your credentials."
+      );
+    }
   };
 
   return (
@@ -90,7 +98,7 @@ export function ConnectProviderModal({
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
               {error}
             </div>
           )}

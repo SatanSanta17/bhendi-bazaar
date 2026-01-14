@@ -457,7 +457,11 @@ export class ShiprocketProvider extends BaseShippingProvider {
     requestBody: ConnectionRequestBody
   ): Promise<ProviderConnectionResult> {
     // Validate credentials type
-    if (requestBody.type !== "email_password") {
+    if (
+      requestBody.type !== "email_password" ||
+      !requestBody.email ||
+      !requestBody.password
+    ) {
       throw new Error(
         `Shiprocket requires email_password credentials, got ${requestBody.type}`
       );
@@ -497,11 +501,13 @@ export class ShiprocketProvider extends BaseShippingProvider {
       success: true,
       token: data.token,
       tokenExpiresAt,
+      lastAuthAt: new Date(),
       accountInfo: {
         id: data.id,
         firstName: data.first_name,
         lastName: data.last_name,
         email: data.email,
+        password: encryptionService.encrypt(password),
         companyId: data.company_id,
       },
     };

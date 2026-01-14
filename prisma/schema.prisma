@@ -227,13 +227,14 @@ model ShippingProvider {
   code        String  @unique // 'shiprocket', 'delhivery', 'bluedart', etc.
   name        String // Display name: "Shiprocket", "Delhivery"
   description String? @db.Text // Provider description
-  isEnabled   Boolean @default(false) // Toggle provider on/off
+
   priority    Int     @default(0) // Higher number = higher priority
 
   // Authentication & Connection Status
   isConnected Boolean   @default(false) // Is account connected?
   connectedAt DateTime? // When was it connected?
   connectedBy String? // Admin user ID who connected it
+  connectionType String   @default("email_password") // [ 'email_password', 'api_key', 'oauth' ]
   lastAuthAt  DateTime? // Last successful authentication
   authError   String?   @db.Text // Last auth error message
 
@@ -252,11 +253,9 @@ model ShippingProvider {
   // }
   
   // Capabilities
-  supportedModes String[] // ['prepaid', 'cod', 'express']
+  paymentOptions String[] // ['prepaid', 'cod']
+  deliveryModes  String[] // ['air', 'surface']
   features       Json? // {tracking: true, label: true, scheduling: true}
-
-  // Service areas
-  serviceablePincodes String[] @default([]) // Empty = all India
 
   // Metadata
   logoUrl    String? // Provider logo
@@ -270,7 +269,6 @@ model ShippingProvider {
   rateCache ShippingRateCache[]
   events    ShippingEvent[]
 
-  @@index([isEnabled, priority])
   @@index([isConnected])
   @@index([code])
 }

@@ -88,7 +88,7 @@ export class ShippingOrchestratorService {
   ): Promise<void> {
     const providerConfig = await shippingProviderRepository.getById(providerId);
 
-    if (!providerConfig || !providerConfig.isEnabled) {
+    if (!providerConfig) {
       this.providers.delete(providerId);
       return;
     }

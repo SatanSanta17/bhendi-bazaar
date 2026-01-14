@@ -1,42 +1,34 @@
-// src/services/admin/shippingService.ts
-
 // Define client-side types (don't import from /server)
 export interface ShippingProvider {
-    id: string;
-    code: string;
-    name: string;
-    description: string | null;
-    isConnected: boolean;
-    connectedAt: string | null;
-    connectedBy: string | null;
-    isAuthenticated: boolean;
-    accountEmail: string | null;
-    accountName: string | null;
-    priority: number;
-    supportedModes: string[];
-    logoUrl: string | null;
-    websiteUrl: string | null;
-  }
-  
-  export interface ShippingProviderStats {
-    total: number;
-    connected: number;
-    disconnected: number;
-  }
+  id: string;
+  code: string;
+  name: string;
+  connectionType: "email_password" | "api_key" | "oauth";
+  description?: string;
+  isConnected: boolean;
+  paymentOptions?: string[];
+  deliveryModes?: string[];
+  logoUrl?: string;
+  websiteUrl?: string;
+  accountInfo?: Record<string, string | number>;
+  lastAuthAt?: Date;
+  connectedBy?: string;
+}
 
-  export type ConnectionRequestBody =
-  | {
-      type: "email_password";
-      email: string;
-      password: string;
-    }
-  | {
-      type: "api_key";
-      apiKey: string;
-    }
-  | {
-      type: "oauth";
-      clientId: string;
-      clientSecret: string;
-    };
-  
+export interface ConnectionRequestBody {
+  type: "email_password" | "api_key" | "oauth";
+  email?: string;
+  password?: string;
+}
+
+export interface ConnectionResponse {
+  success: boolean;
+  provider?: ShippingProvider;
+  error?: string;
+}
+
+export interface GetProvidersResponse {
+  success: boolean;
+  providers: ShippingProvider[];
+  error?: string;
+}
