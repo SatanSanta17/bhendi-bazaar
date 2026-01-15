@@ -87,29 +87,6 @@ export class ShippingProviderRepository {
   // ============================================================================
 
   /**
-   * Get provider count by status
-   */
-  async getProviderStats(): Promise<{
-    total: number;
-    connected: number;
-    disconnected: number;
-  }> {
-    const [total, connected] = await Promise.all([
-      prisma.shippingProvider.count(),
-      prisma.shippingProvider.count({ where: { isConnected: true } }),
-    ]);
-
-    return {
-      total,
-      connected,
-      disconnected: total - connected,
-    };
-  }
-  // src/server/shipping/repositories/provider.repository.ts
-
-  // Add these methods:
-
-  /**
    * Connect provider account (store encrypted credentials)
    */
   async connectAccount(
@@ -131,7 +108,7 @@ export class ShippingProviderRepository {
         connectedBy: data.connectedBy,
         lastAuthAt: new Date(),
         authError: null,
-        authToken: encryptionService.encrypt(data.authToken),
+        authToken: data.authToken,
         tokenExpiresAt: data.tokenExpiresAt,
         accountInfo: {
           ...data.accountInfo,
@@ -176,45 +153,12 @@ export class ShippingProviderRepository {
     return await prisma.shippingProvider.update({
       where: { id },
       data: {
-        authToken: encryptionService.encrypt(token),
+        authToken: token,
         tokenExpiresAt: expiresAt,
         lastAuthAt: new Date(),
         authError: null,
       },
     });
-  }
-
-  /**
-   * Get decrypted auth token
-   */
-  async getDecryptedAuthToken(id: string): Promise<string | null> {
-    const provider = await this.getById(id);
-    if (!provider?.authToken) return null;
-
-    try {
-      return encryptionService.decrypt(provider.authToken);
-    } catch (error) {
-      console.error("Failed to decrypt auth token:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Get decrypted password
-   */
-  async getDecryptedPassword(id: string): Promise<string | null> {
-    const provider = await this.getById(id);
-    if (!provider?.accountInfo) return null;
-
-    const accountInfo = provider.accountInfo as any;
-    if (!accountInfo.password) return null;
-
-    try {
-      return encryptionService.decrypt(accountInfo.password);
-    } catch (error) {
-      console.error("Failed to decrypt password:", error);
-      return null;
-    }
   }
 }
 

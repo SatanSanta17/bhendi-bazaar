@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -38,7 +38,7 @@ interface ProfileContextValue {
   }) => Promise<void>;
   updateProfilePic: (profilePic: string) => Promise<void>;
   refetch: () => Promise<void>;
-  
+
   // Email verification
   resendVerificationEmail: () => Promise<{ success: boolean; message: string }>;
 }
@@ -115,20 +115,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setError(null);
 
         // Optimistic update - update UI immediately
-        const optimisticData: ProfileData = { 
-            user: {...data.user},
-            profile: {...data.profile},
-         };
+        const optimisticData: ProfileData = {
+          user: { ...data.user },
+          profile: { ...data.profile },
+        };
 
         if (input.name !== undefined) optimisticData.user.name = input.name;
         if (input.email !== undefined) {
-            optimisticData.user.email = input.email;
-            // If email changed, mark as unverified
-            if (input.email !== data.user.email) {
-              optimisticData.user.isEmailVerified = false;
-            }
+          optimisticData.user.email = input.email;
+          // If email changed, mark as unverified
+          if (input.email !== data.user.email) {
+            optimisticData.user.isEmailVerified = false;
+          }
         }
-        if (input.mobile !== undefined) optimisticData.user.mobile = input.mobile;
+        if (input.mobile !== undefined)
+          optimisticData.user.mobile = input.mobile;
         if (input.addresses !== undefined)
           optimisticData.profile.addresses = input.addresses;
         if (input.profilePic !== undefined)
@@ -174,7 +175,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [data]
   );
 
-
   // Resend verification email
   const resendVerificationEmail = useCallback(async () => {
     try {
@@ -185,18 +185,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (response.ok) {
-        return { success: true, message: result.message || "Verification email sent!" };
+        return {
+          success: true,
+          message: result.message || "Verification email sent!",
+        };
       } else {
-        return { 
-          success: false, 
-          message: result.error || "Failed to send verification email" 
+        return {
+          success: false,
+          message: result.error || "Failed to send verification email",
         };
       }
     } catch (error) {
       console.error("Failed to resend verification email:", error);
-      return { 
-        success: false, 
-        message: "Failed to send verification email. Please try again." 
+      return {
+        success: false,
+        message: "Failed to send verification email. Please try again.",
       };
     }
   }, []);
@@ -204,7 +207,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   // Convenience methods
   const updateAddresses = useCallback(
     async (addresses: ProfileAddress[]) => {
-      await updateProfile({ addresses });
+      // remove the country code from the mobile
+      const addressesWithMobile = addresses.map((address) => ({
+        ...address,
+        mobile: address.mobile?.replace(/^\+91/, "").replace(/[\s\-+]/g, ""),
+      }));
+      await updateProfile({ addresses: addressesWithMobile });
     },
     [updateProfile]
   );
@@ -239,9 +247,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ProfileContext.Provider value={value}>
-      {children}
-    </ProfileContext.Provider>
+    <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
   );
 }
 

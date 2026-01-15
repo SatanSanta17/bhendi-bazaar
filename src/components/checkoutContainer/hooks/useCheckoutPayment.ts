@@ -12,13 +12,12 @@ import type {
   PaymentMethod,
   PaymentStatus,
 } from "@/domain/order";
-import type { CartItem, CartTotals, Shipping } from "@/domain/cart";
+import type { CartItem, CartTotals } from "@/domain/cart";
 
 interface ProcessPaymentInput {
   items: CartItem[];
   totals: CartTotals;
   address: OrderAddress;
-  shipping: Shipping;
   notes?: string;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;

@@ -8,6 +8,8 @@
 import type { IShippingProvider } from "../domain/provider.interface";
 import type {
   ConnectionRequestBody,
+  GetShippingRatesRequest,
+  GetShippingRatesResponse,
   ProviderConnectionResult,
   ShippingRate,
 } from "../domain/shipping.types";
@@ -32,11 +34,9 @@ export abstract class BaseShippingProvider implements IShippingProvider {
 
   abstract getProviderId(): string;
   abstract getProviderName(): string;
-  abstract checkServiceability(payload: any): Promise<any>;
-  abstract getRates(request: any): Promise<ShippingRate[]>;
-  abstract createShipment(request: any): Promise<any>;
-  abstract trackShipment(trackingNumber: string): Promise<any>;
-  abstract cancelShipment(trackingNumber: string): Promise<boolean>;
+  abstract getRates(
+    request: GetShippingRatesRequest
+  ): Promise<GetShippingRatesResponse>;
   abstract handleWebhook(payload: any): Promise<any>;
 
   // ============================================================================
@@ -44,7 +44,7 @@ export abstract class BaseShippingProvider implements IShippingProvider {
   // ============================================================================
 
   /**
-   * Initialize provider with configuration
+   * Initialize provider
    */
   async initialize(providerId: string): Promise<void> {
     this.providerId = providerId;

@@ -56,6 +56,8 @@ export function AddressFields({
           error={getError("label")}
         />
       )}
+
+      {/* Full Name and Mobile */}
       <div className="grid gap-3 sm:grid-cols-2">
         <FormInput
           label="Full Name"

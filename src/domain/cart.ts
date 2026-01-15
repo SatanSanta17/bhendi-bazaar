@@ -6,15 +6,6 @@ export interface Cart {
   updatedAt: Date;
 }
 
-export interface Shipping {
-  providerId: string;
-  courierName: string;
-  shippingCost: number;
-  estimatedDays: number;
-  mode: String;
-  packageWeight: number;
-}
-
 export interface CartItem {
   id: string;
   productId: string;

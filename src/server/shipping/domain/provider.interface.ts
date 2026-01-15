@@ -6,10 +6,9 @@
  */
 
 import type {
+  GetShippingRatesRequest,
+  GetShippingRatesResponse,
   ShippingRate,
-  CreateShipmentRequest,
-  Shipment,
-  TrackingInfo,
   WebhookEvent,
 } from "./shipping.types";
 
@@ -42,17 +41,6 @@ export interface IShippingProvider {
   initialize(providerId: string): Promise<void>;
 
   // ============================================================================
-  // SERVICEABILITY
-  // ============================================================================
-
-  /**
-   * Check if provider can deliver to a pincode
-   * @param pincode Delivery pincode to check
-   * @returns true if serviceable, false otherwise
-   */
-  checkServiceability(request: any): Promise<boolean>;
-
-  // ============================================================================
   // RATE CALCULATION
   // ============================================================================
 
@@ -62,66 +50,7 @@ export interface IShippingProvider {
    * @param request Rate calculation parameters
    * @returns Array of available shipping rates
    */
-  getRates(request: any): Promise<ShippingRate[]>;
-
-  // ============================================================================
-  // SHIPMENT CREATION
-  // ============================================================================
-
-  /**
-   * Create a new shipment and get tracking number
-   * @param request Shipment creation parameters
-   * @returns Shipment details including AWB number and labels
-   */
-  createShipment(request: CreateShipmentRequest): Promise<Shipment>;
-
-  // ============================================================================
-  // TRACKING
-  // ============================================================================
-
-  /**
-   * Get current tracking status for a shipment
-   * @param trackingNumber AWB number to track
-   * @returns Complete tracking information with history
-   */
-  trackShipment(trackingNumber: string): Promise<TrackingInfo>;
-
-  // ============================================================================
-  // CANCELLATION
-  // ============================================================================
-
-  /**
-   * Cancel a shipment (before pickup)
-   * @param trackingNumber AWB number to cancel
-   * @returns true if cancelled successfully
-   */
-  cancelShipment(trackingNumber: string): Promise<boolean>;
-
-  // ============================================================================
-  // OPTIONAL: ADVANCED FEATURES
-  // ============================================================================
-
-  /**
-   * Schedule pickup for shipments (optional)
-   * @param params Pickup scheduling parameters
-   */
-  schedulePickup?(params: {
-    trackingNumbers: string[];
-    pickupDate: Date;
-    pickupTime?: string;
-  }): Promise<{ pickupId: string }>;
-
-  /**
-   * Generate or download shipping label (optional)
-   * @param trackingNumber AWB number
-   */
-  generateLabel?(trackingNumber: string): Promise<{ labelUrl: string }>;
-
-  /**
-   * Get invoice/manifest (optional)
-   * @param trackingNumber AWB number
-   */
-  getInvoice?(trackingNumber: string): Promise<{ invoiceUrl: string }>;
+  getRates(request: GetShippingRatesRequest): Promise<GetShippingRatesResponse>;
 
   // ============================================================================
   // WEBHOOKS

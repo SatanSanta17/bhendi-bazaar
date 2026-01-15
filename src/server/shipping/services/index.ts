@@ -5,6 +5,5 @@
  */
 
 export * from "./orchestrator.service";
-export * from "./selector.service";
 export * from "./cache.service";
 

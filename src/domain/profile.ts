@@ -5,18 +5,11 @@
  * They mirror the API response structure and are used for type safety.
  */
 
-export interface ProfileAddress {
+import { DeliveryAddress } from "@/components/checkoutContainer/types";
+
+export interface ProfileAddress extends DeliveryAddress {
   id: string;
   label?: string;
-  fullName: string;
-  mobile: string;
-  addressLine1: string;
-  addressLine2?: string;
-  landmark?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
   isDefault?: boolean;
 }
 

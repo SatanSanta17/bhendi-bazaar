@@ -7,56 +7,60 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { shippingOrchestrator } from "@/server/shipping";
+import {
+  initializeShippingModule,
+  shippingOrchestrator,
+} from "@/server/shipping";
 import { z } from "zod";
 
 // Validation schema
 const getRatesSchema = z.object({
   fromPincode: z.string().regex(/^\d{6}$/, "Pincode must be 6 digits"),
   toPincode: z.string().regex(/^\d{6}$/, "Pincode must be 6 digits"),
-  weight: z.number().min(0.1).max(100),
-  cod: z.number(),
+  weight: z.number().min(0.1).max(500).optional(),
+  cod: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
+    // ✅ Defensive check: ensure shipping is initialized
+    if (shippingOrchestrator.getProviderCount() === 0) {
+      console.warn("⚠️ Shipping not initialized, initializing now...");
+      await initializeShippingModule();
+
+      // If still no providers after init, return error
+      if (shippingOrchestrator.getProviderCount() === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "No shipping providers available. Please check server configuration.",
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const validated = getRatesSchema.parse(body);
-
-    // Calculate weight if not provided
-    let weight = validated.weight;
-    if (!weight) {
-      weight = 0.5; // Default weight
-    }
 
     // Build rate request
     const rateRequest = {
       fromPincode: validated.fromPincode,
       toPincode: validated.toPincode,
       cod: validated.cod,
-      weight: weight,
+      weight: validated.weight,
     };
 
     // Get best rates using two-step filtering
-    const bestRates = await shippingOrchestrator.getBestRatesByDeliveryDays(
+    const response = await shippingOrchestrator.getRatesFromAllProviders(
       rateRequest,
       { useCache: false }
     );
+    // console.log("response", response);
 
-    // Debug logging
-    console.log("📦 Shipping Rates Debug:");
-    console.log(`- Total rates returned: ${bestRates.length}`);
-    console.log(
-      `- Rates:`,
-      bestRates.map((r) => ({
-        courier: r.courierName,
-        days: r.estimatedDays,
-        rate: r.rate,
-      }))
-    );
-
-    if (bestRates.length === 0) {
+    if (!response.success || !response.rates || response.rates.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -69,18 +73,11 @@ export async function POST(request: NextRequest) {
     // Return best rates (one per delivery day group)
     return NextResponse.json({
       success: true,
-      rates: bestRates, // Array of best rates (one per delivery day)
-      defaultRate: bestRates[0], // First one is fastest/cheapest
-      fromPincode: rateRequest.fromPincode,
-      toPincode: rateRequest.toPincode,
-      metadata: {
-        totalOptions: bestRates.length,
-        deliveryDays: bestRates.map((r) => r.estimatedDays),
-        priceRange: {
-          min: Math.min(...bestRates.map((r) => r.rate)),
-          max: Math.max(...bestRates.map((r) => r.rate)),
-        },
-      },
+      rates: response.rates, // Array of best rates (one per delivery day)
+      defaultRate: response.rates[0], // First one is fastest/cheapest
+      fromPincode: response.fromPincode,
+      toPincode: response.toPincode,
+      metadata: response.metadata,
     });
   } catch (error) {
     console.error("Get shipping rates error:", error);

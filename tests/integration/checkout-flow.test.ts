@@ -31,7 +31,7 @@ vi.mock('@/services/paymentGatewayService');
 vi.mock('@/services/cartService');
 
 // Now we can import after mocking
-import { useCheckoutPayment } from '@/components/checkout/hooks/useCheckoutPayment';
+import { useCheckoutPayment } from "@/components/checkoutContainer/hooks/useCheckoutPayment";
 import { useCartStore } from '@/store/cartStore';
 import { orderService } from '@/services/orderService';
 import { paymentGatewayService } from '@/services/paymentGatewayService';

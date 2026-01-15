@@ -15,8 +15,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <CartSyncProvider>
-        <ProfileProvider>{children}</ProfileProvider>
         <Toaster position="top-right" richColors />
+        <ProfileProvider>{children}</ProfileProvider>
       </CartSyncProvider>
     </SessionProvider>
   );
