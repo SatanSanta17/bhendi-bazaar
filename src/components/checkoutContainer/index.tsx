@@ -31,20 +31,12 @@ export function CheckoutContainer() {
 
   const checkout = useCheckout({ items: checkoutItems, isBuyNow });
 
-  const {
-    serviceable,
-    rates,
-    selectedRate,
-    loading: shippingLoading,
-    error: shippingError,
-    selectRate,
-    fetchRates,
-  } = useShippingRates();
+  const { serviceable, rates, selectedRate, loading: shippingLoading, error: shippingError, selectRate, fetchRates } = useShippingRates();
 
   useEffect(() => {
     if (checkout.selectedAddress) {
       fetchRates({
-        fromPincode: "560083",
+        fromPincode: checkout.selectedAddress.pincode,
         toPincode: checkout.selectedAddress.pincode,
         weight: calculateCartWeight(checkoutItems),
         cod: false,
@@ -52,8 +44,8 @@ export function CheckoutContainer() {
     }
   }, [checkout.selectedAddress]);
 
-  const { profile, updateAddress } = useProfileContext(); // ✅ Changed from useProfile
-
+  const { profile, updateAddresses } = useProfileContext(); // ✅ Changed from useProfile
+  
   useEffect(() => {
     const loadItems = async () => {
       if (buyNowSlug) {
@@ -114,7 +106,7 @@ export function CheckoutContainer() {
         <CheckoutAddress
           selectedAddress={checkout.selectedAddress}
           onAddressChange={checkout.setAddress}
-          onAddressUpdated={updateAddress}
+          onAddressUpdated={updateAddresses}
           addresses={profile?.addresses || []}
         />
 
