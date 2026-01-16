@@ -10,7 +10,7 @@ import { useProfileContext } from "@/context/ProfileContext";
 interface CheckoutAddressProps {
   selectedAddress: DeliveryAddress | null;
   onAddressChange: (address: DeliveryAddress) => void;
-  onAddressUpdated: (addresses: ProfileAddress[]) => void;
+  onAddressUpdated: (address: ProfileAddress) => void;
   addresses: ProfileAddress[];
 }
 

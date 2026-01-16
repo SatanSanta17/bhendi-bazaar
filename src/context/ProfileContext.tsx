@@ -30,7 +30,7 @@ interface ProfileContextValue {
 
   // Actions
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
-  updateAddresses: (addresses: ProfileAddress[]) => Promise<void>;
+  updateAddress: (address: ProfileAddress) => Promise<void>;
   updateUserInfo: (input: {
     name?: string;
     email?: string;
@@ -205,14 +205,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Convenience methods
-  const updateAddresses = useCallback(
-    async (addresses: ProfileAddress[]) => {
+  const updateAddress = useCallback(
+    async (address: ProfileAddress) => {
       // remove the country code from the mobile
-      const addressesWithMobile = addresses.map((address) => ({
+      const newAddress = {
         ...address,
         mobile: address.mobile?.replace(/^\+91/, "").replace(/[\s\-+]/g, ""),
-      }));
-      await updateProfile({ addresses: addressesWithMobile });
+      };
+      const existingAddresses = data?.profile?.addresses ?? [];
+      // if the new address is the default address, make all other addresses non-default
+      if (newAddress.isDefault) {
+        existingAddresses.forEach((a) => {
+          a.isDefault = false;
+        });
+      }
+      const newAddresses = [...existingAddresses, newAddress];
+      await updateProfile({ addresses: newAddresses });
     },
     [updateProfile]
   );
@@ -239,7 +247,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     error,
     saving,
     updateProfile,
-    updateAddresses,
+    updateAddress,
     updateUserInfo,
     updateProfilePic,
     refetch: fetchProfile,

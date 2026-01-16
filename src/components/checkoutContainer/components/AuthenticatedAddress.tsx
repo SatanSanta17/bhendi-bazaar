@@ -9,15 +9,15 @@ import { ProfileAddress } from "@/domain/profile";
 interface AuthenticatedAddressProps {
   selectedAddress: DeliveryAddress | null;
   onAddressChange: (address: DeliveryAddress) => void;
-  onAddressUpdated: (addresses: ProfileAddress[]) => void;
+  onAddressUpdated: (address: ProfileAddress) => void;
   addresses: ProfileAddress[];
 }
 
-export function AuthenticatedAddress({ 
-  selectedAddress, 
-  onAddressChange, 
-  onAddressUpdated, 
-  addresses 
+export function AuthenticatedAddress({
+  selectedAddress,
+  onAddressChange,
+  onAddressUpdated,
+  addresses,
 }: AuthenticatedAddressProps) {
   const [showAddressSelector, setShowAddressSelector] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -35,9 +35,8 @@ export function AuthenticatedAddress({
     if (addresses.length === 0) {
       address.isDefault = true;
     }
-    const newAddresses = [...addresses, address];
 
-    onAddressUpdated(newAddresses);
+    onAddressUpdated(address);
     onAddressChange(address);
     setShowAddressModal(false);
   };
