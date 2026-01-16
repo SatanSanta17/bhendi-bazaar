@@ -4,7 +4,6 @@ import { useProfileContext } from "@/context/ProfileContext";
 import { useAuth } from "@/lib/auth";
 import type { ProfileAddress } from "@/domain/profile";
 import { orderService } from "@/services/orderService";
-import { useProfile } from "@/hooks/useProfile";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { AddressesSection } from "@/components/profile/addresses-section";
 import { RecentOrdersSection } from "@/components/profile/recent-orders-section";

@@ -35,6 +35,12 @@ export function AuthenticatedAddress({
     if (addresses.length === 0) {
       address.isDefault = true;
     }
+    // ensure only one default address
+    if (address.isDefault) {
+      addresses.forEach((a) => {
+        a.isDefault = false;
+      });
+    }
     const newAddresses = [...addresses, address];
 
     onAddressUpdated(newAddresses);
