@@ -19,6 +19,7 @@ import { hash } from "bcryptjs";
 import {
   seedUsers,
   seedCategories,
+  seedSellers,
   seedProducts,
   seedOrders,
   seedReviews,
@@ -42,10 +43,12 @@ async function main() {
 
   // Clear existing data (in correct order to respect foreign keys)
   console.log("🗑️  Clearing existing data...");
+  await prisma.shippingProvider.deleteMany();
   await prisma.cart.deleteMany();
   await prisma.review.deleteMany();
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.seller.deleteMany(); // Add this
   await prisma.category.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.adminLog.deleteMany();
@@ -107,6 +110,36 @@ async function main() {
   console.log(`✅ ${seedCategories.length} categories seeded\n`);
 
   // ====================
+  // SEED SELLERS (NEW - before products)
+  // ====================
+  console.log("🏪 Seeding sellers...");
+  for (const sellerData of seedSellers) {
+    const seller = await prisma.seller.create({
+      data: {
+        id: sellerData.id,
+        code: sellerData.code,
+        name: sellerData.name,
+        email: sellerData.email,
+        phone: sellerData.phone,
+        contactPerson: sellerData.contactPerson,
+        defaultPincode: sellerData.defaultPincode,
+        defaultCity: sellerData.defaultCity,
+        defaultState: sellerData.defaultState,
+        defaultAddress: sellerData.defaultAddress,
+        businessName: sellerData.businessName,
+        gstNumber: sellerData.gstNumber,
+        panNumber: sellerData.panNumber,
+        isActive: sellerData.isActive,
+        isVerified: sellerData.isVerified,
+        description: sellerData.description,
+        logoUrl: sellerData.logoUrl,
+      },
+    });
+    console.log(`  ✓ ${seller.name} (${seller.code})`);
+  }
+  console.log(`✅ ${seedSellers.length} sellers seeded\n`);
+
+  // ====================
   // SEED PRODUCTS
   // ====================
   console.log("🛍️  Seeding products...");
@@ -119,6 +152,7 @@ async function main() {
         description: productData.description,
         price: productData.price,
         salePrice: productData.salePrice || null,
+        sellerId: productData.sellerId,
         currency: productData.currency,
         categoryId: productData.categoryId,
         tags: productData.tags,

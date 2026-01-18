@@ -2,8 +2,6 @@
  * Type definitions for seed data
  */
 
-import { cuid } from "zod";
-
 export interface SeedUser {
   id: string;
   email: string;
@@ -17,6 +15,28 @@ export interface SeedUser {
     addresses: SeedAddress[];
     profilePic: string | null;
   };
+}
+
+// ... existing code ...
+
+export interface SeedSeller {
+  id: string;
+  code: string;
+  name: string;
+  email: string;
+  phone?: string;
+  contactPerson?: string;
+  defaultPincode: string;
+  defaultCity: string;
+  defaultState: string;
+  defaultAddress?: string;
+  businessName?: string;
+  gstNumber?: string;
+  panNumber?: string;
+  isActive: boolean;
+  isVerified: boolean;
+  description?: string;
+  logoUrl?: string;
 }
 
 export interface SeedAddress {
@@ -51,6 +71,7 @@ export interface SeedProduct {
   price: number;
   salePrice?: number;
   currency: "INR";
+  sellerId: string;
   categoryId: string;
   tags: string[];
   flags: string[];

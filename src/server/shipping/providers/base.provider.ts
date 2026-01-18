@@ -11,7 +11,6 @@ import type {
   GetShippingRatesRequest,
   GetShippingRatesResponse,
   ProviderConnectionResult,
-  ShippingRate,
 } from "../domain/shipping.types";
 
 export abstract class BaseShippingProvider implements IShippingProvider {

@@ -5,6 +5,5 @@
  */
 
 export * from "./provider.repository";
-export * from "./rateCache.repository";
 export * from "./event.repository";
 

@@ -4,6 +4,13 @@
  */
 
 import type { SeedProduct } from "./types";
+import { seedSellers } from "./sellers.seed";
+
+// Helper function to randomly assign a seller
+const getRandomSeller = (): string => {
+  const randomIndex = Math.floor(Math.random() * seedSellers.length);
+  return seedSellers[randomIndex].id;
+};
 
 export const seedProducts: SeedProduct[] = [
   // ABAYAS CATEGORY (3 products)
@@ -16,11 +23,12 @@ export const seedProducts: SeedProduct[] = [
     price: 4200,
     salePrice: 3690,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-abayas",
     tags: ["abaya", "evening", "satin", "emerald", "special-occasion"],
     flags: ["FEATURED", "HERO", "ON_OFFER"],
-    rating: 0, // Will be calculated from reviews
-    reviewsCount: 0, // Will be updated
+    rating: 0,
+    reviewsCount: 0,
     images: [
       "https://placehold.co/800x800/10b981/ffffff?text=Emerald+Abaya+1",
       "https://placehold.co/800x800/10b981/ffffff?text=Emerald+Abaya+2",
@@ -41,14 +49,13 @@ export const seedProducts: SeedProduct[] = [
     price: 3200,
     salePrice: 2880,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-abayas",
     tags: ["jilbab", "everyday", "black", "classic", "breathable"],
     flags: ["ON_OFFER"],
     rating: 0,
     reviewsCount: 0,
-    images: [
-      "https://placehold.co/800x800/000000/ffffff?text=Black+Jilbab",
-    ],
+    images: ["https://placehold.co/800x800/000000/ffffff?text=Black+Jilbab"],
     thumbnail: "https://placehold.co/800x800/000000/ffffff?text=Black+Jilbab",
     sizes: ["S", "M", "L", "XL", "XXL"],
     colors: ["Jet Black"],
@@ -64,6 +71,7 @@ export const seedProducts: SeedProduct[] = [
       "Stunning maroon abaya with intricate gold thread embroidery on the sleeves and hem. A statement piece that combines tradition with contemporary style. Perfect for weddings and festive occasions.",
     price: 5800,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-abayas",
     tags: ["abaya", "embroidered", "maroon", "wedding", "festive"],
     flags: ["FEATURED"],
@@ -91,14 +99,13 @@ export const seedProducts: SeedProduct[] = [
     price: 2400,
     salePrice: 1920,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-attars",
     tags: ["attar", "oud", "woody", "premium", "long-lasting"],
     flags: ["FEATURED", "HERO", "ON_OFFER"],
     rating: 0,
     reviewsCount: 0,
-    images: [
-      "https://placehold.co/800x800/f59e0b/ffffff?text=Oud+Attar",
-    ],
+    images: ["https://placehold.co/800x800/f59e0b/ffffff?text=Oud+Attar"],
     thumbnail: "https://placehold.co/800x800/f59e0b/ffffff?text=Oud+Attar",
     sizes: ["12ml"],
     colors: ["Golden"],
@@ -114,18 +121,17 @@ export const seedProducts: SeedProduct[] = [
       "Delicate blend of Bulgarian rose and white musk. Floral yet sophisticated fragrance perfect for daily wear. Gentle on skin and suitable for all occasions.",
     price: 1200,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-attars",
     tags: ["attar", "rose", "musk", "floral", "everyday"],
     flags: [],
     rating: 0,
     reviewsCount: 0,
-    images: [
-      "https://placehold.co/800x800/f59e0b/ffffff?text=Rose+Musk",
-    ],
+    images: ["https://placehold.co/800x800/f59e0b/ffffff?text=Rose+Musk"],
     thumbnail: "https://placehold.co/800x800/f59e0b/ffffff?text=Rose+Musk",
     sizes: ["8ml", "12ml"],
     colors: ["Rose Gold"],
-    stock: 0, // Out of stock
+    stock: 0,
     sku: "ATT-RSM-001",
     lowStockThreshold: 10,
   },
@@ -138,6 +144,7 @@ export const seedProducts: SeedProduct[] = [
     price: 1800,
     salePrice: 1530,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-attars",
     tags: ["attar", "sandalwood", "amber", "warm", "evening"],
     flags: ["ON_OFFER"],
@@ -146,7 +153,8 @@ export const seedProducts: SeedProduct[] = [
     images: [
       "https://placehold.co/800x800/f59e0b/ffffff?text=Sandalwood+Amber",
     ],
-    thumbnail: "https://placehold.co/800x800/f59e0b/ffffff?text=Sandalwood+Amber",
+    thumbnail:
+      "https://placehold.co/800x800/f59e0b/ffffff?text=Sandalwood+Amber",
     sizes: ["12ml"],
     colors: ["Amber"],
     stock: 38,
@@ -163,6 +171,7 @@ export const seedProducts: SeedProduct[] = [
       "Exquisite gold-toned filigree earrings featuring intricate traditional patterns. Lightweight despite their elaborate design. Perfect for weddings and festive celebrations.\n\nMaterial: Gold-plated brass with anti-tarnish coating",
     price: 1500,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-jewellery",
     tags: ["earrings", "gold", "filigree", "traditional", "wedding"],
     flags: ["FEATURED"],
@@ -188,6 +197,7 @@ export const seedProducts: SeedProduct[] = [
     price: 3200,
     salePrice: 2560,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-jewellery",
     tags: ["necklace", "emerald", "statement", "contemporary", "stones"],
     flags: ["FEATURED", "ON_OFFER"],
@@ -196,7 +206,8 @@ export const seedProducts: SeedProduct[] = [
     images: [
       "https://placehold.co/800x800/eab308/ffffff?text=Emerald+Necklace",
     ],
-    thumbnail: "https://placehold.co/800x800/eab308/ffffff?text=Emerald+Necklace",
+    thumbnail:
+      "https://placehold.co/800x800/eab308/ffffff?text=Emerald+Necklace",
     sizes: ["Adjustable"],
     colors: ["Gold & Emerald"],
     stock: 8,
@@ -211,18 +222,17 @@ export const seedProducts: SeedProduct[] = [
       "Classic jhumka earrings with pearl drops. Traditional design that never goes out of style. Comes with matching tikka. Perfect for traditional attire.",
     price: 2200,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-jewellery",
     tags: ["jhumka", "pearls", "traditional", "set", "classic"],
     flags: [],
     rating: 0,
     reviewsCount: 0,
-    images: [
-      "https://placehold.co/800x800/eab308/ffffff?text=Pearl+Jhumka",
-    ],
+    images: ["https://placehold.co/800x800/eab308/ffffff?text=Pearl+Jhumka"],
     thumbnail: "https://placehold.co/800x800/eab308/ffffff?text=Pearl+Jhumka",
     sizes: ["One Size"],
     colors: ["Gold & Pearl"],
-    stock: 5, // Low stock
+    stock: 5,
     sku: "JWL-JHM-001",
     lowStockThreshold: 8,
   },
@@ -237,6 +247,7 @@ export const seedProducts: SeedProduct[] = [
     price: 1800,
     salePrice: 1440,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-prayer",
     tags: ["prayer-mat", "velvet", "travel", "cushioned", "kaaba"],
     flags: ["FEATURED", "ON_OFFER"],
@@ -261,14 +272,13 @@ export const seedProducts: SeedProduct[] = [
       "Handcrafted tasbih made from premium sandalwood. 99 beads with divider markers. Smooth finish and pleasant natural fragrance. Comes in decorative box.",
     price: 450,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-prayer",
     tags: ["tasbih", "wooden", "sandalwood", "99-beads", "handcrafted"],
     flags: [],
     rating: 0,
     reviewsCount: 0,
-    images: [
-      "https://placehold.co/800x800/0ea5e9/ffffff?text=Tasbih",
-    ],
+    images: ["https://placehold.co/800x800/0ea5e9/ffffff?text=Tasbih"],
     thumbnail: "https://placehold.co/800x800/0ea5e9/ffffff?text=Tasbih",
     sizes: ["Standard"],
     colors: ["Natural Wood", "Dark Brown"],
@@ -284,14 +294,13 @@ export const seedProducts: SeedProduct[] = [
       "Protective Quran cover with beautiful gold embroidery. Soft padded interior to protect your holy book. Zipper closure for secure storage.\n\nFits standard Quran sizes (25cm x 18cm)",
     price: 650,
     currency: "INR",
+    sellerId: getRandomSeller(),
     categoryId: "cat-prayer",
     tags: ["quran-cover", "embroidered", "protective", "zipper"],
     flags: [],
     rating: 0,
     reviewsCount: 0,
-    images: [
-      "https://placehold.co/800x800/0ea5e9/ffffff?text=Quran+Cover",
-    ],
+    images: ["https://placehold.co/800x800/0ea5e9/ffffff?text=Quran+Cover"],
     thumbnail: "https://placehold.co/800x800/0ea5e9/ffffff?text=Quran+Cover",
     sizes: ["Standard", "Large"],
     colors: ["Green", "Maroon", "Navy"],
@@ -300,4 +309,3 @@ export const seedProducts: SeedProduct[] = [
     lowStockThreshold: 15,
   },
 ];
-

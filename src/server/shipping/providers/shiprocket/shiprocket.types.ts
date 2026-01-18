@@ -5,6 +5,12 @@
  * Based on official Shiprocket API documentation: https://apidocs.shiprocket.in
  */
 
+export interface PackageDimensions {
+  length: number;
+  breadth: number;
+  height: number;
+}
+
 // ============================================================================
 // AUTHENTICATION
 // ============================================================================

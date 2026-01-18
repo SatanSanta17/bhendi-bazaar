@@ -2,7 +2,7 @@
  * Shiprocket Configuration & Constants
  */
 
-import { PackageDimensions } from "../../domain";
+import type { PackageDimensions } from "./shiprocket.types";
 
 export const SHIPROCKET_CONFIG = {
   BASE_URL: "https://apiv2.shiprocket.in/v1/external",

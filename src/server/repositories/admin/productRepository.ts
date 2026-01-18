@@ -169,6 +169,7 @@ export class AdminProductRepository {
         price: data.price,
         salePrice: data.salePrice,
         currency: data.currency || "INR",
+        sellerId: data.sellerId || "",
         categoryId: data.categoryId,
         tags: data.tags || [],
         flags: data.flags || [],

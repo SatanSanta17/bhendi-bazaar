@@ -3,7 +3,6 @@
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { orderService } from "@/services/orderService";
 import { OrderSummary } from "@/components/order/order-summary";
-import { OrderTrackingWithShipping as OrderTracking } from "@/components/order/OrderTrackingWithShipping";
 import { LoadingSpinner } from "../shared/states/LoadingSpinner";
 import { ErrorState } from "../shared/states/ErrorState";
 import { SectionHeader } from "../shared/SectionHeader";
@@ -60,7 +59,6 @@ export function OrderClient({ orderId }: OrderClientProps) {
       </header>
       <div className="grid gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <OrderSummary order={order} showShare={true} />
-        <OrderTracking order={order} />
       </div>
     </div>
   );

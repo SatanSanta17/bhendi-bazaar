@@ -5,6 +5,17 @@
  * They represent addresses, packages, rates, shipments, and tracking information.
  */
 
+export type ShipmentStatus =
+  | "pending"
+  | "created"
+  | "picked_up"
+  | "in_transit"
+  | "out_for_delivery"
+  | "delivered"
+  | "cancelled"
+  | "returned"
+  | "failed";
+
 // ============================================================================
 // PROVIDER CONNECTION
 // ============================================================================

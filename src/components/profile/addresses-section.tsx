@@ -56,6 +56,7 @@ export function AddressesSection({
       pincode: "",
       mobile: "",
       isDefault: addresses.length === 0,
+      email: "",
     });
     setModalMode("add");
   }

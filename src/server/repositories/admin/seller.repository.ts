@@ -70,7 +70,7 @@ export class SellerRepository {
    * Find seller by email
    */
   async findByEmail(email: string) {
-    return await prisma.seller.findUnique({
+    return await prisma.seller.findMany({
       where: { email },
     });
   }

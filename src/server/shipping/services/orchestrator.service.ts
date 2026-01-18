@@ -12,7 +12,6 @@ import type {
 } from "../domain/shipping.types";
 import type { IShippingProvider } from "../domain/provider.interface";
 import { shippingProviderRepository } from "../repositories/provider.repository";
-import { shippingCacheService } from "./cache.service";
 
 export class ShippingOrchestratorService {
   private providers: Map<string, IShippingProvider> = new Map();
@@ -101,37 +100,17 @@ export class ShippingOrchestratorService {
     }
 
     const allRates: ShippingRate[] = [];
-    const useCache = options?.useCache ?? true;
 
     // Get rates from each provider
     await Promise.all(
       Array.from(this.providers.entries()).map(
         async ([providerId, provider]) => {
           try {
-            // Try cache first
-            if (useCache) {
-              const cachedRate = await shippingCacheService.getCachedRate(
-                request,
-                providerId
-              );
-
-              if (cachedRate) {
-                cachedRate.providerName = provider.getProviderName();
-                allRates.push(cachedRate);
-                return;
-              }
-            }
-
             // Call provider API
             const response = await provider.getRates(request);
             // console.log("response", response);
             const rates = response.rates;
             allRates.push(...rates);
-
-            // Cache the results
-            if (useCache) {
-              await shippingCacheService.cacheRates(rates, request);
-            }
           } catch (error) {
             console.error(
               `Error getting rates from ${provider.getProviderName()}:`,

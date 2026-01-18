@@ -58,6 +58,7 @@ export interface CreateProductInput {
   price: number;
   salePrice?: number;
   currency?: string;
+  sellerId?: string;
   categoryId: string;
   tags?: string[];
   flags?: ProductFlag[];
@@ -77,6 +78,7 @@ export interface UpdateProductInput {
   price?: number;
   salePrice?: number;
   categoryId?: string;
+  sellerId?: string;
   tags?: string[];
   flags?: ProductFlag[];
   images?: string[];
