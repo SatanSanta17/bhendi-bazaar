@@ -36,10 +36,11 @@ model Product {
   price       Float
   salePrice   Float?
   currency    String   @default("INR")
+
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  tags        String[] // Array of tags
 
+  tags        String[] // Array of tags
   flags String[] @default([])
 
   rating            Float    @default(0)
@@ -48,9 +49,20 @@ model Product {
   thumbnail         String // Main product image URL
   sizes             String[] // Available sizes
   colors            String[] // Available colors
+
   stock             Int      @default(0)
   sku               String?  @unique // Stock Keeping Unit
   lowStockThreshold Int      @default(10) // Alert when stock falls below this
+
+  // ⭐ Seller Association (REQUIRED)
+  sellerId String
+  seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  
+  // ⭐ Shipping Origin (OPTIONAL - overrides seller's default)
+  shippingFromPincode   String?
+  shippingFromCity      String?
+  shippingFromLocation  String? // "Warehouse 2", "Special Location"
+  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   reviews           Review[]
@@ -59,6 +71,8 @@ model Product {
   @@index([categoryId])
   @@index([createdAt])
   @@index([stock])
+  @@index([sellerId])
+  @@index([shippingFromPincode])
 }
 
 model Review {
@@ -129,6 +143,48 @@ model Profile {
   userId     String  @unique
   addresses  Json? // address[] as JSON block
   profilePic String? // URL to avatar image
+}
+
+model Seller {
+  id   String @id @default(cuid())
+  code String @unique // "SEL-001", "SEL-002"
+  name String // "ABC Traders", "XYZ Wholesale"
+  
+  // Contact Information
+  email        String
+  phone        String?
+  contactPerson String? // "John Doe"
+  
+  // Default Shipping Location
+  defaultPincode String
+  defaultCity    String
+  defaultState   String
+  defaultAddress String? @db.Text
+  
+  // Business Details
+  businessName   String?
+  gstNumber      String? @unique
+  panNumber      String?
+  
+  // Status
+  isActive       Boolean  @default(true)
+  isVerified     Boolean  @default(false) // KYC verification
+  
+  // Metadata
+  description String? @db.Text
+  logoUrl     String?
+  
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  products Product[]
+  
+  @@index([email])
+  @@index([isActive])
+  @@index([code])
+  @@index([defaultPincode])
 }
 
 model Account {

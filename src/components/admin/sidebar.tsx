@@ -16,6 +16,7 @@ import {
   Star,
   ShoppingBag,
   Truck,
+  Store,
 } from "lucide-react";
 
 const navItems = [
@@ -43,6 +44,11 @@ const navItems = [
     title: "Users",
     href: "/admin/users",
     icon: Users,
+  },
+  {
+    title: "Sellers",
+    href: "/admin/sellers",
+    icon: Store,
   },
   {
     title: "Reviews",
@@ -104,5 +110,3 @@ export function AdminSidebar() {
     </aside>
   );
 }
-
-
