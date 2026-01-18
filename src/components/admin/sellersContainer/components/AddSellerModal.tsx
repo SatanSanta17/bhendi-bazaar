@@ -1,5 +1,9 @@
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { SellerForm } from "@/components/shared/forms/sellers";
 import type { Seller, CreateSellerInput } from "@/domain/seller";
 
@@ -18,7 +22,7 @@ export function AddSellerModal({
   onSubmit,
   seller,
   isSubmitting = false,
-  mode = "create"
+  mode = "create",
 }: AddSellerModalProps) {
   const isEdit = mode === "edit";
   const isView = mode === "view";
@@ -28,10 +32,14 @@ export function AddSellerModal({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? `Edit Seller: ${seller?.name || ""}` : isView ? `View Seller: ${seller?.name || ""}` : "Add New Seller"}
+            {isEdit
+              ? `Edit Seller: ${seller?.name || ""}`
+              : isView
+              ? `View Seller: ${seller?.name || ""}`
+              : "Add New Seller"}
           </DialogTitle>
         </DialogHeader>
-        
+
         <SellerForm
           seller={seller}
           onSubmit={onSubmit}

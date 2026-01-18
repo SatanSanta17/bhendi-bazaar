@@ -333,6 +333,7 @@ export default function AdminReviewsPage() {
         columns={columns}
         totalPages={totalPages}
         currentPage={filters.page || 1}
+        totalItems={data?.total || 0}
         onPageChange={(page) => setFilters({ ...filters, page })}
         onSort={(key, order) =>
           setFilters({ ...filters, sortBy: key as any, sortOrder: order })

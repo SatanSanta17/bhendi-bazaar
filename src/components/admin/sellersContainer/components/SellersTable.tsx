@@ -1,7 +1,3 @@
-// src/components/admin/sellersContainer/components/SellersTable.tsx
-
-"use client";
-
 import { DataTable, Column } from "@/components/admin/data-table";
 import { Edit, Trash2, CheckCircle, XCircle, MapPin, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +14,6 @@ interface SellersTableProps {
   onView: (seller: SellerWithStats) => void;
   onEdit: (seller: SellerWithStats) => void;
   onDelete: (id: string, name: string) => void;
-  onToggleStatus: (id: string, currentStatus: boolean) => void;
 }
 
 export function SellersTable({
@@ -32,7 +27,6 @@ export function SellersTable({
   onView,
   onEdit,
   onDelete,
-  onToggleStatus,
 }: SellersTableProps) {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -135,14 +129,14 @@ export function SellersTable({
       render: (seller) => (
         <div className="flex items-center gap-2">
           {/* ⭐ NEW: View button */}
-      <button
-        onClick={() => onView(seller)}
-        className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-        title="View seller details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      
+          <button
+            onClick={() => onView(seller)}
+            className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+            title="View seller details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+
           <button
             onClick={() => onEdit(seller)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -192,6 +186,7 @@ export function SellersTable({
           columns={columns}
           totalPages={totalPages}
           currentPage={currentPage}
+          totalItems={totalItems}
           onPageChange={onPageChange}
           isLoading={isLoading}
         />

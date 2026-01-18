@@ -8,7 +8,7 @@ import {
 } from "@/lib/rate-limit";
 import { validateRequest } from "@/lib/validation/utils";
 import { signupSchema } from "@/lib/validation/schemas/auth.schemas";
-import { emailService } from "@/server/services/emailService";
+import { emailService } from "../../../../../server/services/emailService";
 
 export async function POST(request: NextRequest) {
   // Rate limit check

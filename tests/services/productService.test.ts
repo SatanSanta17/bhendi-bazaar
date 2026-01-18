@@ -5,9 +5,12 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { productService, ProductService } from '@/server/services/productService';
-import { productRepository } from '@/server/repositories/productRepository';
-import type { ServerProduct, ProductFilter } from '@/server/domain/product';
+import {
+  productService,
+  ProductService,
+} from "../../server/services/productService";
+import { productRepository } from "../../server/repositories/productRepository";
+import type { ServerProduct, ProductFilter } from "../../server/domain/product";
 
 // Mock the product repository
 vi.mock('@/server/repositories/productRepository', () => ({

@@ -50,7 +50,7 @@ describe("Password Change E2E Flow", () => {
   describe("Happy Path", () => {
     it("should complete full password change flow", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // USER STORY:
@@ -115,7 +115,7 @@ describe("Password Change E2E Flow", () => {
 
     it("should show success message after password change", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.changePassword(
@@ -136,7 +136,7 @@ describe("Password Change E2E Flow", () => {
 
     it("should allow immediate use of new password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -159,7 +159,7 @@ describe("Password Change E2E Flow", () => {
   describe("Error Handling", () => {
     it("should show error for wrong current password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // User enters wrong current password
@@ -180,7 +180,7 @@ describe("Password Change E2E Flow", () => {
 
     it("should show error for weak new password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // User enters weak password
@@ -275,7 +275,7 @@ describe("Password Change E2E Flow", () => {
       });
 
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.changePassword(
@@ -299,7 +299,7 @@ describe("Password Change E2E Flow", () => {
     it("should require authentication to change password", async () => {
       // Without authentication (no userId)
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Try with non-existent user
@@ -319,7 +319,7 @@ describe("Password Change E2E Flow", () => {
 
     it("should not allow changing another user's password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Create another user
@@ -347,15 +347,11 @@ describe("Password Change E2E Flow", () => {
 
     it("should require correct current password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Multiple incorrect attempts
-      const incorrectPasswords = [
-        "Wrong123",
-        "NotRight456",
-        "Incorrect789",
-      ];
+      const incorrectPasswords = ["Wrong123", "NotRight456", "Incorrect789"];
 
       for (const incorrectPassword of incorrectPasswords) {
         const result = await passwordService.changePassword(
@@ -378,7 +374,7 @@ describe("Password Change E2E Flow", () => {
   describe("UI/UX Flow", () => {
     it("should provide clear password requirements", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Password requirements
@@ -427,7 +423,7 @@ describe("Password Change E2E Flow", () => {
 
     it("should clear form after successful change", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -451,7 +447,7 @@ describe("Password Change E2E Flow", () => {
   describe("Complete User Journey", () => {
     it("should complete full journey: sign in → change password → sign out → sign in with new", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // COMPLETE USER JOURNEY:
@@ -514,7 +510,7 @@ describe("Password Change E2E Flow", () => {
 
     it("should handle password change followed by immediate password change", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // First change

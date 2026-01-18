@@ -211,6 +211,7 @@ export default function AdminAbandonedCartsPage() {
         columns={columns}
         totalPages={data?.totalPages || 1}
         currentPage={filters.page || 1}
+        totalItems={data?.total || 0}
         onPageChange={(page) => setFilters({ ...filters, page })}
         onSort={(key, order) =>
           setFilters({ ...filters, sortBy: key as any, sortOrder: order })

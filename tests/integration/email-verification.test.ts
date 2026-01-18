@@ -61,7 +61,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should create verification token on signup", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const user = await createTestUser({
         email: testEmail,
@@ -78,7 +80,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should send verification email on signup", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const user = await createTestUser({
         email: testEmail,
@@ -105,7 +109,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should verify email with valid token", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       await emailService.sendVerificationEmail(testUserId, testEmail);
       const tokens = await getVerificationTokensForUser(testUserId);
@@ -117,7 +123,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should update User.isEmailVerified to true", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       await emailService.sendVerificationEmail(testUserId, testEmail);
       const tokens = await getVerificationTokensForUser(testUserId);
@@ -134,7 +142,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should remove token from database after verification", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       await emailService.sendVerificationEmail(testUserId, testEmail);
       const tokens = await getVerificationTokensForUser(testUserId);
@@ -147,7 +157,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should reject invalid token", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const result = await emailService.verifyEmail("invalid-token-12345");
 
@@ -156,7 +168,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should reject expired token", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Create expired token manually
       const expiredToken = await prisma.verificationToken.create({
@@ -174,7 +188,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should prevent token reuse", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       await emailService.sendVerificationEmail(testUserId, testEmail);
       const tokens = await getVerificationTokensForUser(testUserId);
@@ -221,7 +237,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should delete old verification tokens on email update", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Create old token
       await emailService.sendVerificationEmail(testUserId, testEmail);
@@ -241,7 +259,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should send new verification email with new token", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
       clearCapturedEmails();
 
       const newEmail = `new-${Date.now()}@example.com`;
@@ -254,7 +274,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should be able to verify with new token after email update", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const newEmail = `new-${Date.now()}@example.com`;
 
@@ -291,7 +313,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should delete old tokens when resending", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Send initial email
       await emailService.sendVerificationEmail(testUserId, testEmail);
@@ -307,7 +331,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should create new token when resending", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       await emailService.sendVerificationEmail(testUserId, testEmail);
       await emailService.resendVerificationEmail(testUserId);
@@ -317,7 +343,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should fail to resend for already verified users", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Mark as verified
       await prisma.user.update({
@@ -331,7 +359,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should fail to resend for non-existent users", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       await expect(
         emailService.resendVerificationEmail("non-existent-id")
@@ -341,7 +371,9 @@ describe("Email Verification Integration", () => {
 
   describe("Error Scenarios", () => {
     it("should handle database failures gracefully during verification", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const originalFindUnique = prisma.verificationToken.findUnique;
       prisma.verificationToken.findUnique = vi.fn().mockRejectedValue(
@@ -358,7 +390,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should clean up expired tokens when verification fails", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const user = await createTestUser({
         email: testEmail,
@@ -381,7 +415,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should handle multiple verification attempts gracefully", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const user = await createTestUser({
         email: testEmail,
@@ -415,7 +451,9 @@ describe("Email Verification Integration", () => {
 
   describe("Email Content", () => {
     it("should include verification link in email", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const user = await createTestUser({
         email: testEmail,
@@ -434,7 +472,9 @@ describe("Email Verification Integration", () => {
     });
 
     it("should include valid token in email link", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const user = await createTestUser({
         email: testEmail,
@@ -455,7 +495,9 @@ describe("Email Verification Integration", () => {
 
   describe("Complete Flow End-to-End", () => {
     it("should complete full verification flow from signup to verified", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // 1. Create user (signup)
       const user = await createTestUser({

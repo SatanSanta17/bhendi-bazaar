@@ -5,7 +5,7 @@
 
 import type {
   AdminProduct,
-  ProductListFilters,
+  ProductFilters,
   ProductListResult,
   CreateProductInput,
   UpdateProductInput,
@@ -15,9 +15,7 @@ class AdminProductService {
   /**
    * Get paginated list of products
    */
-  async getProducts(
-    filters: ProductListFilters = {}
-  ): Promise<ProductListResult> {
+  async getProducts(filters: ProductFilters = {}): Promise<ProductListResult> {
     const params = new URLSearchParams();
 
     if (filters.search) params.append("search", filters.search);

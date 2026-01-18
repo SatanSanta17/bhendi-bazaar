@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { orderService, OrderService } from '@/server/services/orderService';
-import { orderRepository } from '@/server/repositories/orderRepository';
+import { orderService, OrderService } from "../../server/services/orderService";
+import { orderRepository } from "../../server/repositories/orderRepository";
 import type {
   ServerOrder,
   CreateOrderInput,
@@ -14,7 +14,7 @@ import type {
   OrderItem,
   OrderAddress,
   OrderTotals,
-} from '@/server/domain/order';
+} from "../../server/domain/order";
 
 // Mock the order repository
 vi.mock('@/server/repositories/orderRepository', () => ({

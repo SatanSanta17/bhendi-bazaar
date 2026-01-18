@@ -6,7 +6,11 @@
 
 import type { Product } from '@/domain/product';
 import type { CartItem } from '@/domain/cart';
-import type { ServerOrder, OrderAddress, OrderItem } from '@/server/domain/order';
+import type {
+  ServerOrder,
+  OrderAddress,
+  OrderItem,
+} from "../../server/domain/order";
 import type { AuthUser } from '@/lib/auth';
 import { ProductFlag } from "@/types/product";
 

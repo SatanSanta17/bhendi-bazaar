@@ -44,7 +44,9 @@ describe("Email Verification E2E Flow", () => {
 
   describe("Signup → Verify Flow", () => {
     it("should complete full signup and verification flow", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // STEP 1: User signs up
       testUserEmail = `e2e-test-${Date.now()}@example.com`;
@@ -86,7 +88,9 @@ describe("Email Verification E2E Flow", () => {
     });
 
     it("should show banner for unverified users", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // User signs up
       testUserEmail = `banner-test-${Date.now()}@example.com`;
@@ -105,7 +109,9 @@ describe("Email Verification E2E Flow", () => {
     });
 
     it("should hide banner after verification", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // User signs up and verifies
       testUserEmail = `hide-banner-${Date.now()}@example.com`;
@@ -127,7 +133,9 @@ describe("Email Verification E2E Flow", () => {
     });
 
     it("should show verified badge in profile menu", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Verified user
       testUserEmail = `verified-badge-${Date.now()}@example.com`;
@@ -173,9 +181,11 @@ describe("Email Verification E2E Flow", () => {
 
   describe("Email Update → Re-verify Flow", () => {
     it("should trigger re-verification on email update", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
       const { profileService } = await import(
-        "@/server/services/profileService"
+        "../../server/services/profileService"
       );
 
       // STEP 1: User starts verified
@@ -238,7 +248,9 @@ describe("Email Verification E2E Flow", () => {
     });
 
     it("should show banner again after email update", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Verified user
       testUserEmail = `banner-reappear-${Date.now()}@example.com`;
@@ -266,7 +278,9 @@ describe("Email Verification E2E Flow", () => {
 
   describe("Resend Verification Flow", () => {
     it("should allow user to resend verification email", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // STEP 1: Unverified user
       testUserEmail = `resend-${Date.now()}@example.com`;
@@ -297,7 +311,9 @@ describe("Email Verification E2E Flow", () => {
     });
 
     it("should prevent resend for already verified users", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Verified user
       testUserEmail = `already-verified-${Date.now()}@example.com`;
@@ -316,7 +332,9 @@ describe("Email Verification E2E Flow", () => {
 
   describe("Error Scenarios", () => {
     it("should show error for invalid verification link", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // User tries to verify with invalid token
       const result = await emailService.verifyEmail("invalid-token-12345");
@@ -326,7 +344,9 @@ describe("Email Verification E2E Flow", () => {
     });
 
     it("should show error for expired verification link", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       testUserEmail = `expired-link-${Date.now()}@example.com`;
       const user = await createTestUser({
@@ -351,7 +371,9 @@ describe("Email Verification E2E Flow", () => {
     });
 
     it("should show success message after verification", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       testUserEmail = `success-message-${Date.now()}@example.com`;
       const user = await createTestUser({
@@ -373,7 +395,9 @@ describe("Email Verification E2E Flow", () => {
 
   describe("Complete User Journey", () => {
     it("should complete full user journey from signup to verified", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // USER STORY:
       // 1. New user signs up with email/password

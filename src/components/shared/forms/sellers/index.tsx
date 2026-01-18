@@ -1,14 +1,13 @@
-// src/components/admin/sellersContainer/components/SellerForm.tsx
-
-"use client";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { createSellerSchema, type CreateSellerInput } from "@/lib/validation/schemas/seller.schema";
+import {
+  createSellerSchema,
+  type CreateSellerInput,
+} from "@/lib/validation/schemas/seller.schema";
 import type { Seller } from "@/domain/seller";
 import { SellerBasicFields } from "./SellerBasicFields";
 import { SellerLocationFields } from "./SellerLocationFields";
@@ -116,7 +115,11 @@ export function SellerForm({
         </Button>
         {!readOnly && (
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : isEdit ? "Update Seller" : "Create Seller"}
+            {isSubmitting
+              ? "Saving..."
+              : isEdit
+              ? "Update Seller"
+              : "Create Seller"}
           </Button>
         )}
       </div>

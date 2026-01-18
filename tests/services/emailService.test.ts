@@ -29,7 +29,7 @@ vi.mock("resend", () => {
 });
 
 // Import after mocking
-import { emailService } from "@/server/services/emailService";
+import { emailService } from "../../server/services/emailService";
 import crypto from "crypto";
 
 describe("EmailService - Email Verification", () => {

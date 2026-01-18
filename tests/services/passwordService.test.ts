@@ -13,7 +13,7 @@ import {
   createPasswordResetToken,
   createExpiredPasswordResetToken,
 } from "../utils/auth-helpers";
-import { PasswordService } from "@/server/services/passwordService";
+import { PasswordService } from "../../server/services/passwordService";
 
 // Mock email service
 vi.mock("@/server/services/emailService", () => ({
@@ -253,7 +253,9 @@ describe("PasswordService", () => {
     });
 
     it("should send reset email", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       await passwordService.requestPasswordReset(testUserEmail);
 
@@ -296,7 +298,9 @@ describe("PasswordService", () => {
     });
 
     it("should handle email sending failures", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
       vi.mocked(emailService.sendPasswordResetEmail).mockRejectedValueOnce(
         new Error("Email send failed")
       );

@@ -163,7 +163,7 @@ model Seller {
   
   // Business Details
   businessName   String?
-  gstNumber      String? @unique
+  gstNumber      String?
   panNumber      String?
   
   // Status

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { categoryService } from "@/server/services/categoryService";
+import { categoryService } from "../../../../../server/services/categoryService";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;

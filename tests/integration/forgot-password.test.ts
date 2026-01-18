@@ -55,7 +55,7 @@ describe("Forgot Password Integration", () => {
   describe("Request Password Reset Flow", () => {
     it("should create reset token for valid email", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -70,7 +70,7 @@ describe("Forgot Password Integration", () => {
 
     it("should create token with password-reset: prefix in identifier", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -86,7 +86,7 @@ describe("Forgot Password Integration", () => {
 
     it("should send reset email to user", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -99,7 +99,7 @@ describe("Forgot Password Integration", () => {
 
     it("should return success even for non-existent email (security)", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.requestPasswordReset(
@@ -111,7 +111,7 @@ describe("Forgot Password Integration", () => {
 
     it("should not send email for non-existent user", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset("nonexistent@example.com");
@@ -127,7 +127,7 @@ describe("Forgot Password Integration", () => {
       });
 
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.requestPasswordReset(
@@ -152,7 +152,7 @@ describe("Forgot Password Integration", () => {
 
     it("should create token with 1-hour expiry", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const beforeRequest = Date.now();
@@ -173,7 +173,7 @@ describe("Forgot Password Integration", () => {
 
     it("should allow multiple reset requests", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -193,7 +193,7 @@ describe("Forgot Password Integration", () => {
     it("should reset password with valid token", async () => {
       const { token } = await createPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.resetPassword(token, newPassword);
@@ -204,7 +204,7 @@ describe("Forgot Password Integration", () => {
     it("should update password in database", async () => {
       const { token } = await createPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.resetPassword(token, newPassword);
@@ -221,7 +221,7 @@ describe("Forgot Password Integration", () => {
     it("should delete token after successful reset", async () => {
       const { token } = await createPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.resetPassword(token, newPassword);
@@ -236,7 +236,7 @@ describe("Forgot Password Integration", () => {
     it("should allow sign in with new password", async () => {
       const { token } = await createPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.resetPassword(token, newPassword);
@@ -253,7 +253,7 @@ describe("Forgot Password Integration", () => {
     it("should invalidate old password", async () => {
       const { token } = await createPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.resetPassword(token, newPassword);
@@ -269,7 +269,7 @@ describe("Forgot Password Integration", () => {
 
     it("should reject invalid token", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.resetPassword(
@@ -284,7 +284,7 @@ describe("Forgot Password Integration", () => {
     it("should reject expired token", async () => {
       const expiredToken = await createExpiredPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.resetPassword(
@@ -299,7 +299,7 @@ describe("Forgot Password Integration", () => {
     it("should clean up expired token", async () => {
       const expiredToken = await createExpiredPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.resetPassword(expiredToken, newPassword);
@@ -314,7 +314,7 @@ describe("Forgot Password Integration", () => {
     it("should not allow token reuse", async () => {
       const { token } = await createPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Use once
@@ -341,7 +341,7 @@ describe("Forgot Password Integration", () => {
       });
 
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.resetPassword(
@@ -367,12 +367,10 @@ describe("Forgot Password Integration", () => {
   describe("Security", () => {
     it("should not reveal if email exists", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
-      const result1 = await passwordService.requestPasswordReset(
-        testUserEmail
-      );
+      const result1 = await passwordService.requestPasswordReset(testUserEmail);
       const result2 = await passwordService.requestPasswordReset(
         "nonexistent@example.com"
       );
@@ -384,7 +382,7 @@ describe("Forgot Password Integration", () => {
 
     it("should generate cryptographically random tokens", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Generate multiple tokens
@@ -406,7 +404,7 @@ describe("Forgot Password Integration", () => {
     it("should hash password before storage", async () => {
       const { token } = await createPasswordResetToken(testUserId);
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.resetPassword(token, newPassword);
@@ -422,7 +420,7 @@ describe("Forgot Password Integration", () => {
 
     it("should expire tokens after 1 hour", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -442,7 +440,7 @@ describe("Forgot Password Integration", () => {
 
     it("should not expose user information in tokens", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -460,7 +458,7 @@ describe("Forgot Password Integration", () => {
   describe("Email Content", () => {
     it("should include reset link in email", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -475,7 +473,7 @@ describe("Forgot Password Integration", () => {
 
     it("should include valid token in email link", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -500,7 +498,7 @@ describe("Forgot Password Integration", () => {
       });
 
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(userWithName.email!);
@@ -514,9 +512,11 @@ describe("Forgot Password Integration", () => {
 
   describe("Error Handling", () => {
     it("should handle email sending failures", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       vi.spyOn(emailService, "sendPasswordResetEmail").mockRejectedValueOnce(
@@ -531,7 +531,7 @@ describe("Forgot Password Integration", () => {
 
     it("should handle database errors gracefully", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const mockFindUnique = prisma.user.findUnique;
@@ -549,7 +549,7 @@ describe("Forgot Password Integration", () => {
     it("should handle missing user gracefully", async () => {
       const { token } = await createPasswordResetToken("non-existent-user-id");
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // This should fail when trying to update non-existent user
@@ -567,7 +567,7 @@ describe("Forgot Password Integration", () => {
   describe("Complete Forgot Password Flow", () => {
     it("should complete full forgot password flow", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
       clearCapturedEmails();
 

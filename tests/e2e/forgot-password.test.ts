@@ -62,7 +62,7 @@ describe("Forgot Password E2E Flow", () => {
   describe("Complete Flow", () => {
     it("should complete full forgot password flow from start to finish", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // USER STORY: Complete Journey
@@ -155,7 +155,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should show success message after requesting reset", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.requestPasswordReset(testUserEmail);
@@ -171,7 +171,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should send email with reset link", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -193,7 +193,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should show success message after resetting password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
       const { token } = await createPasswordResetToken(testUserId);
 
@@ -209,7 +209,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should allow immediate sign-in with new password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -233,7 +233,7 @@ describe("Forgot Password E2E Flow", () => {
   describe("Error Scenarios", () => {
     it("should show error for invalid reset link", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // User clicks on invalid/tampered link
@@ -253,7 +253,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should show error for expired reset link", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Create expired token
@@ -275,7 +275,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should show error for weak new password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const weakPasswords = [
@@ -289,9 +289,7 @@ describe("Forgot Password E2E Flow", () => {
         const validation = passwordService.validatePassword(password);
 
         expect(validation.valid).toBe(false);
-        expect(validation.error?.toLowerCase()).toContain(
-          error.toLowerCase()
-        );
+        expect(validation.error?.toLowerCase()).toContain(error.toLowerCase());
 
         // In real app:
         // - Show error under password field
@@ -318,7 +316,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should prevent token reuse", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
       const { token } = await createPasswordResetToken(testUserId);
 
@@ -345,7 +343,7 @@ describe("Forgot Password E2E Flow", () => {
   describe("UI/UX Details", () => {
     it("should show password requirements in real-time", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // As user types, validate each character
@@ -403,7 +401,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should show loading state during submission", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
       const { token } = await createPasswordResetToken(testUserId);
 
@@ -432,7 +430,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should provide clear expiry information", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -457,13 +455,11 @@ describe("Forgot Password E2E Flow", () => {
   describe("Security Considerations", () => {
     it("should not reveal if email exists", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Request for existing email
-      const result1 = await passwordService.requestPasswordReset(
-        testUserEmail
-      );
+      const result1 = await passwordService.requestPasswordReset(testUserEmail);
 
       // Request for non-existing email
       const result2 = await passwordService.requestPasswordReset(
@@ -488,7 +484,7 @@ describe("Forgot Password E2E Flow", () => {
       });
 
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.requestPasswordReset(
@@ -514,7 +510,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should require valid token to reset password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Try to reset without token
@@ -530,7 +526,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should invalidate old password immediately", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.requestPasswordReset(testUserEmail);
@@ -559,7 +555,7 @@ describe("Forgot Password E2E Flow", () => {
   describe("Alternative Flows", () => {
     it("should allow user to request multiple reset links", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // User requests reset
@@ -611,7 +607,7 @@ describe("Forgot Password E2E Flow", () => {
   describe("Complete User Journey - Multiple Scenarios", () => {
     it("should handle user who requests reset but remembers password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // 1. User requests reset
@@ -645,7 +641,7 @@ describe("Forgot Password E2E Flow", () => {
 
     it("should handle user who clicks expired link then requests new one", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // 1. User has expired token
@@ -675,7 +671,10 @@ describe("Forgot Password E2E Flow", () => {
       const newToken = extractTokenFromLink(resetLink!);
 
       // 8. User resets password successfully
-      const result = await passwordService.resetPassword(newToken!, newPassword);
+      const result = await passwordService.resetPassword(
+        newToken!,
+        newPassword
+      );
       expect(result.success).toBe(true);
     });
   });

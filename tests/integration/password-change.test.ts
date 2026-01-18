@@ -42,7 +42,7 @@ describe("Password Change Integration", () => {
   describe("Success Flow", () => {
     it("should change password with valid credentials", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.changePassword(
@@ -57,7 +57,7 @@ describe("Password Change Integration", () => {
 
     it("should allow sign in with new password after change", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -77,7 +77,7 @@ describe("Password Change Integration", () => {
 
     it("should NOT allow sign in with old password after change", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -97,7 +97,7 @@ describe("Password Change Integration", () => {
 
     it("should hash password before storage", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -119,7 +119,7 @@ describe("Password Change Integration", () => {
 
     it("should allow multiple consecutive password changes", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // First change
@@ -151,7 +151,7 @@ describe("Password Change Integration", () => {
   describe("Validation", () => {
     it("should validate current password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.changePassword(
@@ -166,7 +166,7 @@ describe("Password Change Integration", () => {
 
     it("should enforce password strength requirements", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Test weak passwords
@@ -186,7 +186,7 @@ describe("Password Change Integration", () => {
 
     it("should accept strong passwords", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const strongPasswords = [
@@ -204,7 +204,7 @@ describe("Password Change Integration", () => {
 
     it("should return clear error messages", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Wrong current password
@@ -233,7 +233,7 @@ describe("Password Change Integration", () => {
       });
 
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.changePassword(
@@ -268,7 +268,7 @@ describe("Password Change Integration", () => {
   describe("Security", () => {
     it("should use bcrypt with 10 rounds", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -289,7 +289,7 @@ describe("Password Change Integration", () => {
 
     it("should not reveal old password in error messages", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.changePassword(
@@ -304,7 +304,7 @@ describe("Password Change Integration", () => {
 
     it("should not store password in plain text", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -357,7 +357,7 @@ describe("Password Change Integration", () => {
 
     it("should invalidate old password immediately", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       await passwordService.changePassword(
@@ -381,7 +381,7 @@ describe("Password Change Integration", () => {
   describe("Error Handling", () => {
     it("should handle non-existent user", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.changePassword(
@@ -396,7 +396,7 @@ describe("Password Change Integration", () => {
 
     it("should handle database errors gracefully", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Mock database error
@@ -420,7 +420,7 @@ describe("Password Change Integration", () => {
 
     it("should handle concurrent password changes", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const results = await Promise.allSettled([
@@ -440,7 +440,7 @@ describe("Password Change Integration", () => {
   describe("Password Validation Edge Cases", () => {
     it("should accept passwords with special characters", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = passwordService.validatePassword("P@ssw0rd!");
@@ -449,7 +449,7 @@ describe("Password Change Integration", () => {
 
     it("should accept passwords with spaces", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = passwordService.validatePassword("My Pass Word 123");
@@ -458,7 +458,7 @@ describe("Password Change Integration", () => {
 
     it("should reject very short passwords", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = passwordService.validatePassword("Aa1");
@@ -468,7 +468,7 @@ describe("Password Change Integration", () => {
 
     it("should accept exactly 8 character passwords if they meet requirements", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = passwordService.validatePassword("Pass1234");
@@ -477,7 +477,7 @@ describe("Password Change Integration", () => {
 
     it("should accept very long passwords", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const longPassword = "A".repeat(50) + "a1";
@@ -489,7 +489,7 @@ describe("Password Change Integration", () => {
   describe("Complete Flow", () => {
     it("should complete full password change flow", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // 1. Verify current password works

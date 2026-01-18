@@ -5,9 +5,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { cartService, CartService } from '@/server/services/cartService';
-import { cartRepository } from '@/server/repositories/cartRepository';
-import type { CartItem, ServerCart } from '@/server/domain/cart';
+import { cartService, CartService } from "../../server/services/cartService";
+import { cartRepository } from "../../server/repositories/cartRepository";
+import type { CartItem, ServerCart } from "../../server/domain/cart";
 
 // Mock the cart repository
 vi.mock('@/server/repositories/cartRepository', () => ({

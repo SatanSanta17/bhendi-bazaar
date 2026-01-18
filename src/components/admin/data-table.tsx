@@ -20,6 +20,7 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   totalPages: number;
   currentPage: number;
+  totalItems: number;
   onPageChange: (page: number) => void;
   onSort?: (key: string, order: "asc" | "desc") => void;
   isLoading?: boolean;
@@ -30,6 +31,7 @@ export function DataTable<T extends Record<string, any>>({
   columns,
   totalPages,
   currentPage,
+  totalItems,
   onPageChange,
   onSort,
   isLoading,
@@ -111,6 +113,9 @@ export function DataTable<T extends Record<string, any>>({
       <div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
         <div className="text-sm text-gray-700">
           Page {currentPage} of {totalPages}
+        </div>
+        <div className="text-sm text-gray-700">
+          Showing {data.length} of {totalItems} product(s)
         </div>
         <div className="flex gap-2">
           <button

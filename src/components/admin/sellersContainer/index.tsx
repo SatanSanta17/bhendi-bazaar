@@ -19,7 +19,6 @@ export function SellersContainer() {
     createSeller,
     updateSeller,
     deleteSeller,
-    toggleStatus,
     refetch,
   } = useSellers();
 
@@ -135,10 +134,6 @@ export function SellersContainer() {
     await deleteSeller(id);
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    await toggleStatus(id, currentStatus);
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -244,7 +239,6 @@ export function SellersContainer() {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onToggleStatus={handleToggleStatus}
         />
       )}
 

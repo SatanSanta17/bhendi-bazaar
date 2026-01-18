@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { passwordService } from "@/server/services/passwordService";
+import { passwordService } from "../../../../../server/services/passwordService";
 import {
   authRateLimit,
   getClientIp,

@@ -80,7 +80,7 @@ describe("Authentication Security", () => {
 
       it("should be single-use only", async () => {
         const { emailService } = await import(
-          "@/server/services/emailService"
+          "../../server/services/emailService"
         );
         const { token } = await createVerificationToken(testUserId);
 
@@ -157,7 +157,7 @@ describe("Authentication Security", () => {
 
       it("should be single-use only", async () => {
         const { passwordService } = await import(
-          "@/server/services/passwordService"
+          "../../server/services/passwordService"
         );
         const { token } = await createPasswordResetToken(testUserId);
 
@@ -259,12 +259,16 @@ describe("Authentication Security", () => {
 
     it("should invalidate old passwords immediately on change", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
       const oldPassword = "TestPassword123";
       const newPassword = "NewPassword456";
 
-      await passwordService.changePassword(testUserId, oldPassword, newPassword);
+      await passwordService.changePassword(
+        testUserId,
+        oldPassword,
+        newPassword
+      );
 
       const user = await prisma.user.findUnique({
         where: { id: testUserId },
@@ -292,7 +296,7 @@ describe("Authentication Security", () => {
   describe("Timing Attack Prevention", () => {
     it("should have consistent response time for existing vs non-existing emails in forgot password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Measure time for existing email
@@ -341,12 +345,10 @@ describe("Authentication Security", () => {
   describe("Information Disclosure Prevention", () => {
     it("should not reveal user existence in forgot password", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
-      const result1 = await passwordService.requestPasswordReset(
-        testUserEmail
-      );
+      const result1 = await passwordService.requestPasswordReset(testUserEmail);
       const result2 = await passwordService.requestPasswordReset(
         "nonexistent@example.com"
       );
@@ -363,7 +365,7 @@ describe("Authentication Security", () => {
       });
 
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const result = await passwordService.requestPasswordReset(
@@ -379,7 +381,7 @@ describe("Authentication Security", () => {
 
     it("should not expose password in error messages", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const wrongPassword = "WrongPassword123";
@@ -402,7 +404,9 @@ describe("Authentication Security", () => {
     });
 
     it("should not expose internal errors to users", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Mock database error
       const mockFindUnique = prisma.verificationToken.findUnique;
@@ -423,7 +427,9 @@ describe("Authentication Security", () => {
 
   describe("Token Expiry Enforcement", () => {
     it("should reject expired verification tokens", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Create expired token
       const expiredToken = await prisma.verificationToken.create({
@@ -442,7 +448,7 @@ describe("Authentication Security", () => {
 
     it("should reject expired password reset tokens", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Create expired reset token
@@ -464,7 +470,9 @@ describe("Authentication Security", () => {
     });
 
     it("should clean up expired tokens on verification attempt", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       const expiredToken = await prisma.verificationToken.create({
         data: {
@@ -488,7 +496,7 @@ describe("Authentication Security", () => {
   describe("Concurrent Request Security", () => {
     it("should handle concurrent password changes safely", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       const results = await Promise.allSettled([
@@ -524,7 +532,9 @@ describe("Authentication Security", () => {
     });
 
     it("should handle concurrent verification attempts safely", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
       const { token } = await createVerificationToken(testUserId);
 
       const results = await Promise.all([
@@ -555,7 +565,7 @@ describe("Authentication Security", () => {
   describe("Token Type Isolation", () => {
     it("should not accept verification token for password reset", async () => {
       const { passwordService } = await import(
-        "@/server/services/passwordService"
+        "../../server/services/passwordService"
       );
 
       // Create verification token (not password-reset)
@@ -571,7 +581,9 @@ describe("Authentication Security", () => {
     });
 
     it("should not accept password reset token for email verification", async () => {
-      const { emailService } = await import("@/server/services/emailService");
+      const { emailService } = await import(
+        "../../server/services/emailService"
+      );
 
       // Create password reset token
       const { token } = await createPasswordResetToken(testUserId);

@@ -5,8 +5,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { paymentService, PaymentService } from '@/server/services/paymentService';
-import { razorpayRepository } from '@/server/repositories/razorpayRepository';
+import {
+  paymentService,
+  PaymentService,
+} from "../../server/services/paymentService";
+import { razorpayRepository } from "../../server/repositories/razorpayRepository";
 import type {
   ServerPaymentOrder,
   CreatePaymentOrderInput,
@@ -14,7 +17,7 @@ import type {
   PaymentVerificationResult,
   WebhookVerificationResult,
   WebhookEvent,
-} from '@/server/domain/payment';
+} from "../../server/domain/payment";
 
 // Mock the razorpay repository
 vi.mock('@/server/repositories/razorpayRepository', () => ({

@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminOrderService } from "@/server/services/admin/orderService";
-import type { UpdateOrderStatusInput } from "@/server/domain/admin/order";
+import { adminOrderService } from "../../../../../../server/services/admin/orderService";
+import type { UpdateOrderStatusInput } from "../../../../../../server/domain/admin/order";
 
 export async function GET(
   _request: NextRequest,

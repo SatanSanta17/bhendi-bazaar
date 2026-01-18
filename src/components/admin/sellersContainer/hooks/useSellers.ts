@@ -30,9 +30,9 @@ export function useSellers() {
 
   const createSeller = async (data: CreateSellerInput) => {
     try {
-      await sellerService.createSeller(data);
+      const newSeller = await sellerService.createSeller(data);
       toast.success("Seller created successfully");
-      await loadSellers();
+      setSellers([...sellers, newSeller as SellerWithStats]);
     } catch (err: any) {
       toast.error(err.message || "Failed to create seller");
       throw err;
@@ -41,9 +41,16 @@ export function useSellers() {
 
   const updateSeller = async (id: string, data: Partial<CreateSellerInput>) => {
     try {
-      await sellerService.updateSeller(id, data);
+      const newSeller = (await sellerService.updateSeller(
+        id,
+        data
+      )) as SellerWithStats;
       toast.success("Seller updated successfully");
-      await loadSellers();
+      setSellers(
+        sellers.map((seller: SellerWithStats) =>
+          seller.id === id ? newSeller : seller
+        )
+      );
     } catch (err: any) {
       toast.error(err.message || "Failed to update seller");
       throw err;
@@ -54,21 +61,9 @@ export function useSellers() {
     try {
       await sellerService.deleteSeller(id);
       toast.success("Seller deleted successfully");
-      await loadSellers();
+      setSellers(sellers.filter((seller: SellerWithStats) => seller.id !== id));
     } catch (err: any) {
       toast.error(err.message || "Failed to delete seller");
-      throw err;
-    }
-  };
-
-  // ⭐ Changed: Use updateSeller with isActive instead of separate toggle
-  const toggleStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      await sellerService.updateSeller(id, { isActive: !currentStatus });
-      toast.success(`Seller ${!currentStatus ? "activated" : "deactivated"}`);
-      await loadSellers();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update seller status");
       throw err;
     }
   };
@@ -80,7 +75,6 @@ export function useSellers() {
     createSeller,
     updateSeller,
     deleteSeller,
-    toggleStatus,
     refetch: loadSellers,
   };
 }

@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { paymentService } from "@/server/services/paymentService";
-import type { VerifyPaymentInput } from "@/server/domain/payment";
+import { paymentService } from "../../../../../server/services/paymentService";
+import type { VerifyPaymentInput } from "../../../../../server/domain/payment";
 
 export async function POST(request: NextRequest) {
   try {

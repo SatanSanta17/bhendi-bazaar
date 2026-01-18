@@ -1,6 +1,6 @@
 // src/app/api/search/suggestions/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { productService } from "@/server/services/productService";
+import { productService } from "../../../../../server/services/productService";
 import { categories } from "@/data/categories";
 
 export async function GET(request: NextRequest) {
