@@ -6,11 +6,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminProductService } from "../../../../../server/services/admin/productService";
+import { productsService } from "@server/admin/services/products.service";
 import type {
   ProductFilters,
-  CreateProductInput,
-} from "../../../../../server/domain/admin/product";
+  ProductFormInput,
+} from "@/components/admin/products/types";
 import { ProductFlag } from "@/types/product";
 
 export async function GET(request: NextRequest) {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       sortOrder: (searchParams.get("sortOrder") as any) || "desc",
     };
 
-    const result = await adminProductService.getProducts(filters);
+    const result = await productsService.getProducts(filters);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch products:", error);
@@ -57,27 +57,25 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// export async function POST(request: NextRequest) {
-//   const session = await verifyAdminSession();
-//   if (session instanceof NextResponse) return session;
+export async function POST(request: NextRequest) {
+  const session = await verifyAdminSession();
+  if (session instanceof NextResponse) return session;
 
-//   try {
-//     const body = (await request.json()) as CreateProductInput;
-//     const product = await adminProductService.createProduct(
-//       body as CreateProductInput
-//     );
+  try {
+    const body = (await request.json()) as ProductFormInput;
+    const product = await productsService.createProduct(body);
 
-//     return NextResponse.json(product, { status: 201 });
-//   } catch (error) {
-//     console.error("Failed to create product:", error);
-//     return NextResponse.json(
-//       {
-//         error:
-//           error instanceof Error ? error.message : "Failed to create product",
-//       },
-//       { status: 400 }
-//     );
-//   }
-// }
+    return NextResponse.json(product, { status: 201 });
+  } catch (error) {
+    console.error("Failed to create product:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to create product",
+      },
+      { status: 400 }
+    );
+  }
+}
 
 

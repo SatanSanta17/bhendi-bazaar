@@ -4,7 +4,7 @@
  * These types are used exclusively on the server-side (services, repositories).
  */
 
-import { ProductFlag } from "../types/products";
+import { ProductFlag } from "@server/types";
 
 export type ProductId = string;
 export type CategorySlug = string;

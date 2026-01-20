@@ -6,7 +6,7 @@
 
 import { prisma } from "@/lib/prisma";
 import type { ServerProduct, ProductFilter } from "../domain/product";
-import { ProductFlag } from "../types/products";
+import { ProductFlag } from "@server/types";
 
 /**
  * Convert Prisma Product to ServerProduct

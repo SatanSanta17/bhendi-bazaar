@@ -1,5 +1,11 @@
 
-export enum ProductFlag {
+export interface Pagination {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  }
+  export enum ProductFlag {
     FEATURED = "FEATURED",
     HERO = "HERO",
     ON_OFFER = "ON_OFFER",

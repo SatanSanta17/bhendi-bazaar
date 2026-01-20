@@ -3,12 +3,12 @@
  * Create a new product
  */
 
-import { ProductForm } from "@/components/admin/product-form";
+import { ProductAddContainer } from "@/components/admin/products/productAdd";
 
 export default function NewProductPage() {
   return (
     <div className="max-w-5xl mx-auto">
-      <ProductForm />
+      <ProductAddContainer />
     </div>
   );
 }

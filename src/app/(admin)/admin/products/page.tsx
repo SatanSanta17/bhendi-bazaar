@@ -2,9 +2,12 @@
 
 import { Suspense } from "react";
 import { productsDAL } from "@/components/admin/products/products.dal";
-import { ProductsContainer } from "@/components/admin/products/productsContainer";
-import { ProductsTableSkeleton } from "@/components/admin/products/components/ProductsTableSkeleton";
+import { ProductsContainer } from "@/components/admin/products/productsList";
+import { ProductsTableSkeleton } from "@/components/admin/products/productsList/components/ProductsTableSkeleton";
 import type { Metadata } from "next";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 // ⚡ ISR - Revalidate every 5 minutes
 export const revalidate = 300;
@@ -40,6 +43,12 @@ export default async function ProductsPage({
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
+        <Button asChild>
+          <Link href="/admin/products/new">
+            <Plus className="w-4 h-4" />
+            New Product
+          </Link>
+        </Button>
       </div>
 
       {/* ⚡ Suspense for streaming */}

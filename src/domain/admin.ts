@@ -23,14 +23,6 @@ export type {
 } from "../../server/domain/admin/order";
 
 export type {
-  AdminProduct,
-  ProductFilters,
-  ProductListResult,
-  CreateProductInput,
-  UpdateProductInput,
-} from "../../server/domain/admin/product";
-
-export type {
   AdminCategory,
   CategoryListFilters,
   CategoryListResult,

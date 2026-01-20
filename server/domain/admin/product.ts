@@ -2,7 +2,7 @@
  * Admin Product Management Domain Types
  */
 
-import { ProductFlag } from "../../types/products";
+import { ProductFlag } from "@server/types";
 
 
 export interface ProductFilters {
@@ -52,45 +52,6 @@ export interface ProductListResult {
   page: number;
   limit: number;
   totalPages: number;
-}
-
-export interface CreateProductInput {
-  slug: string;
-  name: string;
-  description: string;
-  price: number;
-  salePrice?: number;
-  currency?: string;
-  sellerId?: string;
-  categoryId: string;
-  tags?: string[];
-  flags?: ProductFlag[];
-  images: string[];
-  thumbnail: string;
-  sizes?: string[];
-  colors?: string[];
-  stock: number;
-  sku?: string;
-  lowStockThreshold?: number;
-}
-
-export interface UpdateProductInput {
-  slug?: string;
-  name?: string;
-  description?: string;
-  price?: number;
-  salePrice?: number;
-  categoryId?: string;
-  sellerId?: string;
-  tags?: string[];
-  flags?: ProductFlag[];
-  images?: string[];
-  thumbnail?: string;
-  sizes?: string[];
-  colors?: string[];
-  stock?: number;
-  sku?: string;
-  lowStockThreshold?: number;
 }
 
 export interface ProductStats {

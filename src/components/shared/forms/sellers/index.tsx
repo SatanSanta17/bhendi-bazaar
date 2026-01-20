@@ -12,6 +12,7 @@ import type { Seller } from "@/domain/seller";
 import { SellerBasicFields } from "./SellerBasicFields";
 import { SellerLocationFields } from "./SellerLocationFields";
 import { SellerBusinessFields } from "./SellerBusinessFields";
+import { FormActions } from "../../button-groups/FormActions";
 
 interface SellerFormProps {
   seller?: Seller;
@@ -104,25 +105,24 @@ export function SellerForm({
       )}
 
       {/* Actions */}
-      <div className="flex justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          {readOnly ? "Close" : "Cancel"}
-        </Button>
-        {!readOnly && (
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? "Saving..."
-              : isEdit
-              ? "Update Seller"
-              : "Create Seller"}
+      {readOnly ? (
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Close
           </Button>
-        )}
-      </div>
+        </div>
+      ) : (
+        <FormActions
+          onCancel={onCancel}
+          submitLabel={isEdit ? "Update Seller" : "Create Seller"}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </form>
   );
 }

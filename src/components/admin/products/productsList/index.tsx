@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ProductsFilters } from "./components/ProductsFilters";
 import { ProductsTable } from "./components/ProductsTable";
 import { ProductsStats } from "./components/ProductsStats";
-import { useProducts } from "./useProducts";
+import { useProducts } from "../useProducts";
 import type { ProductStats, ProductFilters, ProductListResult } from "../types";
 
 interface ProductsContainerProps {
@@ -38,7 +38,6 @@ export function ProductsContainer({
   // ✅ Hook for mutations
   const { deleteProduct } = useProducts({
     onSuccess: () => {
-      // ⚡ Refresh server data after mutation
       router.refresh();
     }
   });

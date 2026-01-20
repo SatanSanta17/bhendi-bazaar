@@ -2,15 +2,18 @@
 
 import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
 import { FormInput, FormSelect, FormTextarea } from "../FormField";
-import type { CreateProductInput, AdminCategory } from "@/domain/admin";
+import type { AdminCategory } from "@/domain/admin";
+import type { ProductFormInput } from "@/components/admin/products/types";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { Seller } from "@/domain/seller";
 
 interface ProductBasicFieldsProps {
-  register: UseFormRegister<CreateProductInput>;
-  errors: FieldErrors<CreateProductInput>;
-  setValue: UseFormSetValue<CreateProductInput>;
+  register: UseFormRegister<ProductFormInput>;
+  errors: FieldErrors<ProductFormInput>;
+  setValue: UseFormSetValue<ProductFormInput>;
   categories: AdminCategory[];
+  readOnly?: boolean;
   onSlugManualEdit?: () => void;
 }
 
@@ -18,6 +21,7 @@ export function ProductBasicFields({
   register,
   errors,
   categories,
+  readOnly = false,
   onSlugManualEdit,
 }: ProductBasicFieldsProps) {
   const router = useRouter();
@@ -35,6 +39,7 @@ export function ProductBasicFields({
           label="Product Name"
           required
           placeholder="e.g., Velvet Embroidered Kurta"
+          disabled={readOnly}
           {...register("name", { required: "Product name is required" })}
           error={errors.name?.message}
         />
@@ -42,6 +47,7 @@ export function ProductBasicFields({
         <FormInput
           label="Slug (URL)"
           required
+          disabled={readOnly}
           placeholder="e.g., velvet-embroidered-kurta"
           {...register("slug", { required: "Slug is required" })}
           error={errors.slug?.message}
@@ -55,6 +61,7 @@ export function ProductBasicFields({
           <FormTextarea
             label="Description"
             required
+            disabled={readOnly}
             placeholder="Detailed product description..."
             rows={4}
             {...register("description", { required: "Description is required" })}
@@ -66,6 +73,7 @@ export function ProductBasicFields({
           <FormSelect
             label="Category"
             required
+            disabled={readOnly}
             {...register("categoryId", { required: "Category is required" })}
             error={errors.categoryId?.message}
           >
@@ -90,6 +98,7 @@ export function ProductBasicFields({
         <FormInput
           label="SKU"
           placeholder="e.g., VEK-001"
+          disabled={readOnly}
           {...register("sku")}
           hint="Optional"
         />

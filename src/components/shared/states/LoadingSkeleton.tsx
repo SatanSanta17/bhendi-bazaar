@@ -36,7 +36,6 @@ export function LoadingSkeleton({
   );
 }
 
-// Specialized variants
 export function ProductCardSkeleton() {
   return (
     <div className="space-y-3">
@@ -52,7 +51,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
+        {[...Array(rows)].map((_, i) => (
           <div key={i} className="h-16 bg-gray-200 animate-pulse rounded-lg" />
         ))}
       </div>
@@ -81,6 +80,18 @@ export function PaginationSkeleton() {
             key={i}
             className="w-10 h-10 bg-gray-200 animate-pulse rounded"
           />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function StatsSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="flex gap-4">
+        {[...Array(count)].map((_, i) => (
+          <div key={i} className="flex-1 h-24 bg-gray-200 animate-pulse rounded-lg" />
         ))}
       </div>
     </div>
