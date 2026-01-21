@@ -12,41 +12,44 @@ import type { Seller } from "@/domain/seller";
 import { ProductForm } from "@/components/shared/forms/product";
 import { sellerService } from "@/services/admin/sellerService";
 import { useProducts } from "../useProducts";
+import type { ProductDetails } from "../types";
 
-export function ProductAddContainer() {
+export function ProductEditContainer({ product }: { product: ProductDetails }) {
     const router = useRouter();
     const [categories, setCategories] = useState<AdminCategory[]>([]);
     const [sellers, setSellers] = useState<Seller[]>([]);
-    
-    const { createProduct, isLoading, error, successMessage } = useProducts();
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const { updateProduct, isLoading, error, successMessage } = useProducts();
 
     // Load categories and sellers
     useEffect(() => {
-        loadCategories();
-        loadSellers();
+        loadData();
     }, []);
 
-    const loadCategories = async () => {
+    const loadData = async () => {
         try {
-            const result = await adminCategoryService.getCategories({ limit: 100 });
-            setCategories(result.categories);
+            const [categoriesResult, sellersResult] = await Promise.all([
+                adminCategoryService.getCategories({ limit: 100 }),
+                sellerService.getSellers()
+            ]);
+            
+            setCategories(categoriesResult.categories);
+            setSellers(sellersResult.filter((s: Seller) => s.isActive));
+            setIsDataLoaded(true);
         } catch (error) {
-            console.error("Failed to load categories:", error);
-        }
-    };
-
-    const loadSellers = async () => {
-        try {
-            const result = await sellerService.getSellers();
-            setSellers(result.filter((s: Seller) => s.isActive));
-        } catch (error) {
-            console.error("Failed to load sellers:", error);
+            console.error("Failed to load data:", error);
         }
     };
 
     const handleCancel = () => {
         router.push("/admin/products");
     };
+
+    // Don't render form until data is loaded
+    if (!isDataLoaded) {
+        return <div className="p-8 text-center">Loading...</div>;
+    }
+
 
     return (
         <div className="space-y-8">
@@ -61,11 +64,8 @@ export function ProductAddContainer() {
                     </Link>
                     <div>
                         <h1 className="text-3xl font-heading font-bold text-gray-900">
-                            Create New Product
+                            Edit Product: {product.name}
                         </h1>
-                        <p className="text-gray-600 mt-1">
-                            Add a new product to your catalog
-                        </p>
                     </div>
                 </div>
             </div>
@@ -85,9 +85,10 @@ export function ProductAddContainer() {
             )}
 
             <ProductForm
+                product={product}
                 categories={categories}
                 sellers={sellers}
-                onSubmit={createProduct}
+                onSubmit={updateProduct}
                 onCancel={handleCancel}
                 isSubmitting={isLoading}
                 readOnly={false}

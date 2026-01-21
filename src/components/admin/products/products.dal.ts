@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 import { productsService } from "@server/admin/services/products.service";
-import type { ProductFilters, ProductForTable, ProductStats } from "./types";
+import type { ProductDetails, ProductFilters, ProductForTable, ProductStats } from "./types";
 import type { Pagination } from "@/types/shared";
 import { ProductFlag } from "@/types/shared";
 
@@ -38,6 +38,44 @@ class ProductsDAL {
       outOfStockProducts: stats.outOfStockProducts,
       featuredProducts: stats.featuredProducts,
       totalInventoryValue: stats.totalInventoryValue,
+    };
+  });
+
+  getProductById = cache(async (id: string): Promise<ProductDetails> => {
+    const product = await productsService.getProductById({ id });
+    if (!product) {
+      throw new Error("Product not found");
+    }
+    return {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      salePrice: product.salePrice ?? undefined,
+      currency: product.currency,
+      category: product.category,
+      tags: product.tags,
+      flags: product.flags as ProductFlag[],
+      sku: product.sku ?? undefined,
+      stock: product.stock,
+      lowStockThreshold: product.lowStockThreshold,
+      images: product.images,
+      thumbnail: product.thumbnail,
+      sizes: product.sizes,
+      colors: product.colors,
+      seller: {
+        id: product.seller.id,
+        name: product.seller.name,
+        code: product.seller.code,
+        defaultPincode: product.seller.defaultPincode,
+        defaultCity: product.seller.defaultCity,
+        defaultAddress: product.seller.defaultAddress ?? "",
+      },
+      shippingFromPincode: product.shippingFromPincode ?? "",
+      shippingFromCity: product.shippingFromCity ?? "",
+      shippingFromLocation: product.shippingFromLocation ?? "",
+      createdAt: product.createdAt,
     };
   });
 }

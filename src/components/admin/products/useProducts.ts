@@ -1,7 +1,7 @@
 // components/admin/productsContainer/hooks/useProducts.ts
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ProductsService } from "./productsService";
 import type { ProductFormInput } from "./types";
@@ -16,7 +16,7 @@ export function useProducts(options?: UseProductsOptions) {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const productsService = new ProductsService();
-  
+  const params = useParams();
 
   /**
    * Create Product
@@ -66,7 +66,35 @@ export function useProducts(options?: UseProductsOptions) {
     }
   };
 
+  const updateProduct = async (data: ProductFormInput) => {
+    const id = params.id as string;
+    setError(null);
+    setSuccessMessage(null);
+    setIsLoading(true);
+    try {
+      const product = await productsService.updateProduct(id as string, data);
+      const successMsg = "Product updated successfully!";
+      setSuccessMessage(successMsg);
+      toast.success(successMsg);
 
+      // Navigate back after a short delay
+      setTimeout(() => {
+        router.push("/admin/products");
+        router.refresh(); // Refresh server cache
+      }, 1000);
+
+      options?.onSuccess?.();
+      return product;
+    }
+    catch (err: any) {
+      const errorMsg = err.message || "Failed to update product";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const deleteProduct = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) {
@@ -93,7 +121,7 @@ export function useProducts(options?: UseProductsOptions) {
     // Mutations
     createProduct,
     deleteProduct,
-
+    updateProduct,
     // State
     isLoading,
     error,

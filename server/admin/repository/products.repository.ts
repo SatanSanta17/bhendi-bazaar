@@ -33,6 +33,19 @@ const PRODUCT_LIST_SELECT = {
     },
 } satisfies Prisma.ProductSelect;
 
+const PRODUCT_DETAILS_SELECT = {
+    ...PRODUCT_LIST_SELECT,
+    slug: true,
+    description: true,
+    tags: true,
+    images: true,
+    sizes: true,
+    colors: true,
+    shippingFromPincode: true,
+    shippingFromCity: true,
+    shippingFromLocation: true,
+} satisfies Prisma.ProductSelect;
+
 export class ProductsRepository {
     /**
      * Get paginated list of products with filters
@@ -170,6 +183,12 @@ export class ProductsRepository {
         return product
     }
 
+    async getProductById(id: string) {
+        return await prisma.product.findUnique({
+            where: { id },
+            select: PRODUCT_DETAILS_SELECT,
+        });
+    }
 
     /**
      * Delete product
@@ -218,6 +237,17 @@ export class ProductsRepository {
             featuredProducts,
             totalInventoryValue,
         };
+    }
+
+    async updateProduct(id: string, data: ProductFormInput) {
+        const product = await prisma.product.update({
+            where: { id },
+            data,
+        });
+        if (!product) {
+            throw new Error("Product not found");
+        }
+        return product;
     }
 
 }

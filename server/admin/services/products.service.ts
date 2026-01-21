@@ -19,6 +19,22 @@ export class ProductsService {
   async createProduct(data: ProductFormInput) {
     return await productsRepository.createProduct(data);
   }
+
+  async getProductById({ id }: { id: string }) {
+    const product = await productsRepository.getProductById(id);
+    if (!product) {
+      throw new Error("Product not found");
+    }
+    return product;
+  }
+
+  async updateProduct(id: string, data: ProductFormInput) {
+    const product = await productsRepository.updateProduct(id, data);
+    if (!product) {
+      throw new Error("Product not found");
+    }
+    return product;
+  }
 }
 
 export const productsService = new ProductsService();

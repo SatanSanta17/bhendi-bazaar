@@ -31,11 +31,12 @@ export function ProductForm({
   product,
   categories,
   sellers,
-  onSubmit: createProduct,
+  onSubmit,
   onCancel,
   isSubmitting,
   readOnly = false,
 }: ProductFormProps) {
+
   const isEdit = !!product;
 
 
@@ -87,7 +88,7 @@ export function ProductForm({
   }, [imagesValue, setValue, product?.thumbnail]);
 
   return (
-    <form onSubmit={handleSubmit(createProduct)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Basic Information */}
       <ProductBasicFields
         register={register}
