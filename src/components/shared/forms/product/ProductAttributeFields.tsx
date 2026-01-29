@@ -21,7 +21,6 @@ export function ProductAttributeFields({ control, readOnly = false }: ProductAtt
         <FormController
           name="sizes"
           control={control}
-          label="Sizes"
           disabled={readOnly}
           render={(field) => (
             <MultiSelect
@@ -36,7 +35,6 @@ export function ProductAttributeFields({ control, readOnly = false }: ProductAtt
         <FormController
           name="colors"
           control={control}
-          label="Colors"
           disabled={readOnly}
           render={(field) => (
             <MultiSelect
@@ -51,7 +49,6 @@ export function ProductAttributeFields({ control, readOnly = false }: ProductAtt
         <FormController
           name="tags"
           control={control}
-          label="Tags"
           disabled={readOnly}
           render={(field) => (
             <MultiSelect

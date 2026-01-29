@@ -78,6 +78,8 @@ function validateCartItem(item: any): CartItem | null {
       quantity: item.quantity,
       size: item.size,
       color: item.color,
+      shippingFromPincode: item.shippingFromPincode,
+      seller: item.seller,
     };
   } catch (error) {
     console.warn("[Cart] Invalid item during validation:", error);

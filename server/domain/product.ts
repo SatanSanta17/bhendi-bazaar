@@ -6,18 +6,15 @@
 
 import { ProductFlag } from "@server/types";
 
-export type ProductId = string;
-export type CategorySlug = string;
-
 export interface ServerProduct {
-  id: ProductId;
+  id: string;
   slug: string;
   name: string;
   description: string;
   price: number;
   salePrice: number | null;
   currency: "INR";
-  categorySlug: CategorySlug;
+  categorySlug: string;
   tags: string[];
   flags: ProductFlag[];
   rating: number;
@@ -30,10 +27,20 @@ export interface ServerProduct {
   lowStockThreshold: number;
   createdAt: Date;
   updatedAt: Date;
+  seller: {
+    id: string;
+    name: string;
+    code: string;
+    defaultPincode: string;
+    defaultCity: string;
+    defaultState: string;
+    defaultAddress: string;
+  };
+  shippingFromPincode: string;
 }
 
 export interface ProductFilter {
-  categorySlug?: CategorySlug;
+  categorySlug?: string;
   search?: string;
   minPrice?: number;
   maxPrice?: number;

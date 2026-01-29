@@ -14,7 +14,7 @@ export function SimilarProducts({ products }: SimilarProductsProps) {
       <SectionHeader overline="Pieces from nearby lanes" title="Similar" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.id} {...product} />
         ))}
       </div>
     </section>

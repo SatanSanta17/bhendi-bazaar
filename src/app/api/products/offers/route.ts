@@ -5,14 +5,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { productService } from "../../../../../server/services/productService";
+import { productService } from "@server/services/productService";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const limit = searchParams.has("limit")
       ? parseInt(searchParams.get("limit")!, 10)
-      : undefined;
+      : 10;
 
     const products = await productService.getOfferProducts(limit);
     return NextResponse.json(products);

@@ -8,11 +8,7 @@ import { StockStatus } from "@/components/shared/StockStatus";
 import { ProductActions } from "@/components/shared/button-groups/ProductActions";
 import { useProductActions } from "@/hooks/product/useProductActions";
 
-interface ProductDetailsProps {
-  product: Product;
-}
-
-export function ProductDetails({ product }: ProductDetailsProps) {
+export function ProductDetails(product: Product) {
   const {
     handleAddToCart,
     handleBuyNow,

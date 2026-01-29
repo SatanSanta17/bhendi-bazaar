@@ -1,7 +1,7 @@
 // app/(admin)/admin/products/page.tsx
 
 import { Suspense } from "react";
-import { productsDAL } from "@/components/admin/products/products.dal";
+import { productsDAL } from "@/data-access-layer/admin/products.dal";
 import { ProductsContainer } from "@/components/admin/products/productsList";
 import { ProductsTableSkeleton } from "@/components/admin/products/productsList/components/ProductsTableSkeleton";
 import type { Metadata } from "next";

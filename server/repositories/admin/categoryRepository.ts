@@ -11,7 +11,7 @@ import type {
   UpdateCategoryInput,
 } from "../../domain/admin/category";
 
-export class AdminCategoryRepository {
+class AdminCategoryRepository {
   /**
    * Get paginated list of categories with filters
    */

@@ -14,7 +14,7 @@ export interface Product {
   description: string;
   price: number;
   salePrice?: number;
-  currency: "INR";
+  currency: string;
   categorySlug: string;
   tags: string[];
   flags?: ProductFlag[];
@@ -27,6 +27,16 @@ export interface Product {
   options?: {
     sizes?: string[];
     colors?: string[];
+  };
+  shippingFromPincode: string;
+  seller: {
+    id: string;
+    name: string;
+    code: string;
+    defaultPincode: string;
+    defaultCity: string;
+    defaultState: string;
+    defaultAddress: string;
   };
 }
 

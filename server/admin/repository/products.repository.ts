@@ -29,7 +29,7 @@ const PRODUCT_LIST_SELECT = {
         select: { id: true, name: true },
     },
     seller: {
-        select: { id: true, name: true, code: true, defaultPincode: true, defaultCity: true, defaultAddress: true },
+        select: { id: true, name: true, code: true, defaultPincode: true, defaultCity: true, defaultState: true, defaultAddress: true },
     },
 } satisfies Prisma.ProductSelect;
 

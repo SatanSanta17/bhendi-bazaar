@@ -2,11 +2,11 @@
 
 import { PriceDisplay } from "@/components/shared/PriceDisplay";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { CartItem } from "@/domain/cart";
 import { Truck } from "lucide-react";
+import type { CheckoutItem } from "../types";
 
 interface CheckoutSummaryProps {
-  items: CartItem[];
+  items: CheckoutItem[];
   subtotal: number; // Sum of all original prices
   discount: number; // Total savings
   total: number; // Final total including shipping

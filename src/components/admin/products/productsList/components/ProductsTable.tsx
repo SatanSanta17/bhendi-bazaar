@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Eye, Trash2 } from "lucide-react";
 import { DataTable, Column } from "@/components/admin/data-table";
 import { PriceDisplay } from "@/components/shared/PriceDisplay";
 import { StockBadge } from "@/components/shared/badges/StatusBadge";
@@ -121,6 +121,13 @@ export function ProductsTable({
       label: "Actions",
       render: (product) => (
         <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/products/${product.id}`}
+            className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+            title="View product"
+          >
+            <Eye className="w-4 h-4" />
+          </Link>
           <Link
             href={`/admin/products/${product.id}/edit`}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

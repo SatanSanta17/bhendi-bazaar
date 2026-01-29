@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { PriceDisplay } from "./PriceDisplay";
 import { StockStatus } from "./StockStatus";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard(product: Product) {
   return (
     <Link href={`/product/${product.slug}`}>
       <Card className="group overflow-hidden transition-all hover:-translate-y-1 hover:shadow-md">
@@ -29,7 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
         {/* Content */}
         <div className="space-y-2 p-4">
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-muted-foreground/80">
-            {product.categorySlug.replace("-", " ")}
+            {product.categorySlug?.replace("-", " ")}
           </p>
           <h3 className="line-clamp-2 font-heading text-sm font-semibold tracking-tight">
             {product.name}

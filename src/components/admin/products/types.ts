@@ -54,7 +54,7 @@ export interface ProductDetails {
   thumbnail: string;
   sizes: string[];
   colors: string[];
-  seller: { id: string; name: string; code: string; defaultPincode: string; defaultCity: string; defaultAddress: string };
+  seller: { id: string; name: string; code: string; defaultPincode: string; defaultCity: string; defaultState: string; defaultAddress: string };
   shippingFromPincode: string;
   shippingFromCity: string;
   shippingFromLocation: string;

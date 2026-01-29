@@ -11,9 +11,7 @@ export default function CheckoutPage() {
         title="Finalise your Bhendi Bazaar order"
       />
 
-      {/* <div className="grid gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]"> */}
       <CheckoutContainer />
-      {/* </div> */}
     </div>
   );
 }

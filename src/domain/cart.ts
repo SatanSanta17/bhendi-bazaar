@@ -17,6 +17,16 @@ export interface CartItem {
   quantity: number;
   size?: string;
   color?: string;
+  shippingFromPincode: string;
+  seller: {
+    id: string;
+    name: string;
+    code: string;
+    defaultPincode: string;
+    defaultCity: string;
+    defaultState: string;
+    defaultAddress: string;
+  };
 }
 
 export interface CartTotals {

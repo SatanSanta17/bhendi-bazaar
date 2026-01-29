@@ -44,13 +44,13 @@ export function CheckoutContainer() {
   useEffect(() => {
     if (checkout.selectedAddress) {
       fetchRates({
-        fromPincode: checkout.selectedAddress.pincode,
+        fromPincode: checkoutItems.find((item) => item.shippingFromPincode)?.shippingFromPincode ?? checkout.selectedAddress.pincode,
         toPincode: checkout.selectedAddress.pincode,
         weight: calculateCartWeight(checkoutItems),
         cod: false,
       });
     }
-  }, [checkout.selectedAddress]);
+  }, [checkout.selectedAddress, checkoutItems]);
 
   const { profile, updateAddresses } = useProfileContext(); // ✅ Changed from useProfile
 
@@ -72,6 +72,8 @@ export function CheckoutContainer() {
                 price: product.price,
                 salePrice: product.salePrice,
                 quantity: 1,
+                shippingFromPincode: product.shippingFromPincode ?? product.seller.defaultPincode,
+                seller: product.seller,
               },
             ]);
           } else {

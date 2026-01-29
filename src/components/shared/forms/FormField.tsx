@@ -16,7 +16,7 @@ import {
 } from "react-hook-form";
 
 interface FormFieldProps {
-  label: string;
+  label?: string;
   required?: boolean;
   error?: string;
   hint?: string;
@@ -107,7 +107,7 @@ export function FormSelect({
 interface FormControllerProps<T extends FieldValues> {
   name: Path<T>;
   control: Control<T>;
-  label: string;
+  label?: string;
   required?: boolean;
   error?: string;
   hint?: string;

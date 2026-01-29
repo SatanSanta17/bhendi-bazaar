@@ -4,31 +4,31 @@
  * This service encapsulates all business logic related to products.
  */
 
-import { productRepository } from "../repositories/productRepository";
-import type { ServerProduct, ProductFilter } from "../domain/product";
+import { productsRepository } from "@server/repositories/products.repository";
+import type { ProductFilter } from "../domain/product";
 
 export class ProductService {
   /**
    * Get all products with optional filtering
    */
-  async getProducts(filter?: ProductFilter): Promise<ServerProduct[]> {
+  async getProducts(filter: ProductFilter) {
     // Validate filter
     if (filter) {
       this.validateFilter(filter);
     }
 
-    return await productRepository.list(filter);
+    return await productsRepository.getProducts(filter);
   }
 
   /**
    * Get a single product by slug
    */
-  async getProductBySlug(slug: string): Promise<ServerProduct | null> {
+  async getProductBySlug(slug: string) {
     if (!slug || typeof slug !== "string") {
       throw new Error("Invalid product slug");
     }
 
-    return await productRepository.findBySlug(slug);
+    return await productsRepository.getProductBySlug(slug);
   }
 
   /**
@@ -37,7 +37,7 @@ export class ProductService {
   async getSimilarProducts(
     slug: string,
     limit = 4
-  ): Promise<ServerProduct[]> {
+  ) {
     if (!slug || typeof slug !== "string") {
       throw new Error("Invalid product slug");
     }
@@ -46,29 +46,29 @@ export class ProductService {
       throw new Error("Limit must be between 1 and 20");
     }
 
-    return await productRepository.findSimilar(slug, limit);
+    return await productsRepository.getSimilarProducts(slug, limit);
   }
 
   /**
    * Get hero/featured products for homepage
    */
-  async getHeroProducts(limit = 6): Promise<ServerProduct[]> {
+  async getHeroProducts(limit = 6) {
     if (limit < 1 || limit > 20) {
       throw new Error("Limit must be between 1 and 20");
     }
 
-    return await productRepository.getHeroProducts(limit);
+    return await productsRepository.getHeroProducts(limit);
   }
 
   /**
    * Get products on offer
    */
-  async getOfferProducts(limit?: number): Promise<ServerProduct[]> {
+  async getOfferProducts(limit: number) {
     if (limit !== undefined && (limit < 1 || limit > 50)) {
       throw new Error("Limit must be between 1 and 50");
     }
 
-    return await productRepository.getOfferProducts(limit);
+    return await productsRepository.getOfferProducts(limit);
   }
 
   /**
@@ -77,7 +77,7 @@ export class ProductService {
   async searchProducts(
     query: string,
     limit = 20
-  ): Promise<ServerProduct[]> {
+  ) {
     if (!query || typeof query !== "string") {
       return [];
     }
@@ -86,7 +86,7 @@ export class ProductService {
       throw new Error("Search query must be at least 2 characters");
     }
 
-    return await productRepository.list({
+    return await productsRepository.getProducts({
       search: query,
       limit,
     });

@@ -1,16 +1,15 @@
 // components/shared/forms/product/ProductSellerShippingFields.tsx
 
 import { UseFormRegister, FieldErrors, UseFormWatch } from "react-hook-form";
-import { FormInput, FormSelect, FormTextarea } from "../FormField";
-import { Plus, Info } from "lucide-react";
+import { FormInput, FormSelect } from "../FormField";
+import { Info } from "lucide-react";
 import type { ProductFormInput } from "@/components/admin/products/types";
-import type { Seller } from "@/domain/seller";
 
 interface ProductSellerShippingFieldsProps {
   register: UseFormRegister<ProductFormInput>;
   errors: FieldErrors<ProductFormInput>;
   watch: UseFormWatch<ProductFormInput>;
-  sellers: Seller[];
+  sellers?: { id: string; name: string; code: string; defaultPincode: string; defaultCity: string; defaultState: string; defaultAddress: string }[];
   readOnly?: boolean;
 }
 
@@ -22,7 +21,7 @@ export function ProductSellerShippingFields({
   readOnly = false,
 }: ProductSellerShippingFieldsProps) {
   const selectedSellerId = watch("sellerId");
-  const selectedSeller = sellers.find((s) => s.id === selectedSellerId);
+  const selectedSeller = sellers?.find((s) => s.id === selectedSellerId);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -46,7 +45,7 @@ export function ProductSellerShippingFields({
             disabled={readOnly}
           >
             <option value="">Select a seller</option>
-            {sellers.map((seller) => (
+            {sellers?.map((seller) => (
               <option key={seller.id} value={seller.id}>
                 {seller.name} ({seller.code})
               </option>
@@ -54,7 +53,7 @@ export function ProductSellerShippingFields({
           </FormSelect>
 
           {/* Show seller's default location */}
-          {selectedSeller && (
+          {selectedSeller && !watch("shippingFromPincode") && (
             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -88,11 +87,13 @@ export function ProductSellerShippingFields({
 
         {/* Override Shipping Location */}
         <div className="space-y-4">
+          {!watch("shippingFromPincode") && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="text-sm text-amber-800">
-              <strong>Note:</strong> Only fill these fields if this product ships from a different location than the seller's default address.
-            </p>
-          </div>
+              <p className="text-sm text-amber-800">
+                <strong>Note:</strong> Only fill these fields if this product ships from a different location than the seller's default address.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput

@@ -21,7 +21,6 @@ export function ProductFlagsFields({ control, readOnly = false }: ProductFlagsFi
         <FormController
           name="flags"
           control={control}
-          label="Product Flags"
           disabled={readOnly}
           render={({ field }) => {
             const currentFlags = (field.value as ProductFlag[]) || [];

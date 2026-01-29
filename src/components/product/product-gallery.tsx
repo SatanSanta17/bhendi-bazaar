@@ -5,11 +5,7 @@ import type { Product } from "@/domain/product";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface ProductGalleryProps {
-  product: Product;
-}
-
-export function ProductGallery({ product }: ProductGalleryProps) {
+export function ProductGallery(product: Product) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);

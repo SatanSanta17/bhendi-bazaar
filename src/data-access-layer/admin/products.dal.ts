@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 import { productsService } from "@server/admin/services/products.service";
-import type { ProductDetails, ProductFilters, ProductForTable, ProductStats } from "./types";
+import type { ProductDetails, ProductFilters, ProductForTable, ProductStats } from "@/components/admin/products/types";
 import type { Pagination } from "@/types/shared";
 import { ProductFlag } from "@/types/shared";
 
@@ -70,6 +70,7 @@ class ProductsDAL {
         code: product.seller.code,
         defaultPincode: product.seller.defaultPincode,
         defaultCity: product.seller.defaultCity,
+        defaultState: product.seller.defaultState,
         defaultAddress: product.seller.defaultAddress ?? "",
       },
       shippingFromPincode: product.shippingFromPincode ?? "",

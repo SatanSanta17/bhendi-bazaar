@@ -12,15 +12,13 @@ import { ProductInventoryFields } from "./ProductInventoryFields";
 import { ProductAttributeFields } from "./ProductAttributeFields";
 import { ProductFlagsFields } from "./ProductFlagsFields";
 import { ProductSellerShippingFields } from "./ProductSellerShippingFields";
-import type { AdminCategory } from "@/domain/admin";
-import type { Seller } from "@/domain/seller";
 import { FormActions } from "../../button-groups/FormActions";
 import type { ProductFormInput, ProductDetails } from "@/components/admin/products/types";
 import { useFormPersist } from "@/hooks/forms/useFormPersist";
 interface ProductFormProps {
   product?: ProductDetails;
-  categories: AdminCategory[];
-  sellers: Seller[];
+  categories?: { id: string; name: string }[];
+  sellers?: { id: string; name: string; code: string; defaultPincode: string; defaultCity: string; defaultState: string; defaultAddress: string }[];
   onSubmit: (data: ProductFormInput) => Promise<ProductDetails | null | undefined>;
   onCancel: () => void;
   isSubmitting?: boolean;

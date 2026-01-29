@@ -2,47 +2,22 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { adminCategoryService } from "@/services/admin/categoryService";
-import type { AdminCategory } from "@/domain/admin";
-import type { Seller } from "@/domain/seller";
 import { ProductForm } from "@/components/shared/forms/product";
-import { sellerService } from "@/services/admin/sellerService";
 import { useProducts } from "../useProducts";
 
-export function ProductAddContainer() {
+
+interface ProductAddContainerProps {
+    categories: { id: string; name: string }[];
+    sellers: { id: string; name: string; code: string; defaultPincode: string; defaultCity: string; defaultState: string; defaultAddress: string }[];
+}
+
+export function ProductAddContainer({ categories, sellers }: ProductAddContainerProps) {
     const router = useRouter();
-    const [categories, setCategories] = useState<AdminCategory[]>([]);
-    const [sellers, setSellers] = useState<Seller[]>([]);
-    
+
     const { createProduct, isLoading, error, successMessage } = useProducts();
-
-    // Load categories and sellers
-    useEffect(() => {
-        loadCategories();
-        loadSellers();
-    }, []);
-
-    const loadCategories = async () => {
-        try {
-            const result = await adminCategoryService.getCategories({ limit: 100 });
-            setCategories(result.categories);
-        } catch (error) {
-            console.error("Failed to load categories:", error);
-        }
-    };
-
-    const loadSellers = async () => {
-        try {
-            const result = await sellerService.getSellers();
-            setSellers(result.filter((s: Seller) => s.isActive));
-        } catch (error) {
-            console.error("Failed to load sellers:", error);
-        }
-    };
 
     const handleCancel = () => {
         router.push("/admin/products");

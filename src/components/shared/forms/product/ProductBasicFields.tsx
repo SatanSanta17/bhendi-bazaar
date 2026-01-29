@@ -2,17 +2,15 @@
 
 import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
 import { FormInput, FormSelect, FormTextarea } from "../FormField";
-import type { AdminCategory } from "@/domain/admin";
 import type { ProductFormInput } from "@/components/admin/products/types";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { Seller } from "@/domain/seller";
 
 interface ProductBasicFieldsProps {
   register: UseFormRegister<ProductFormInput>;
   errors: FieldErrors<ProductFormInput>;
   setValue: UseFormSetValue<ProductFormInput>;
-  categories: AdminCategory[];
+  categories?: { id: string; name: string }[];
   readOnly?: boolean;
   onSlugManualEdit?: () => void;
 }
@@ -78,7 +76,7 @@ export function ProductBasicFields({
             error={errors.categoryId?.message}
           >
             <option value="">Select a category</option>
-            {categories.map((cat) => (
+            {categories?.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
@@ -87,9 +85,10 @@ export function ProductBasicFields({
           
           {/* Add Category Button */}
           <button
+            disabled={readOnly}
             type="button"
             onClick={handleAddCategory}
-            className="mt-2 w-full px-3 py-2 text-sm border border-dashed border-emerald-500 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
+            className="mt-2 w-full px-3 py-2 text-sm border disabled:opacity-50 disabled:cursor-not-allowed border-dashed border-emerald-500 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add New Category

@@ -2,54 +2,26 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { adminCategoryService } from "@/services/admin/categoryService";
-import type { AdminCategory } from "@/domain/admin";
-import type { Seller } from "@/domain/seller";
 import { ProductForm } from "@/components/shared/forms/product";
-import { sellerService } from "@/services/admin/sellerService";
 import { useProducts } from "../useProducts";
 import type { ProductDetails } from "../types";
 
-export function ProductEditContainer({ product }: { product: ProductDetails }) {
+interface ProductEditContainerProps {
+    product: ProductDetails;
+    categories: { id: string; name: string }[];
+    sellers: { id: string; name: string; code: string; defaultPincode: string; defaultCity: string; defaultState: string; defaultAddress: string }[];
+}
+
+export function ProductEditContainer({ product, categories, sellers }: ProductEditContainerProps) {
     const router = useRouter();
-    const [categories, setCategories] = useState<AdminCategory[]>([]);
-    const [sellers, setSellers] = useState<Seller[]>([]);
-    const [isDataLoaded, setIsDataLoaded] = useState(false);
     const { updateProduct, isLoading, error, successMessage } = useProducts();
-
-    // Load categories and sellers
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
-        try {
-            const [categoriesResult, sellersResult] = await Promise.all([
-                adminCategoryService.getCategories({ limit: 100 }),
-                sellerService.getSellers()
-            ]);
-            
-            setCategories(categoriesResult.categories);
-            setSellers(sellersResult.filter((s: Seller) => s.isActive));
-            setIsDataLoaded(true);
-        } catch (error) {
-            console.error("Failed to load data:", error);
-        }
-    };
 
     const handleCancel = () => {
         router.push("/admin/products");
     };
-
-    // Don't render form until data is loaded
-    if (!isDataLoaded) {
-        return <div className="p-8 text-center">Loading...</div>;
-    }
-
 
     return (
         <div className="space-y-8">
