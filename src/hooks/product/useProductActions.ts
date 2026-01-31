@@ -31,7 +31,6 @@ export function useProductActions(product: Product) {
       );
       return;
     }
-
     // after stock validation done
     startAddToCart(
       () =>
@@ -53,6 +52,7 @@ export function useProductActions(product: Product) {
           }, 300);
         })
     );
+    // console.log("CartItems: ", JSON.stringify(items, null, 2));
   };
 
   const handleBuyNow = () => {

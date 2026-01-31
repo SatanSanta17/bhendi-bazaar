@@ -4,7 +4,7 @@
  * Helper functions for shipping-related calculations and formatting.
  */
 
-import type { CheckoutItem } from "@/components/checkoutContainer/types";
+import type { CartItem } from "@/domain/cart";
 /**
  * Calculate total weight from cart items
  * @param items - Cart items
@@ -12,7 +12,7 @@ import type { CheckoutItem } from "@/components/checkoutContainer/types";
  * @returns Total weight in kg
  */
 export function calculateCartWeight(
-  items: CheckoutItem[],
+  items: CartItem[],
   defaultWeightPerItem: number = 0.5
 ): number {
   const totalWeight = items.reduce((total, item) => {

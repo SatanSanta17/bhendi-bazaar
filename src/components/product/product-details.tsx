@@ -15,9 +15,9 @@ export function ProductDetails(product: Product) {
     isAddingToCart,
     isBuyingNow,
     isOutOfStock,
-    currentCartQty,
-    remainingStock,
+    currentCartQty
   } = useProductActions(product);
+  // console.log("ProductDetails: ", JSON.stringify(product, null, 2));
 
   return (
     <section className="space-y-4">

@@ -2,20 +2,22 @@
 
 import { PriceDisplay } from "@/components/shared/PriceDisplay";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { CartItem } from "@/domain/cart";
 import { Truck } from "lucide-react";
-import type { CheckoutItem } from "../types";
 
 interface CheckoutSummaryProps {
-  items: CheckoutItem[];
+  items: CartItem[];
   subtotal: number; // Sum of all original prices
   discount: number; // Total savings
   total: number; // Final total including shipping
+  shipping: number;
 }
 export function CheckoutSummary({
   items,
   subtotal,
   discount,
   total,
+  shipping,
 }: CheckoutSummaryProps) {
   if (!items.length) {
     return (
@@ -78,12 +80,16 @@ export function CheckoutSummary({
           </div>
         )}
 
-        <div className="flex items-center justify-between text-amber-600">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Truck className="h-3 w-3" />
             <span>Shipping</span>
           </div>
-          <span className="text-xs">Select method</span>
+          {shipping > 0 ? (
+            <span className="font-medium">₹{shipping.toFixed(2)}</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Select method</span>
+          )}
         </div>
 
         {/* Final Total */}
@@ -93,10 +99,13 @@ export function CheckoutSummary({
         </div>
       </div>
 
-      <p className="pt-1 text-[0.65rem] text-muted-foreground">
-        Shipping charges will be calculated based on your location and selected
-        delivery method.
-      </p>
+      {/* Update description at bottom (lines 96-99): */}
+      {shipping === 0 && (
+        <p className="pt-1 text-[0.65rem] text-muted-foreground">
+          Shipping charges will be calculated based on your location and selected
+          delivery method.
+        </p>
+      )}
     </div>
   );
 }

@@ -1,27 +1,40 @@
 // src/domain/cart.ts
 
 export interface Cart {
+  id?: string;
+  userId?: string;
   items: CartItem[];
   totals: CartTotals;
   updatedAt: Date;
+  version?: number;
 }
 
 export interface CartItem {
-  id: string;
-  productId: string;
-  productName: string;
-  productSlug: string;
-  thumbnail: string;
-  price: number;
-  salePrice?: number;
-  quantity: number;
-  size?: string;
-  color?: string;
-  shippingFromPincode: string;
-  seller: {
+  // Identity
+  id: string;                    // Unique cart item ID (not product ID)
+  productId: string;             // Reference to product
+  productSlug: string;           // For navigation
+
+  // Display
+  productName: string;           // Name at time of add
+  thumbnail: string;             // Primary image
+
+  // Pricing (frozen at add-to-cart time)
+  price: number;                 // Original price
+  salePrice?: number;            // Sale price if applicable
+
+  // Selection
+  quantity: number;              // How many
+  size?: string;                 // Selected size
+  color?: string;                // Selected color
+
+  // Shipping (for multi-seller/warehouse support)
+  shippingFromPincode: string;   // Origin pincode
+  seller: {                      // Minimal seller info
     id: string;
     name: string;
     code: string;
+    // Include full seller info (needed for shipping)
     defaultPincode: string;
     defaultCity: string;
     defaultState: string;

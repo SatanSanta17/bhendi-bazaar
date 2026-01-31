@@ -188,6 +188,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
     request: GetShippingRatesRequestShiprocket
   ): Promise<GetShippingRatesResponse> {
     await this.ensureAuthenticated();
+    console.log("Getting rates for request:", JSON.stringify(request, null, 2));
 
     try {
       const params = {
@@ -216,7 +217,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
       const filteredCouriers = res.data.available_courier_companies.filter(
         (courier: any) =>
           courier.blocked === 0 && // Must be non-blocked
-          courier.rating >= 4 // Must have rating >= 4
+          true // courier.rating >= 3.5 // Must have rating >= 3.5
       );
 
       // console.log("🚚 Shiprocket Rates Debug:");
@@ -226,7 +227,7 @@ export class ShiprocketProvider extends BaseShippingProvider {
 
       if (filteredCouriers.length === 0) {
         console.warn(
-          `No couriers available with rating >= 4 for pincode ${request.toPincode}`
+          `No couriers available with rating >= 3.5 for pincode ${request.toPincode}`
         );
         return {
           success: false,

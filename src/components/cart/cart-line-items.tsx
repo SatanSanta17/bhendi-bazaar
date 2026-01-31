@@ -7,6 +7,7 @@ import { CartItem } from "./CartItem";
 
 export function CartLineItems() {
   const items = useCartStore((state) => state.items);
+  // console.log("CartLineItems: ", JSON.stringify(items, null, 2));
 
   if (!items.length) {
     return (
@@ -20,7 +21,7 @@ export function CartLineItems() {
   return (
     <div className="space-y-4">
       {items.map((item) => (
-        <CartItem key={item.id} item={item} />
+        <CartItem key={item.id} {...item} />
       ))}
     </div>
   );

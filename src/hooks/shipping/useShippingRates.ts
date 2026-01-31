@@ -41,6 +41,7 @@ export function useShippingRates(): UseShippingRatesReturn {
       setError(null);
 
       try {
+        // console.log("Fetching shipping rates for request: ", JSON.stringify(request, null, 2));
         const response = await shippingService.getRates(request);
         setRates(response.rates);
 

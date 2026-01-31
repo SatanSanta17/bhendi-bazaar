@@ -41,15 +41,27 @@ export class CartService {
 
         // Merge carts
         let merged = this.mergeCartItems(localItems, remoteItems);
-
         // Fetch all products in one query (within transaction)
         const slugs = merged.map((i) => i.productSlug);
         const products = await tx.product.findMany({
           where: { slug: { in: slugs } },
+          include: {
+            seller: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                defaultPincode: true,
+                defaultCity: true,
+                defaultState: true,
+                defaultAddress: true,
+              },
+            },
+          },
         });
         const productMap = new Map(products.map((p) => [p.slug, p]));
 
-        // Filter deleted products and refresh prices
+        // Filter deleted products and refresh prices + seller data
         merged = merged
           .filter((i) => productMap.has(i.productSlug))
           .map((i) => {
@@ -59,9 +71,19 @@ export class CartService {
               price: product.price,
               salePrice: product.salePrice ?? undefined,
               thumbnail: product.thumbnail,
+              // ✨ Add seller and shipping info
+              shippingFromPincode: product.shippingFromPincode || product.seller.defaultPincode,
+              seller: {
+                id: product.seller.id,
+                name: product.seller.name,
+                code: product.seller.code,
+                defaultPincode: product.seller.defaultPincode,
+                defaultCity: product.seller.defaultCity,
+                defaultState: product.seller.defaultState,
+                defaultAddress: product.seller.defaultAddress,
+              },
             };
           });
-
         // Save merged cart within transaction
         await tx.cart.upsert({
           where: { userId },
@@ -164,9 +186,8 @@ export class CartService {
    * Generate unique key for cart item
    */
   private getItemKey(item: CartItem): string {
-    return `${item.productId}-${item.size || "default"}-${
-      item.color || "default"
-    }`;
+    return `${item.productId}-${item.size || "default"}-${item.color || "default"
+      }`;
   }
 }
 

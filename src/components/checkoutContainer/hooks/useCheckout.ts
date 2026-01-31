@@ -8,20 +8,20 @@ import { orderService } from "@/services/orderService";
 import { calculateCartWeight } from "@/utils/shipping";
 import { useCheckoutPayment } from "./useCheckoutPayment";
 import { useShippingRates } from "@/hooks/shipping/useShippingRates";
-import type { CheckoutItem } from "../types";
 import type { ProfileAddress } from "@/domain/profile";
 import type { OrderAddress } from "@/domain/order";
 import type { DeliveryAddress } from "../types";
 import type { ShippingRate } from "@/domain/shipping";
+import { CartItem } from "@/domain/cart";
 
 interface UseCheckoutProps {
-  items: CheckoutItem[];
+  items: CartItem[];
   isBuyNow: boolean;
 }
 
 interface UseCheckoutReturn {
   // Items & Totals
-  items: CheckoutItem[];
+  items: CartItem[];
   totals: {
     subtotal: number;
     discount: number;

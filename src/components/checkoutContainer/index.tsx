@@ -7,7 +7,6 @@ import { CheckoutAddress } from "./components/checkout-address";
 import { CheckoutSummary } from "./components/checkout-summary";
 import { uuidv4 } from "zod";
 import { useSearchParams } from "next/navigation";
-import { CheckoutItem } from "./types";
 import { useCheckout } from "./hooks/useCheckout";
 import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/states/ErrorState";
@@ -17,12 +16,13 @@ import { useProfileContext } from "@/context/ProfileContext";
 import { useShippingRates } from "@/hooks/shipping/useShippingRates";
 import { ShippingRatesSection } from "./components/ShippingRatesSection";
 import { calculateCartWeight } from "@/utils/shipping";
+import { CartItem } from "@/domain/cart";
 
 export function CheckoutContainer() {
   const searchParams = useSearchParams();
   const buyNowSlug = searchParams.get("buyNow");
 
-  const [checkoutItems, setCheckoutItems] = useState<CheckoutItem[]>([]);
+  const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
 
   const [loading, setLoading] = useState(!!buyNowSlug);
   const [error, setError] = useState<string | null>(null);
@@ -42,9 +42,10 @@ export function CheckoutContainer() {
   } = useShippingRates();
 
   useEffect(() => {
-    if (checkout.selectedAddress) {
+    if (checkout.selectedAddress && checkoutItems.length > 0) {
+      console.log("Product pincode: ", JSON.stringify(checkoutItems[0].shippingFromPincode, null, 2));
       fetchRates({
-        fromPincode: checkoutItems.find((item) => item.shippingFromPincode)?.shippingFromPincode ?? checkout.selectedAddress.pincode,
+        fromPincode: checkoutItems[0].shippingFromPincode,
         toPincode: checkout.selectedAddress.pincode,
         weight: calculateCartWeight(checkoutItems),
         cod: false,
@@ -146,7 +147,8 @@ export function CheckoutContainer() {
         items={checkoutItems}
         subtotal={checkout.totals.subtotal}
         discount={checkout.totals.discount}
-        total={checkout.totals.total}
+        shipping={selectedRate?.rate ?? 0}
+        total={checkout.totals.total + (selectedRate?.rate ?? 0)}
       />
     </div>
   );

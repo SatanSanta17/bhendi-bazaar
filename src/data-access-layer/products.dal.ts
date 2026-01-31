@@ -4,7 +4,6 @@
 
 import { productsRepository } from "@server/repositories/products.repository";
 import { Product, ProductFilter } from "@/domain/product";
-import { ProductFlag } from "@/types/product";
 
 const mapProduct = (product: any): Product => {
   return {
@@ -17,14 +16,18 @@ const mapProduct = (product: any): Product => {
     currency: product.currency,
     categorySlug: product.category.slug,
     tags: product.tags,
-    flags: product.flags as ProductFlag[],
+    flags: product.flags,
     rating: product.rating,
     reviewsCount: product.reviewsCount,
     images: product.images,
     thumbnail: product.thumbnail,
     stock: product.stock,
     lowStockThreshold: product.lowStockThreshold,
-    shippingFromPincode: product.shippingFromPincode ?? "",
+    options: {
+      sizes: product.sizes,
+      colors: product.colors,
+    },
+    shippingFromPincode: product.shippingFromPincode || product.seller.defaultPincode || "",
     seller: {
       id: product.seller.id,
       name: product.seller.name,
@@ -63,6 +66,7 @@ export const productsDAL = {
   getProductBySlug: async (slug: string): Promise<Product> => {
     try {
       const product = await productsRepository.getProductBySlug(slug);
+      // console.log("Product: ", JSON.stringify(product, null, 2));
       if (!product) {
         throw new Error("Product not found");
       }

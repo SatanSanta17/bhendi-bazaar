@@ -28,7 +28,7 @@ function computeTotals(items: CartItem[]) {
  * Validate and clean cart item
  * Returns null if item is invalid
  */
-function validateCartItem(item: any): CartItem | null {
+function validateCartItem(item: CartItem): CartItem | null {
   try {
     // Check all required fields exist and are valid
     if (
@@ -46,7 +46,7 @@ function validateCartItem(item: any): CartItem | null {
       item.price < 0 ||
       typeof item.quantity !== "number" ||
       item.quantity <= 0 ||
-      item.quantity > 99
+      item.quantity > 99 
     ) {
       return null;
     }
@@ -67,20 +67,7 @@ function validateCartItem(item: any): CartItem | null {
     }
 
     // Return cleaned item
-    return {
-      id: item.id,
-      productId: item.productId,
-      productName: item.productName,
-      productSlug: item.productSlug,
-      thumbnail: item.thumbnail,
-      price: item.price,
-      salePrice: item.salePrice,
-      quantity: item.quantity,
-      size: item.size,
-      color: item.color,
-      shippingFromPincode: item.shippingFromPincode,
-      seller: item.seller,
-    };
+    return item;
   } catch (error) {
     console.warn("[Cart] Invalid item during validation:", error);
     return null;
@@ -100,6 +87,7 @@ export const useCartStore = create<CartStoreState>()(
       updatedAt: new Date(),
 
       addItem: (itemInput) => {
+        // console.log("Adding item: ", JSON.stringify(itemInput, null, 2));
         set((state) => {
           const existing = state.items.find(
             (i) =>
@@ -123,12 +111,22 @@ export const useCartStore = create<CartStoreState>()(
 
           const totals = computeTotals(nextItems);
 
+          // ✨ Add this log to see what's being stored
+          console.log("State after add (before persist):", JSON.stringify(nextItems, null, 2));
+
+
           return {
             items: nextItems,
             totals: totals,
             updatedAt: new Date(),
           };
         });
+
+        // ✨ Add this to check localStorage after persist
+        setTimeout(() => {
+          const stored = localStorage.getItem('bhendi-bazaar-cart');
+          console.log("LocalStorage after persist:", JSON.stringify(stored, null, 2));
+        }, 2000);
       },
 
       removeItem: (id) => {
@@ -176,6 +174,7 @@ export const useCartStore = create<CartStoreState>()(
         const totals = computeTotals(items);
         set({ items, totals, updatedAt: new Date() });
       },
+
     }),
     {
       name: "bhendi-bazaar-cart",
@@ -194,10 +193,16 @@ export const useCartStore = create<CartStoreState>()(
           const validItems: CartItem[] = [];
           let corruptedCount = 0;
 
+          // ✨ Log what came from localStorage
+          console.log("Raw state from localStorage:", JSON.stringify(state.items, null, 2));
+
           for (const item of state.items) {
+            console.log("Validating item:", item.productName, "Has seller?", !!item.seller);
+
             const validatedItem = validateCartItem(item);
             if (validatedItem) {
               validItems.push(validatedItem);
+              // console.log("Validated item: ", JSON.stringify(validatedItem, null, 2));
             } else {
               corruptedCount++;
               console.warn("[Cart] Removed corrupted item from storage:", item);
