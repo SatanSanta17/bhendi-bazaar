@@ -30,7 +30,7 @@ import {
 
 // Use the same adapter configuration as the main app
 const pool = new Pool({
-  connectionString: process.env.BHENDI_BAZAAR_DATABASE_URL,
+  connectionString: process.env.DATABASE_URL,
 });
 
 const adapter = new PrismaPg(pool);
