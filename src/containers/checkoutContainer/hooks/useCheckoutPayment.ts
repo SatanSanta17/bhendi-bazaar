@@ -7,16 +7,15 @@ import { paymentGatewayService } from "@/services/paymentGatewayService";
 import { orderService } from "@/services/orderService";
 import { cartService } from "@/services/cartService";
 import { useCartStore } from "@/store/cartStore";
-import type {
-  OrderAddress,
-} from "@/domain/order";
+
 import type { CartItem, CartTotals } from "@/domain/cart";
 import type { ShippingGroup } from "@/domain/shipping";
+import { DeliveryAddress } from "@/domain/profile";
 
 interface ProcessPaymentInput {
   items: CartItem[];
   totals: CartTotals;
-  address: OrderAddress;
+  address: DeliveryAddress;
   notes?: string;
   paymentMethod: string;
   paymentStatus: string;
@@ -31,7 +30,7 @@ interface ProcessPaymentWithShipmentsInput {
     discount: number;
     grandTotal: number;
   };
-  address: OrderAddress;
+  address: DeliveryAddress;
   notes?: string;
   paymentMethod: string;
   paymentStatus: string;
@@ -73,7 +72,7 @@ export function useCheckoutPayment() {
 
       // Free order case
       if (amountInMinorUnit <= 0) {
-        await orderService.updateOrder(order.id, { paymentStatus: "paid" });
+        await orderService.updateOrder(order.id, { paymentStatus: "paid", status: "confirmed" });
         router.push(`/order/${order.id}`);
         return order;
       }
@@ -97,6 +96,7 @@ export function useCheckoutPayment() {
             // Update order with payment info
             await orderService.updateOrder(order.id, {
               paymentStatus: "paid",
+              status: "confirmed",
               paymentMethod: "razorpay",
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
@@ -124,6 +124,7 @@ export function useCheckoutPayment() {
           console.error("Payment failed:", error);
           await orderService.updateOrder(order.id, {
             paymentStatus: "failed",
+            status: "failed",
           });
           setError(
             error?.error?.description || "Payment failed. Please try again."
@@ -211,7 +212,7 @@ export function useCheckoutPayment() {
 
       // Free order case
       if (amountInMinorUnit <= 0) {
-        await orderService.updateOrder(order.id, { paymentStatus: "paid" });
+        await orderService.updateOrder(order.id, { paymentStatus: "paid", status: "confirmed" });
         console.log('✅ Free order confirmed! Manual fulfillment required.');
         router.push(`/order/${order.id}`);
         return order;
@@ -271,6 +272,7 @@ export function useCheckoutPayment() {
           console.error("❌ Payment failed:", error);
           await orderService.updateOrder(order.id, {
             paymentStatus: "failed",
+            status: "failed",
           });
           setError(
             error?.error?.description || "Payment failed. Please try again."

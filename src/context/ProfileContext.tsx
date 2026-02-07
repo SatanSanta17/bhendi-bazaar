@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useAuth } from "@/lib/auth";
 import type {
-  Address,
+  DeliveryAddress,
   ProfileData,
   UpdateProfileInput,
   User,
@@ -30,7 +30,6 @@ interface ProfileContextValue {
 
   // Actions
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
-  updateAddresses: (addresses: Address[]) => Promise<void>;
   updateUserInfo: (input: {
     name?: string;
     email?: string;
@@ -52,7 +51,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = status === "authenticated";
 
   const [data, setData] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -204,15 +203,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Convenience methods
-  const updateAddresses = useCallback(
-    async (addresses: Address[]) => {
-      // remove the country code from the mobile
-      await updateProfile({ addresses: addresses });
-    },
-    [updateProfile]
-  );
-
   const updateUserInfo = useCallback(
     async (input: { name?: string; email?: string; mobile?: string }) => {
       await updateProfile(input);
@@ -235,7 +225,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     error,
     saving,
     updateProfile,
-    updateAddresses,
     updateUserInfo,
     updateProfilePic,
     refetch: fetchProfile,

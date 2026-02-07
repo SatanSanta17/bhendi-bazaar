@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { MapPin, Plus } from "lucide-react";
-import type { Address } from "@/domain/profile";
+import type { DeliveryAddress } from "@/domain/profile";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AddressModal } from "./address-modal";
 import { LoadingSpinner } from "../shared/states/LoadingSpinner";
 import { EmptyState } from "../shared/states/EmptyState";
@@ -15,10 +14,10 @@ import { SectionHeader } from "../shared/SectionHeader";
 import { DefaultBadge } from "../shared/badges/StatusBadge";
 
 interface AddressesSectionProps {
-  addresses: Address[];
+  addresses: DeliveryAddress[];
   loading?: boolean;
   saving?: boolean;
-  onSaveAddress: (address: Address) => Promise<void>;
+  onSaveAddress: (address: DeliveryAddress) => Promise<void>;
   onDeleteAddress: (addressId: string) => Promise<void>;
   onSetDefault: (addressId: string) => Promise<void>;
 }
@@ -31,7 +30,7 @@ export function AddressesSection({
   onDeleteAddress,
   onSetDefault,
 }: AddressesSectionProps) {
-  const [activeAddress, setActiveAddress] = useState<Address | null>(
+  const [activeAddress, setActiveAddress] = useState<DeliveryAddress | null>(
     null
   );
   const [modalMode, setModalMode] = useState<"view" | "edit" | "add" | null>(
@@ -41,24 +40,11 @@ export function AddressesSection({
   const hasAddresses = addresses.length > 0;
 
   function handleAddClick() {
-    setActiveAddress({
-      id:
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}`,
-      label: "",
-      addressLine1: "",
-      addressLine2: "",
-      city: "",
-      state: "",
-      country: "",
-      pincode: "",
-      isDefault: addresses.length === 0,
-    });
+
     setModalMode("add");
   }
 
-  function handleAddressClick(address: Address) {
+  function handleAddressClick(address: DeliveryAddress) {
     setActiveAddress(address);
     setModalMode("view");
   }
@@ -68,7 +54,7 @@ export function AddressesSection({
     setModalMode(null);
   }
 
-  async function handleSave(address: Address) {
+  async function handleSave(address: DeliveryAddress) {
     await onSaveAddress(address);
     handleCloseModal();
   }
@@ -130,8 +116,8 @@ export function AddressesSection({
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold">{address.label}</span>
-                      {address.isDefault && <DefaultBadge />}
+                      <span className="font-semibold">{address.metadata?.label}</span>
+                      {address.metadata?.isDefault && <DefaultBadge />}
                     </div>
                     <p className="line-clamp-1 text-muted-foreground">
                       {[
@@ -154,13 +140,13 @@ export function AddressesSection({
       {activeAddress && modalMode && (
         <AddressModal
           mode={modalMode}
-          address={activeAddress}
+          address={{ ...activeAddress, id: "" }}
           saving={saving ?? false}
           onClose={handleCloseModal}
           onSave={handleSave}
           onStartEdit={() => setModalMode("edit")}
           onSetDefault={
-            activeAddress.isDefault
+            activeAddress.metadata?.isDefault
               ? undefined
               : () => onSetDefault(activeAddress.id)
           }

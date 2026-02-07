@@ -6,24 +6,7 @@
  */
 
 import { Order } from "@prisma/client";
-
-export type OrderStatus = "processing" | "packed" | "shipped" | "delivered" | "pending_payment" | "confirmed" | "partially_fulfilled" | "fulfillment_failed";
-
-export type PaymentMethod = "razorpay";
-
-export type PaymentStatus = "pending" | "paid" | "failed";
-
-export interface OrderAddress {
-  fullName: string;
-  mobile: string;
-  email?: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-}
+import { DeliveryAddress } from "./profile";
 
 export interface OrderItem {
   productId: string;
@@ -43,12 +26,12 @@ export interface CreateOrderInput {
   shippingTotal: number;
   discount: number;
   grandTotal: number;
-  address: OrderAddress;
+  address: DeliveryAddress;
   notes?: string;
-  paymentMethod?: PaymentMethod;
-  paymentStatus?: PaymentStatus;
+  paymentMethod?: string;
+  paymentStatus?: string;
   paymentId?: string;
-  status?: OrderStatus;
+  status?: string;
   shipments: Shipment[];
 }
 
@@ -71,9 +54,9 @@ interface Shipment {
 }
 
 export interface UpdateOrderInput {
-  status?: OrderStatus;
-  paymentMethod?: PaymentMethod;
-  paymentStatus?: PaymentStatus;
+  status?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
   paymentId?: string;
 }
 
@@ -122,7 +105,7 @@ export interface ShippingGroupInput {
 
 export interface CreateOrderWithShipmentsInput {
   userId?: string;
-  address: OrderAddress;
+  address: DeliveryAddress;
   shippingGroups: ShippingGroupInput[];
   totals: {
     itemsTotal: number;
@@ -131,8 +114,8 @@ export interface CreateOrderWithShipmentsInput {
     grandTotal: number;
   };
   notes?: string;
-  paymentMethod?: PaymentMethod;
-  paymentStatus?: PaymentStatus;
+  paymentMethod?: string;
+  paymentStatus?: string;
 }
 
 export interface ServerShipment {

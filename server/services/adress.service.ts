@@ -6,18 +6,18 @@
  */
 
 import { addressRepository } from "../repositories/address.repository";
-import type { Address } from "../domain/profile";
+import type { DeliveryAddress } from "../domain/profile";
 
 export class AddressService {
   /**
    * Get all addresses for a user
    */
-  async getAddressesByUserId(userId: string): Promise<Address[]> {
+  async getAddressesByUserId(userId: string): Promise<DeliveryAddress[]> {
     const addresses = await addressRepository.getAddressesByUserId(userId);
     if (!Array.isArray(addresses) || addresses.length === 0) {
       return [];
     } 
-    return addresses as unknown as Address[];
+    return addresses as unknown as DeliveryAddress[];
   }
 
   /**
@@ -26,14 +26,14 @@ export class AddressService {
   async getAddressById(
     userId: string,
     addressId: string
-  ): Promise<Address | null> {
+  ): Promise<DeliveryAddress | null> {
     const address = await addressRepository.getAddressById(userId, addressId);
 
     if (!address) {
       throw new Error("Address not found");
     }
 
-    return address as unknown as Address;
+    return address as unknown as DeliveryAddress;
   }
 
   /**
@@ -41,27 +41,30 @@ export class AddressService {
    */
   async addAddress(
     userId: string,
-    input: Omit<Address, "id">
+    input: DeliveryAddress
   ): Promise<boolean> {
 
     try {
     // Get existing addresses to check if this should be default
-    const existingAddresses = await addressRepository.getAddressesByUserId(userId) as unknown as Address[];
+      const existingAddresses = await addressRepository.getAddressesByUserId(userId) as unknown as DeliveryAddress[];
 
     // Generate new ID
-    const newAddress: Address = {
-      id: crypto.randomUUID(),
+      const newAddress: DeliveryAddress = {
       ...input,
       // First address is automatically default
-      isDefault: input.isDefault || existingAddresses.length === 0,
+        metadata: {
+          isDefault: input.metadata?.isDefault || existingAddresses.length === 0,
+        },
     };
 
     // If setting as default, we need to unset others
-    if (newAddress.isDefault && existingAddresses.length > 0) {
+      if (newAddress.metadata?.isDefault && existingAddresses.length > 0) {
       // Unset all other defaults
       const updatedExistingAddresses = existingAddresses.map((addr) => ({
         ...addr,
-        isDefault: false,
+        metadata: {
+          isDefault: false,
+        },
       }));
 
       // Add new address
@@ -86,17 +89,19 @@ export class AddressService {
   async updateAddress(
     userId: string,
     addressId: string,
-    input: Partial<Address>
+    input: Partial<DeliveryAddress>
   ): Promise<boolean> {
 
     try {
     // Handle default flag separately
-    if (input.isDefault === true) {
+      if (input.metadata?.isDefault === true) {
       // If setting this as default, unset all others first
-      const allAddresses = await addressRepository.getAddressesByUserId(userId) as unknown as Address[];
+      const allAddresses = await addressRepository.getAddressesByUserId(userId) as unknown as DeliveryAddress[];
       const updatedAddresses = allAddresses.map((addr) => ({
         ...addr,
-        isDefault: addr.id === addressId,
+        metadata: {
+          isDefault: addr.id === addressId,
+        },
         // Apply updates if this is the target address
         ...(addr.id === addressId ? input : {}),
       }));
@@ -126,13 +131,13 @@ export class AddressService {
     try {
 
       // if only 1 address, then do not allow deletion
-      const addresses = await addressRepository.getAddressesByUserId(userId) as unknown as Address[];
+      const addresses = await addressRepository.getAddressesByUserId(userId) as unknown as DeliveryAddress[];
       if (addresses.length === 1) {
         throw new Error("Cannot delete the only address");
       }
 
     // Get the address to check if it's default
-    const address = await addressRepository.getAddressById(userId, addressId) as unknown as Address;
+      const address = await addressRepository.getAddressById(userId, addressId) as unknown as DeliveryAddress;
 
     if (!address) {
       throw new Error("Address not found");
@@ -142,8 +147,8 @@ export class AddressService {
     await addressRepository.deleteAddress(userId, addressId);
 
     // If deleted address was default, make the first remaining address default
-    if (address.isDefault) {
-      await this.updateAddress(userId, addresses[0].id, { isDefault: true });
+      if (address.metadata?.isDefault) {
+        await this.updateAddress(userId, addresses[0].id, { metadata: { isDefault: true } });
 
     }
     return true;
@@ -157,7 +162,7 @@ export class AddressService {
    * Validate address input
    */
   private validateAddressInput(
-    input: Address,
+    input: DeliveryAddress,
     isPartial = false
   ): void {
 

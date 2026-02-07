@@ -1,63 +1,39 @@
-"use client";
-
-import { useAsyncData } from "@/hooks/core/useAsyncData";
-import { useEffect, useState } from "react";
 import { CategoryHero } from "@/components/category/category-hero";
 import { CategoryProductGrid } from "@/components/category/product-grid";
-import { categoryService } from "@/services/categoryService"; // Client service
-import { productService } from "@/services/productService";
-import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/states/EmptyState";
 import { Package } from "lucide-react";
-import { ErrorState } from "@/components/shared/states/ErrorState";
-
+import { productsDAL } from "@/data-access-layer/products.dal";
+import { categoriesDAL } from "@/data-access-layer/categories.dal";
+import { Suspense } from "react";
+import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default function CategoryPage({ params }: CategoryPageProps) {
-  const [slug, setSlug] = useState<string>("");
+export default async function CategoryPage({ params }: CategoryPageProps) {
 
-  useEffect(() => {
-    params.then(({ slug }) => setSlug(slug));
-  }, [params]);
+  const { slug } = await params;
 
-  const { data, loading, error, refetch } = useAsyncData(
-    async () => {
-      const [category, products] = await Promise.all([
-        categoryService.getCategoryBySlug(slug),
-        productService.getProducts({ categorySlug: slug }),
-      ]);
-      return { category, products };
-    },
-    { enabled: !!slug }
-  );
-
-  const category = data?.category;
-  const products = data?.products;
-
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
-
-  if (error) {
-    return <ErrorState message={error} retry={refetch} />;
-  }
+  const category = await categoriesDAL.getCategoryBySlug(slug);
+  const products = await productsDAL.getProducts({ categorySlug: slug });
 
   return (
     <div className="space-y-4">
+      <Suspense fallback={<LoadingSkeleton />}>
       {category && products ? (
         <>
           <CategoryHero category={category} />
           <CategoryProductGrid products={products} />
         </>
-      ) : (
+        ) : ( 
         <EmptyState
           icon={Package}
           title="No category or products found"
           description="Try different keywords or browse categories"
         />
       )}
+      </Suspense>
+
     </div>
   );
 }

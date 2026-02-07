@@ -44,7 +44,7 @@ export function useProductActions(product: Product) {
               price: product.price,
               salePrice: product.salePrice,
               quantity: 1,
-              weight: product.weight,
+              weight: product.weight ?? 0.5,
               shippingFromPincode: product.shippingFromPincode ?? product.seller.defaultPincode,
               seller: product.seller,
             });

@@ -38,6 +38,9 @@ export class OrderRepository {
     const orders = await prisma.order.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      include: {
+        shipments: true,
+      },
     });
 
     return orders;

@@ -3,10 +3,9 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { productsDAL } from "@/data-access-layer/products.dal";
 import { Suspense } from "react";
 import { ProductGridSkeleton } from "../shared/states/LoadingSkeleton";
+import { Product } from "@/domain/product";
 
-export async function HeroProductsGrid() {
-  const heroes = await productsDAL.getHeroProducts(6);
-
+export async function HeroProductsGrid({ heroes }: { heroes: Product[] }) {
   return (
     <section className="space-y-4">
       <SectionHeader overline="Hero Pieces" title="Curated from the lanes" />

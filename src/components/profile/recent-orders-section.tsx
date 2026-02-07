@@ -1,7 +1,5 @@
 import type { Order } from "@/domain/order";
-import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SectionHeader } from "../shared/SectionHeader";
 import { PriceDisplay } from "../shared/PriceDisplay";

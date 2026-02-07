@@ -6,10 +6,11 @@
  */
 
 
-export interface Address {
+export interface DeliveryAddress {
   id: string;
-  label?: string;
-  isDefault: boolean;
+  fullName: string;
+  mobile: string;
+  email?: string;
   addressLine1: string;
   addressLine2?: string;
   landmark?: string;
@@ -24,7 +25,7 @@ export interface UserProfile {
   id: string;
   userId: string;
   profilePic: string | null;
-  addresses: Address[];
+  addresses: DeliveryAddress[];
 }
 
 // User fields relevant to profile editing
@@ -50,6 +51,6 @@ export interface UpdateProfileInput {
   email?: string;
   mobile?: string;
   // Profile fields
-  addresses?: Address[];
+  addresses?: DeliveryAddress[];
   profilePic?: string | null;
 }

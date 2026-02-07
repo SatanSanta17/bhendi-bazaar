@@ -34,6 +34,16 @@ export class CategoryRepository {
     });
     return category;
   }
+
+  /**
+   * Get category by ID
+   */
+  async findById(id: string): Promise<ServerCategory | null> {
+    const category = await prisma.category.findUnique({
+      where: { id },
+    });
+    return category;
+  }
 }
 
 export const categoryRepository = new CategoryRepository();

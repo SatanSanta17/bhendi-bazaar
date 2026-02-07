@@ -6,16 +6,14 @@
  */
 
 import type { Order } from "@/domain/order";
-import type {
-  OrderAddress,
-} from "@/domain/order";
 import type { CartItem, CartTotals } from "@/domain/cart";
 import type { ShippingGroup } from "@/domain/shipping";
+import type { DeliveryAddress } from "@/domain/profile";
 
 export interface CreateOrderInput {
   items: CartItem[];
   totals: CartTotals;
-  address: OrderAddress;
+  address: DeliveryAddress;
   notes?: string;
   paymentMethod?: string;
   paymentStatus?: string;
@@ -29,14 +27,14 @@ export interface CreateOrderWithShipmentsInput {
     discount: number;
     grandTotal: number;
   };
-  address: OrderAddress;
+  address: DeliveryAddress;
   notes?: string;
   paymentMethod?: string;
   paymentStatus?: string;
 }
 
 export interface UpdateOrderInput {
-  status?: "processing" | "packed" | "shipped" | "delivered";
+  status?: string;
   paymentMethod?: string;
   paymentStatus?: string;
   paymentId?: string;

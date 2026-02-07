@@ -1,6 +1,6 @@
 "use client";
 
-import type { Address } from "@/domain/profile";
+import type { DeliveryAddress } from "@/domain/profile";
 import { X, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormActions } from "../shared/button-groups/FormActions";
@@ -10,10 +10,10 @@ import { useForm } from "react-hook-form";
 
 interface AddressModalProps {
   mode: "view" | "edit" | "add";
-  address: Address;
+  address: DeliveryAddress;
   saving: boolean;
   onClose: () => void;
-  onSave: (address: Address) => void | Promise<void>;
+  onSave: (address: DeliveryAddress) => void | Promise<void>;
   onStartEdit: () => void;
   onSetDefault?: () => void;
   onDelete?: () => void;
@@ -31,7 +31,7 @@ export function AddressModal({
 }: AddressModalProps) {
   const isEditing = mode === "edit" || mode === "add";
 
-  function handleSave(data: Address) {
+  function handleSave(data: DeliveryAddress) {
     void onSave({ ...address, ...data });
   }
   return (
@@ -85,7 +85,7 @@ export function AddressModal({
 }
 
 interface AddressViewModeProps {
-  address: Address;
+  address: DeliveryAddress;
   saving: boolean;
   onStartEdit: () => void;
   onSetDefault?: () => void;
@@ -103,10 +103,13 @@ function AddressViewMode({
     <div className="space-y-4 px-4 py-4 text-sm">
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <p className="font-semibold">{address.label}</p>
-          {address.isDefault && <DefaultBadge />}
+          <p className="font-semibold">{address.metadata?.label}</p>
+          {address.metadata?.isDefault && <DefaultBadge />}
         </div>
       </div>
+      <p className="font-semibold">{address.fullName}</p>
+      <p className="text-xs text-muted-foreground">{address.mobile}</p>
+      <p className="text-xs text-muted-foreground">{address.email}</p>
 
       <div className="space-y-0.5 text-xs text-muted-foreground">
         <p>{address.addressLine1}</p>
@@ -121,7 +124,7 @@ function AddressViewMode({
 
       <div className="flex items-center justify-between gap-2 pt-2">
         <div className="flex items-center gap-2">
-          {onSetDefault && !address.isDefault && (
+          {onSetDefault && !address.metadata?.isDefault && (
             <Button
               type="button"
               variant="outline"
@@ -163,9 +166,9 @@ function AddressViewMode({
 }
 
 interface AddressFormProps {
-  address: Address;
+  address: DeliveryAddress;
   saving: boolean;
-  onSubmit: (address: Address) => void;
+  onSubmit: (address: DeliveryAddress) => void;
   onCancel: () => void;
 }
 
@@ -179,7 +182,7 @@ function AddressForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<Address>({
+  } = useForm<DeliveryAddress>({
     defaultValues: address,
   });
 
@@ -191,7 +194,7 @@ function AddressForm({
       <AddressFields
         register={register}
         errors={errors}
-        includeEmail={false}
+        includeEmail={true}
         includeNotes={false}
         includeLabel={true}
       />
@@ -200,7 +203,7 @@ function AddressForm({
         <label className="flex items-center gap-2 text-[0.7rem] text-muted-foreground">
           <input
             type="checkbox"
-            {...register("isDefault")}
+            {...register("metadata.isDefault")}
             className="h-3.5 w-3.5 rounded border border-border bg-background"
           />
           Set as default address

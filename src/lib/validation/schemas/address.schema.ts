@@ -4,6 +4,14 @@ import { z } from "zod";
  * Validation schema for adding a new address
  */
 export const addAddressSchema = z.object({
+  id: z.string(),
+  fullName: z
+    .string()
+    .min(2, "Full name must be at least 2 characters")
+    .max(100, "Full name must be less than 100 characters"),
+  mobile: z
+    .string()
+    .regex(/^\d{10}$/, "Mobile number must be exactly 10 digits"),
   addressLine1: z
     .string()
     .min(5, "Address line 1 must be at least 5 characters")
@@ -32,11 +40,6 @@ export const addAddressSchema = z.object({
     .min(2, "Country must be at least 2 characters")
     .max(100, "Country must be less than 100 characters")
     .default("India"),
-  label: z
-    .string()
-    .max(50, "Label must be less than 50 characters")
-    .optional(),
-  isDefault: z.boolean().default(false),
   metadata: z.record(z.string(), z.any()).optional(),
 });
 

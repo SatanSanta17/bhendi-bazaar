@@ -5,7 +5,7 @@
  * UI components should use this service instead of making direct fetch calls.
  */
 
-import type { Address } from "@/domain/profile";
+import type { DeliveryAddress } from "@/domain/profile";
 
 class AddressService {
     private baseUrl = "/api/addresses";
@@ -13,7 +13,7 @@ class AddressService {
     /**
      * Fetch all addresses for the authenticated user
      */
-    async getAddresses(): Promise<Address[]> {
+    async getAddresses(): Promise<DeliveryAddress[]> {
         const response = await fetch(this.baseUrl, {
             credentials: "include",
         });
@@ -30,7 +30,7 @@ class AddressService {
     /**
      * Get a single address by ID
      */
-    async getAddressById(id: string): Promise<Address> {
+    async getAddressById(id: string): Promise<DeliveryAddress> {
         const response = await fetch(`${this.baseUrl}/${id}`, {
             credentials: "include",
         });
@@ -46,7 +46,7 @@ class AddressService {
     /**
      * Add a new address
      */
-    async addAddress(input: Omit<Address, "id">): Promise<boolean> {
+    async addAddress(input: DeliveryAddress): Promise<boolean> {
         const response = await fetch(this.baseUrl, {
             method: "POST",
             headers: {
@@ -67,7 +67,7 @@ class AddressService {
     /**
      * Update an existing address
      */
-    async updateAddress(id: string, input: Partial<Address>): Promise<boolean> {
+    async updateAddress(id: string, input: Partial<DeliveryAddress>): Promise<boolean> {
         try {
             const response = await fetch(`${this.baseUrl}/${id}`, {
                 method: "PATCH",

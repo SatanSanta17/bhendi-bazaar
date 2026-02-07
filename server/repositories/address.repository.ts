@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import type { Address } from "../domain/profile";
+import type { DeliveryAddress } from "../domain/profile";
 
 export class AddressRepository {
   /**
@@ -52,7 +52,7 @@ export class AddressRepository {
    */
   async addAddress(
     userId: string,
-    address: Address
+    address: DeliveryAddress
   ) {
     const profile = await prisma.profile.findUnique({
       where: { userId },
@@ -71,7 +71,7 @@ export class AddressRepository {
         return true;
       }
 
-      const addresses = profile.addresses as unknown as Address[];
+      const addresses = profile.addresses as unknown as DeliveryAddress[];
       const updatedAddresses = [...addresses, address];
 
       await prisma.profile.update({
@@ -91,7 +91,7 @@ export class AddressRepository {
   async updateAddress(
     userId: string,
     addressId: string,
-    updates: Partial<Address>
+    updates: Partial<DeliveryAddress>
   ) {
     const profile = await prisma.profile.findUnique({
       where: { userId },
@@ -102,7 +102,7 @@ export class AddressRepository {
       throw new Error("Profile not found");
     }
 
-    const addresses = profile.addresses as unknown as Address[];
+    const addresses = profile.addresses as unknown as DeliveryAddress[];
     const addressIndex = addresses.findIndex((addr) => addr.id === addressId);
 
     if (addressIndex === -1) {
@@ -134,7 +134,7 @@ export class AddressRepository {
       throw new Error("Profile not found");
     }
   
-    const addresses = profile.addresses as unknown as Address[];
+    const addresses = profile.addresses as unknown as DeliveryAddress[];
     const addressExists = addresses.some(addr => addr.id === addressId);
   
     if (!addressExists) {
@@ -156,7 +156,7 @@ export class AddressRepository {
    */
   async updateAddresses(
     userId: string,
-    addresses: Address[]
+    addresses: DeliveryAddress[]
   ) {
     await prisma.profile.update({
       where: { userId },

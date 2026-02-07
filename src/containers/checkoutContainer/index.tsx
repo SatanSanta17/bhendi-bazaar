@@ -3,16 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Package } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { useProfileContext } from "@/context/ProfileContext";
 import { useMultiShippingRates } from "@/hooks/shipping/useMultiShippingRates";
 import { useCheckoutPayment } from "./hooks/useCheckoutPayment";
-import { CheckoutAddress } from "./components/checkout-address";
 import { CheckoutSummary } from "./components/checkout-summary";
 import { MultiShippingSection } from "./components/MultiShippingSection";
 import { CheckoutActions } from "./components/CheckoutActions";
 import { EmptyState } from "../../components/shared/states/EmptyState";
 import { CartItem } from "@/domain/cart";
 import { useAddressManager } from "@/hooks/useAddressManager";
+import { AuthenticatedAddress } from "./components/AuthenticatedAddress";
+import { GuestAddress } from "./components/GuestAddress";
+import { useAuth } from "@/lib/auth";
+import { DeliveryAddress } from "@/domain/profile";
 
 interface CheckoutContainerProps {
   buyNowProduct?: CartItem;
@@ -20,24 +22,21 @@ interface CheckoutContainerProps {
 
 export function CheckoutContainer({ buyNowProduct }: CheckoutContainerProps) {
 
+  // check if user is authenticated
+  const { user } = useAuth();
+
   const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
 
-  const { selectedAddress, selectAddress, addresses, updateAddress } = useAddressManager({ autoFetch: true });
+  const { groups: shippingGroups, totalShippingCost, isLoading: isShippingLoading, fetchAllRates, selectRateForGroup } = useMultiShippingRates();
 
-  const { user } = useProfileContext();
-  //remove +91 from mobile
-  const userMobile = user?.mobile?.replace(/^\+91/, '') ?? "";
-  // Multi-shipping rates hook
-  const {
-    groups: shippingGroups,
-    totalShippingCost,
-    isLoading: isShippingLoading,
-    fetchAllRates,
-    selectRateForGroup,
-  } = useMultiShippingRates();
+  const { selectedAddress, addresses, addAddress, updateAddress, selectAddress } = useAddressManager({ autoFetch: true });
 
   // Payment hook
   const { processPaymentWithShipments, isProcessing, error: paymentError, setError: setPaymentError } = useCheckoutPayment();
+
+  const handleGuestAddress = (address: DeliveryAddress) => {
+    selectAddress(address);
+  }
 
   // fetching shipping rates
   useEffect(() => {
@@ -116,7 +115,7 @@ export function CheckoutContainer({ buyNowProduct }: CheckoutContainerProps) {
           discount: totals.discount,
           grandTotal: totals.grandTotal, // Correct calculation
         },
-        address: { ...selectedAddress, fullName: user?.name ?? "", mobile: userMobile, email: user?.email ?? "" },
+        address: selectedAddress,
         notes: undefined,
         paymentMethod: "razorpay",
         paymentStatus: "pending",
@@ -153,12 +152,20 @@ export function CheckoutContainer({ buyNowProduct }: CheckoutContainerProps) {
     <div className="grid gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
       <div className="space-y-6">
         {/* Address Form */}
-        <CheckoutAddress
-          selectedAddress={selectedAddress}
-          onAddressChange={selectAddress}
-          onAddressUpdated={updateAddress}
-          addresses={addresses}
+
+        {user ? (
+          <AuthenticatedAddress
+            selectedAddress={selectedAddress}
+            onAddressChange={selectAddress}
+            onAddressAdded={addAddress}
+            onAddressUpdated={updateAddress}
+            addresses={addresses}
         />
+        ) : (
+          <GuestAddress
+            onAddressChange={handleGuestAddress}
+          />
+        )}
 
         {/* Multi-Shipping Section */}
         {selectedAddress && (

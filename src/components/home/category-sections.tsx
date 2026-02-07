@@ -1,28 +1,8 @@
-// NEW VERSION - category-sections.tsx
-
-"use client";
-
 import Link from "next/link";
-import { categoryService } from "@/services/categoryService";
 import { Card } from "@/components/ui/card";
+import { Category } from "@/domain/category";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { LoadingSpinner } from "@/components/shared/states/LoadingSpinner";
-import { useAsyncData } from "@/hooks/core/useAsyncData";
-
-export function CategorySections() {
-  const { data: categories, loading } = useAsyncData(() =>
-    categoryService.getCategories()
-  );
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (!categories?.length) return null;
+export async function CategorySections({ categories }: { categories: Category[] }) {
 
   return (
     <section className="space-y-4">

@@ -3,6 +3,7 @@ import { uuidSchema, priceSchema, quantitySchema, nameSchema, emailSchema, phone
 
 // Order-specific address schema (requires fullName and state)
 const orderAddressSchema = z.object({
+  id: z.string(),
   fullName: nameSchema,
   mobile: phoneSchema,
   email: emailSchema.optional(),

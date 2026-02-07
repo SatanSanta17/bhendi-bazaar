@@ -3,18 +3,20 @@
 import { useState, useEffect } from "react";
 import { AddressModal } from "@/components/profile/address-modal";
 import { AddressSelector } from "./AddressSelector";
-import { Address } from "@/domain/profile";
+import { DeliveryAddress } from "@/domain/profile";
 
 interface AuthenticatedAddressProps {
-  selectedAddress: Address | null;
-  onAddressChange: (address: Address) => void;
-  onAddressUpdated: (id: string, address: Address) => void;
-  addresses: Address[];
+  selectedAddress: DeliveryAddress | null;
+  onAddressChange: (address: DeliveryAddress) => void;
+  onAddressAdded: (address: DeliveryAddress) => void;
+  onAddressUpdated: (id: string, address: DeliveryAddress) => void;
+  addresses: DeliveryAddress[];
 }
 
 export function AuthenticatedAddress({ 
   selectedAddress, 
-  onAddressChange, 
+  onAddressChange,
+  onAddressAdded,
   onAddressUpdated, 
   addresses 
 }: AuthenticatedAddressProps) {
@@ -24,31 +26,30 @@ export function AuthenticatedAddress({
   // ✅ Auto-select default address on mount
   useEffect(() => {
     if (addresses.length > 0 && !selectedAddress) {
-      const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0];
+      const defaultAddress = addresses.find((a) => a.metadata?.isDefault) || addresses[0];
       onAddressChange(defaultAddress);
     }
   }, [addresses, selectedAddress, onAddressChange]);
 
-  const handleSaveNewAddress = async (address: Address) => {
+  const handleSaveNewAddress = async (address: DeliveryAddress) => {
     // If first address make it default
     if (addresses.length === 0) {
-      address.isDefault = true;
+      address.metadata = { ...address.metadata, isDefault: true };
     }
     // ensure only one default address
-    if (address.isDefault) {
+    if (address.metadata?.isDefault) {
       addresses.forEach((a) => {
-        a.isDefault = false;
+        a.metadata = { ...a.metadata, isDefault: false };
       });
     }
-    const newAddresses = [...addresses, address];
 
-    onAddressUpdated(address.id, address);
+    onAddressAdded(address);
     onAddressChange(address);
     setShowAddressModal(false);
   };
 
   // Get default user info for modal prefill
-  const defaultAddress = addresses.find((a) => a.isDefault);
+  const defaultAddress = addresses.find((a) => a.metadata?.isDefault);
 
   const hasAddresses = !!addresses?.length;
 
@@ -81,7 +82,9 @@ export function AuthenticatedAddress({
           mode="add"
           address={{
             id: "",
-            label: "",
+            fullName: "",
+            mobile: "",
+            email: "",
             addressLine1: "",
             addressLine2: "",
             landmark: "",
@@ -89,7 +92,7 @@ export function AuthenticatedAddress({
             state: "",
             country: "India",
             pincode: "",
-            isDefault: !hasAddresses,
+            metadata: {},
           }}
           saving={false}
           onClose={() => setShowAddressModal(false)}

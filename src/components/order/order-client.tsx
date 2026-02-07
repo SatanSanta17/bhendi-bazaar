@@ -22,7 +22,7 @@ export function OrderClient({ order }: OrderClientProps) {
           </div>
           <ShareButton
             url={`${
-              typeof window !== "undefined" ? window.location.origin : ""
+              typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL
               }/order/${order.id}`}
             title={`Order ${order.code} - Bhendi Bazaar`}
             text={`Check out my order from Bhendi Bazaar: ${order.code}`}

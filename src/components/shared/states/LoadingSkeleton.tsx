@@ -1,5 +1,3 @@
-// components/shared/states/LoadingSkeleton.tsx
-
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
