@@ -1,7 +1,6 @@
 // components/shared/forms/AddressFields.tsx
 
 import { FormInput, FormTextarea } from "./FormField";
-import type { OrderAddress } from "@/domain/order";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 
 interface AddressFieldsProps {

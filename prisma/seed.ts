@@ -22,6 +22,7 @@ import {
   seedSellers,
   seedProducts,
   seedOrders,
+  seedShipments,
   seedReviews,
   seedCarts,
   seedShippingProviders,
@@ -46,6 +47,7 @@ async function main() {
   await prisma.shippingProvider.deleteMany();
   await prisma.cart.deleteMany();
   await prisma.review.deleteMany();
+  await prisma.shipment.deleteMany(); // ⭐ NEW - Clear shipments before orders
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
   await prisma.seller.deleteMany(); // Add this
@@ -166,6 +168,7 @@ async function main() {
         stock: productData.stock,
         sku: productData.sku,
         lowStockThreshold: productData.lowStockThreshold,
+        weight: productData.weight || 0.5, // ⭐ Default to 0.5kg if not specified
       },
     });
     console.log(`  ✓ ${product.name} (Stock: ${product.stock})`);
@@ -182,15 +185,16 @@ async function main() {
         id: orderData.id,
         code: orderData.code,
         userId: orderData.userId,
-        items: orderData.items as any,
-        totals: orderData.totals,
-        status: orderData.status,
         address: orderData.address as any,
         notes: orderData.notes,
+        itemsTotal: orderData.itemsTotal,
+        shippingTotal: orderData.shippingTotal,
+        discount: orderData.discount,
+        grandTotal: orderData.grandTotal,
+        status: orderData.status,
         paymentMethod: orderData.paymentMethod,
         paymentStatus: orderData.paymentStatus,
         paymentId: orderData.paymentId,
-        estimatedDelivery: orderData.estimatedDelivery,
         createdAt: orderData.createdAt,
       },
     });
@@ -201,6 +205,38 @@ async function main() {
     );
   }
   console.log(`✅ ${seedOrders.length} orders seeded\n`);
+
+  // ====================
+  // SEED SHIPMENTS
+  // ====================
+  console.log("📦 Seeding shipments...");
+  for (const shipmentData of seedShipments) {
+    const shipment = await prisma.shipment.create({
+      data: {
+        id: shipmentData.id,
+        code: shipmentData.code,
+        orderId: shipmentData.orderId,
+        items: shipmentData.items as any,
+        sellerId: shipmentData.sellerId,
+        fromPincode: shipmentData.fromPincode,
+        fromCity: shipmentData.fromCity,
+        fromState: shipmentData.fromState,
+        shippingCost: shipmentData.shippingCost,
+        shippingProviderId: shipmentData.shippingProviderId,
+        trackingNumber: shipmentData.trackingNumber,
+        courierName: shipmentData.courierName,
+        trackingUrl: shipmentData.trackingUrl,
+        status: shipmentData.status,
+        packageWeight: shipmentData.packageWeight,
+        estimatedDelivery: shipmentData.estimatedDelivery,
+        createdAt: shipmentData.createdAt,
+      },
+    });
+    console.log(
+      `  ✓ ${shipment.code} - ${shipment.status} (${shipment.fromCity})`
+    );
+  }
+  console.log(`✅ ${seedShipments.length} shipments seeded\n`);
 
   // ====================
   // SEED REVIEWS
@@ -300,18 +336,22 @@ async function main() {
     } regular users)`
   );
   console.log(`   • ${seedCategories.length} categories`);
+  console.log(`   • ${seedSellers.length} sellers`);
   console.log(`   • ${seedProducts.length} products`);
   console.log(
     `   • ${seedOrders.length} orders (${
       seedOrders.filter((o) => o.userId === null).length
     } guest orders)`
   );
+  console.log(`   • ${seedShipments.length} shipments (${seedShipments.filter((s) => s.status === "pending").length
+    } pending tracking)`);
   console.log(
     `   • ${seedReviews.length} reviews (${
       seedReviews.filter((r) => r.isVerified).length
     } verified)`
   );
   console.log(`   • ${seedCarts.length} abandoned carts`);
+  console.log(`   • ${seedShippingProviders.length} shipping providers`);
   console.log("\n💡 Next steps:");
   console.log("   1. Upload product/category images to Vercel Blob");
   console.log("   2. Update image URLs in seed data files");

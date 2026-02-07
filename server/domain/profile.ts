@@ -4,11 +4,9 @@
  * These types are used exclusively on the server-side (services, repositories).
  * They mirror the database schema and contain server-specific logic.
  */
-export interface ProfileAddress {
+export interface Address {
   id: string;
   label?: string;
-  fullName: string;
-  mobile: string;
   addressLine1: string;
   addressLine2?: string;
   landmark?: string;
@@ -16,14 +14,14 @@ export interface ProfileAddress {
   state: string;
   pincode: string;
   country: string;
-  isDefault?: boolean;
+  isDefault: boolean;
 }
 
 export interface ServerUserProfile {
   id: string;
   userId: string;
   profilePic: string | null;
-  addresses: ProfileAddress[];
+  addresses: Address[];
 }
 
 export interface ServerUser {
@@ -46,7 +44,7 @@ export interface UpdateProfileInput {
   email?: string;
   mobile?: string;
   // Profile fields
-  addresses?: ProfileAddress[];
+  addresses?: Address[];
   profilePic?: string | null;
 }
 

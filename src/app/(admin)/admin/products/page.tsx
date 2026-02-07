@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import { productsDAL } from "@/data-access-layer/admin/products.dal";
-import { ProductsContainer } from "@/components/admin/products/productsList";
-import { ProductsTableSkeleton } from "@/components/admin/products/productsList/components/ProductsTableSkeleton";
+import { ProductsContainer } from "@/admin/products/productsList";
+import { ProductsTableSkeleton } from "@/admin/products/productsList/components/ProductsTableSkeleton";
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";

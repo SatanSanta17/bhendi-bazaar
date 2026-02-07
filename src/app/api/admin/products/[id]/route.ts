@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
 import { productsService } from "@server/admin/services/products.service";
-import { ProductFormInput } from "@/components/admin/products/types";
+import { ProductFormInput } from "@/admin/products/types";
 
 export async function DELETE(
   _request: NextRequest,

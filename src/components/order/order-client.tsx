@@ -1,39 +1,14 @@
-"use client";
-
-import { useAsyncData } from "@/hooks/core/useAsyncData";
-import { orderService } from "@/services/orderService";
 import { OrderSummary } from "@/components/order/order-summary";
-import { LoadingSpinner } from "../shared/states/LoadingSpinner";
-import { ErrorState } from "../shared/states/ErrorState";
 import { SectionHeader } from "../shared/SectionHeader";
 import { ShareButton } from "../shared/ShareButton";
+import { Order } from "@/domain/order";
 
 interface OrderClientProps {
-  orderId: string;
+  order: Order;
 }
 
-export function OrderClient({ orderId }: OrderClientProps) {
-  const {
-    data: order,
-    loading: isLoading,
-    error,
-    refetch,
-  } = useAsyncData(() => orderService.getOrderById(orderId), {
-    refetchDependencies: [orderId],
-  });
+export function OrderClient({ order }: OrderClientProps) {
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (error || !order) {
-    return (
-      <ErrorState
-        message={error || "We could not locate this order."}
-        retry={refetch}
-      />
-    );
-  }
   return (
     <div className="space-y-6">
       <header className="space-y-3">
@@ -48,7 +23,7 @@ export function OrderClient({ orderId }: OrderClientProps) {
           <ShareButton
             url={`${
               typeof window !== "undefined" ? window.location.origin : ""
-            }/order/${orderId}`}
+              }/order/${order.id}`}
             title={`Order ${order.code} - Bhendi Bazaar`}
             text={`Check out my order from Bhendi Bazaar: ${order.code}`}
             variant="outline"

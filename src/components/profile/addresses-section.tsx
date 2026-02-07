@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MapPin, Plus } from "lucide-react";
-import type { ProfileAddress } from "@/domain/profile";
+import type { Address } from "@/domain/profile";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,10 @@ import { SectionHeader } from "../shared/SectionHeader";
 import { DefaultBadge } from "../shared/badges/StatusBadge";
 
 interface AddressesSectionProps {
-  addresses: ProfileAddress[];
+  addresses: Address[];
   loading?: boolean;
   saving?: boolean;
-  onSaveAddress: (address: ProfileAddress) => Promise<void>;
+  onSaveAddress: (address: Address) => Promise<void>;
   onDeleteAddress: (addressId: string) => Promise<void>;
   onSetDefault: (addressId: string) => Promise<void>;
 }
@@ -31,7 +31,7 @@ export function AddressesSection({
   onDeleteAddress,
   onSetDefault,
 }: AddressesSectionProps) {
-  const [activeAddress, setActiveAddress] = useState<ProfileAddress | null>(
+  const [activeAddress, setActiveAddress] = useState<Address | null>(
     null
   );
   const [modalMode, setModalMode] = useState<"view" | "edit" | "add" | null>(
@@ -47,21 +47,18 @@ export function AddressesSection({
           ? crypto.randomUUID()
           : `${Date.now()}`,
       label: "",
-      fullName: "",
       addressLine1: "",
       addressLine2: "",
       city: "",
       state: "",
       country: "",
       pincode: "",
-      mobile: "",
       isDefault: addresses.length === 0,
-      email: "",
     });
     setModalMode("add");
   }
 
-  function handleAddressClick(address: ProfileAddress) {
+  function handleAddressClick(address: Address) {
     setActiveAddress(address);
     setModalMode("view");
   }
@@ -71,7 +68,7 @@ export function AddressesSection({
     setModalMode(null);
   }
 
-  async function handleSave(address: ProfileAddress) {
+  async function handleSave(address: Address) {
     await onSaveAddress(address);
     handleCloseModal();
   }
@@ -146,9 +143,6 @@ export function AddressesSection({
                         .filter(Boolean)
                         .join(", ")}
                     </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 text-[0.7rem] text-muted-foreground">
-                    <span>{address.mobile}</span>
                   </div>
                 </button>
               ))}

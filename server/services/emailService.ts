@@ -11,7 +11,7 @@
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { Resend } from "resend";
-import type { ServerOrder } from "../domain/order";
+import type { Order } from "@/domain/order";
 import type { SendEmailOptions } from "./email/types";
 import { getVerificationEmailTemplate } from "./email/templates/verificationEmail";
 import { getPasswordResetEmailTemplate } from "./email/templates/passwordResetEmail";
@@ -192,7 +192,7 @@ class EmailService {
    * Send purchase confirmation email
    */
   async sendPurchaseConfirmationEmail(
-    order: ServerOrder,
+    order: Order,
     customerEmail: string
   ): Promise<void> {
     await this.sendEmail({

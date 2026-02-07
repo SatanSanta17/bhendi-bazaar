@@ -24,6 +24,7 @@ const PRODUCT_LIST_SELECT = {
     lowStockThreshold: true,
     flags: true,
     thumbnail: true,
+    weight: true,
     createdAt: true,
     category: {
         select: { id: true, name: true },

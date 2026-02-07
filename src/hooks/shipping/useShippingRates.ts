@@ -1,7 +1,7 @@
 // src/hooks/shipping/useShippingRates.ts
 
 import { useState, useCallback } from "react";
-import { ShippingService } from "@/services/shippingService";
+import { shippingService } from "@/services/shippingService";
 import type { GetShippingRatesRequest, ShippingRate } from "@/domain/shipping";
 
 export interface UseShippingRatesOptions {
@@ -33,7 +33,6 @@ export function useShippingRates(): UseShippingRatesReturn {
   const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const shippingService = new ShippingService();
 
   const fetchRates = useCallback(
     async (request: GetShippingRatesRequest) => {

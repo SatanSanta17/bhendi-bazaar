@@ -10,6 +10,7 @@ export interface Cart {
 }
 
 export interface CartItem {
+  weight: number;
   // Identity
   id: string;                    // Unique cart item ID (not product ID)
   productId: string;             // Reference to product

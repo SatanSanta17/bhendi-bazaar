@@ -122,3 +122,45 @@ export function formatEstimatedDelivery(days: number): string {
   return `In ${days} days`;
 }
 
+/**
+ * Represents a group of items shipping from the same origin
+ */
+export interface ShippingGroup {
+  // Unique identifier for this group
+  groupId: string; // e.g., "SEL-001-400001" (sellerId-pincode)
+
+  // Origin details
+  sellerId: string;
+  sellerName: string;
+  sellerCode: string;
+  fromPincode: string;
+  fromCity: string;
+  fromState: string;
+
+  // Items in this group
+  items: any[]; // CartItem[] - using any to avoid circular dependency
+
+  // Calculated shipping info
+  totalWeight: number; // in kg
+  itemsTotal: number;  // sum of item prices
+
+  // Available rates
+  rates: ShippingRate[];
+  selectedRate: ShippingRate | null;
+
+  // Fetching state
+  isLoading: boolean;
+  error: string | null;
+  serviceable: boolean;
+}
+
+/**
+ * Multi-group shipping state
+ */
+export interface MultiShippingState {
+  groups: ShippingGroup[];
+  totalShippingCost: number;
+  isAllGroupsReady: boolean; // All groups have rates & selection
+  isLoading: boolean;
+}
+

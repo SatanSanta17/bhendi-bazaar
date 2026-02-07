@@ -102,12 +102,10 @@ export class ProfileService {
 
       for (const address of input.addresses) {
         if (
-          !address.fullName ||
           !address.addressLine1 ||
           !address.city ||
           !address.country ||
-          !address.pincode ||
-          !address.mobile
+          !address.pincode 
         ) {
           throw new Error("Address is missing required fields");
         }

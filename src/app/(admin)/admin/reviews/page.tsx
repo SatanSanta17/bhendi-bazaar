@@ -9,7 +9,7 @@ import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useMutation } from "@/hooks/core/useMutation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { DataTable, Column } from "@/components/admin/data-table";
+import { DataTable, Column } from "@/admin/data-table";
 import {
   Search,
   CheckCircle,

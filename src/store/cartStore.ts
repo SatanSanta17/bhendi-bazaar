@@ -194,10 +194,8 @@ export const useCartStore = create<CartStoreState>()(
           let corruptedCount = 0;
 
           // ✨ Log what came from localStorage
-          console.log("Raw state from localStorage:", JSON.stringify(state.items, null, 2));
 
           for (const item of state.items) {
-            console.log("Validating item:", item.productName, "Has seller?", !!item.seller);
 
             const validatedItem = validateCartItem(item);
             if (validatedItem) {

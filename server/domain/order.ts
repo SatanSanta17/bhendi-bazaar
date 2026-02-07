@@ -5,7 +5,9 @@
  * They mirror the database schema and contain server-specific logic.
  */
 
-export type OrderStatus = "processing" | "packed" | "shipped" | "delivered";
+import { Order } from "@prisma/client";
+
+export type OrderStatus = "processing" | "packed" | "shipped" | "delivered" | "pending_payment" | "confirmed" | "partially_fulfilled" | "fulfillment_failed";
 
 export type PaymentMethod = "razorpay";
 
@@ -34,55 +36,38 @@ export interface OrderItem {
   selectedVariant?: string;
 }
 
-export interface OrderTotals {
-  subtotal: number;
-  discount: number;
-  shipping?: number;
-  total: number;
-}
-
-export interface ShippingInfo {
-  providerId: string;
-  courierName: string;
-  shippingCost: number;
-  estimatedDays: number;
-  mode: string;
-  packageWeight?: number;
-}
-
-export interface ServerOrder {
-  id: string;
-  code: string;
-  userId?: string; // Optional for guest orders
-  items: OrderItem[];
-  totals: OrderTotals;
-  status: OrderStatus;
-  address: OrderAddress;
-  notes?: string;
-  placedAt: string;
-  estimatedDelivery?: string;
-  paymentMethod?: PaymentMethod;
-  paymentStatus?: PaymentStatus;
-  paymentId?: string;
-  // Shipping fields
-  shippingProviderId?: string;
-  shippingCost?: number;
-  courierName?: string;
-  trackingNumber?: string;
-  trackingUrl?: string;
-  packageWeight?: number;
-}
-
 export interface CreateOrderInput {
   userId?: string; // Optional for guest orders
   items: OrderItem[];
-  totals: OrderTotals;
+  itemsTotal: number;
+  shippingTotal: number;
+  discount: number;
+  grandTotal: number;
   address: OrderAddress;
   notes?: string;
   paymentMethod?: PaymentMethod;
   paymentStatus?: PaymentStatus;
   paymentId?: string;
-  shipping?: ShippingInfo;
+  status?: OrderStatus;
+  shipments: Shipment[];
+}
+
+interface Shipment {
+  id: string;
+  code: string;
+  orderId: string;
+  items: OrderItem[];
+  sellerId: string;
+  fromPincode: string;
+  fromCity: string;
+  fromState: string;
+  shippingCost: number;
+  shippingProviderId?: string;
+  courierName?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  status: string;
+  estimatedDelivery?: string;
 }
 
 export interface UpdateOrderInput {
@@ -90,4 +75,89 @@ export interface UpdateOrderInput {
   paymentMethod?: PaymentMethod;
   paymentStatus?: PaymentStatus;
   paymentId?: string;
+}
+
+// ============================================
+// NEW: Multi-Shipment Order Types
+// ============================================
+
+export interface ShipmentItem {
+  productId: string;
+  productName: string;
+  productSlug: string;
+  thumbnail: string;
+  price: number;
+  salePrice?: number;
+  quantity: number;
+}
+
+export interface ShippingGroupInput {
+  // Group identifier
+  groupId: string;
+
+  // Origin details
+  sellerId: string;
+  sellerName: string;
+  fromPincode: string;
+  fromCity: string;
+  fromState: string;
+
+  // Items in this group
+  items: ShipmentItem[];
+
+  // Shipping details
+  totalWeight: number;
+  itemsTotal: number;
+  selectedRate: {
+    providerId: string;
+    providerName: string;
+    courierName: string;
+    courierCode?: string;
+    rate: number;
+    estimatedDays: number;
+    mode: string;
+    etd?: string;
+  };
+}
+
+export interface CreateOrderWithShipmentsInput {
+  userId?: string;
+  address: OrderAddress;
+  shippingGroups: ShippingGroupInput[];
+  totals: {
+    itemsTotal: number;
+    shippingTotal: number;
+    discount: number;
+    grandTotal: number;
+  };
+  notes?: string;
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+}
+
+export interface ServerShipment {
+  id: string;
+  code: string;
+  orderId: string;
+  items: ShipmentItem[];
+  sellerId: string;
+  fromPincode: string;
+  fromCity: string;
+  fromState: string;
+  shippingCost: number;
+  shippingProviderId?: string;
+  courierName?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  status: string;
+  estimatedDelivery?: string;
+  createdAt: string;
+}
+
+export interface ServerOrderWithShipments extends Omit<Order, 'items' | 'shippingCost' | 'courierName' | 'trackingNumber' | 'totals'> {
+  itemsTotal: number;
+  shippingTotal: number;
+  discount: number;
+  grandTotal: number;
+  shipments: ServerShipment[];
 }

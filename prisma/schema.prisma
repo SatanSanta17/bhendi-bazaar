@@ -63,6 +63,9 @@ model Product {
   shippingFromCity      String?
   shippingFromLocation  String? // "Warehouse 2", "Special Location"
   
+  // ⭐ ADD THIS:
+  weight                Float?  @default(0.5) // Weight in kg
+  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   reviews           Review[]
@@ -180,6 +183,7 @@ model Seller {
   
   // Relations
   products Product[]
+  shipments Shipment[] // ← ADD THIS
   
   @@index([email])
   @@index([isActive])
@@ -225,57 +229,92 @@ model VerificationToken {
 
 model Order {
   id      String  @id @default(cuid())
-  code    String  @unique // e.g., BB-1001
-  userId  String? // null for guest orders
-  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  items   Json // CartItem[]
-  totals  Json // CartTotals { subtotal, discount, total }
-  status  String  @default("processing") // processing, packed, shipped, delivered
-  address Json // OrderAddress
+  code    String  @unique // "BB-1001"
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id])
+  
+  // Delivery address (same for all shipments)
+  address Json    // OrderAddress
   notes   String? @db.Text
-
-  // Payment fields
-  paymentMethod String? // razorpay
+  
+  // ✅ NEW: Order-level totals
+  itemsTotal    Float @default(0) // Sum of all item prices
+  shippingTotal Float @default(0) // Sum of all shipping costs
+  discount      Float @default(0)
+  grandTotal    Float @default(0) // itemsTotal + shippingTotal - discount
+  
+  // Payment (single for entire order)
+  paymentMethod String? // "razorpay"
   paymentStatus String? @default("pending") // pending, paid, failed
   paymentId     String? // Razorpay payment ID
-
-  // Shipping provider relationship
-  shippingProviderId String?
-  shippingProvider   ShippingProvider? @relation(fields: [shippingProviderId], references: [id], onDelete: SetNull)
-
-  // Tracking information
-  trackingNumber String? // AWB number from courier
-  courierName    String? // Actual courier company (e.g., "BlueDart Surface")
-  trackingUrl    String? // Direct URL to track shipment
-
-  // Package details
-  shippingCost      Float  @default(0) // Shipping charges in INR
-  packageWeight     Float? // Weight in kg
-  packageDimensions Json? // {length, width, height} in cm
-
-  // Shipment status tracking
-  shipmentStatus   String? // Current shipment status (normalized)
-  lastStatusUpdate DateTime? // When status was last updated
-  deliveredAt      DateTime? // Actual delivery timestamp
-
-  // Metadata & documents
-  shippingMeta Json? // Provider-specific data (labels, invoices, etc.)
-
-  estimatedDelivery DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  shippingEvents ShippingEvent[]
-
+  
+  // Overall order status (derived from shipments)
+  status String @default("processing") // processing, partially_shipped, completed
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // ✅ NEW: Relations to shipments
+  shipments Shipment[]
+  shippingEvents ShippingEvent[] // ← ADD THIS
+  
   @@index([userId])
   @@index([code])
-  @@index([createdAt])
   @@index([status])
   @@index([paymentStatus])
-  @@index([shippingProviderId])
+}
+
+model Shipment {
+  id      String @id @default(cuid())
+  code    String @unique // "BB-1001-SH1", "BB-1001-SH2"
+  
+  // Parent order
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // ✅ Items in THIS specific shipment
+  items   Json // ShipmentItem[] - only items from this origin
+  
+  // ✅ Origin details (where it ships from)
+  sellerId    String
+  seller      Seller @relation(fields: [sellerId], references: [id])
+  fromPincode String
+  fromCity    String
+  fromState   String
+  
+  // ✅ Shipping details (specific to this shipment)
+  shippingCost       Float
+  shippingProviderId String?
+  shippingProvider   ShippingProvider? @relation(fields: [shippingProviderId], references: [id])
+  
+  // ✅ Tracking (independent per shipment)
+  trackingNumber   String?
+  courierName      String? // "BlueDart Surface"
+  trackingUrl      String?
+  
+  // ✅ Status (independent per shipment)
+  status           String @default("processing") // processing, packed, shipped, delivered
+  shipmentStatus   String? // Provider-specific status
+  estimatedDelivery DateTime?
+  deliveredAt      DateTime?
+  
+  // Package details
+  packageWeight     Float?
+  packageDimensions Json? // {length, width, height}
+  
+  // Metadata
+  shippingMeta Json? // Provider-specific data
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  shippingEvents ShippingEvent[]
+  
+  @@index([orderId])
+  @@index([sellerId])
+  @@index([status])
   @@index([trackingNumber])
-  @@index([shipmentStatus])
 }
 
 model ShippingProvider {
@@ -321,7 +360,7 @@ model ShippingProvider {
   updatedAt DateTime @updatedAt
 
   // Relations
-  orders    Order[]
+  shipments Shipment[]
   rateCache ShippingRateCache[]
   events    ShippingEvent[]
 
@@ -369,6 +408,10 @@ model ShippingEvent {
   orderId String
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  // Shipment reference
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
   // Provider reference
   providerId String
   provider   ShippingProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
@@ -391,6 +434,7 @@ model ShippingEvent {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+  @@index([shipmentId])
   @@index([providerId])
   @@index([eventType])
   @@index([status])

@@ -60,7 +60,7 @@ export class AdminUserRepository {
           },
           orders: {
             select: {
-              totals: true,
+              grandTotal: true,
             },
           },
         },
@@ -81,8 +81,8 @@ export class AdminUserRepository {
       updatedAt: user.updatedAt,
       ordersCount: user._count.orders,
       totalSpent: user.orders.reduce((sum, order) => {
-        const totals = order.totals as any;
-        return sum + (totals?.total || 0);
+        const grandTotal = order.grandTotal || 0;
+        return sum + (grandTotal || 0);
       }, 0),
     }));
 
@@ -101,7 +101,7 @@ export class AdminUserRepository {
         },
         orders: {
           select: {
-            totals: true,
+            grandTotal: true,
           },
         },
       },
@@ -121,8 +121,8 @@ export class AdminUserRepository {
       updatedAt: user.updatedAt,
       ordersCount: user._count.orders,
       totalSpent: user.orders.reduce((sum, order) => {
-        const totals = order.totals as any;
-        return sum + (totals?.total || 0);
+        const grandTotal = order.grandTotal || 0;
+        return sum + grandTotal;
       }, 0),
     };
   }
@@ -143,7 +143,7 @@ export class AdminUserRepository {
         },
         orders: {
           select: {
-            totals: true,
+            grandTotal: true,
           },
         },
       },
@@ -161,8 +161,8 @@ export class AdminUserRepository {
       updatedAt: updated.updatedAt,
       ordersCount: updated._count.orders,
       totalSpent: updated.orders.reduce((sum, order) => {
-        const totals = order.totals as any;
-        return sum + (totals?.total || 0);
+        const grandTotal = order.grandTotal || 0;
+        return sum + grandTotal;
       }, 0),
     };
   }

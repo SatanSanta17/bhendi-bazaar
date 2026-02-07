@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useAuth } from "@/lib/auth";
 import type {
-  ProfileAddress,
+  Address,
   ProfileData,
   UpdateProfileInput,
   User,
@@ -30,7 +30,7 @@ interface ProfileContextValue {
 
   // Actions
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
-  updateAddresses: (addresses: ProfileAddress[]) => Promise<void>;
+  updateAddresses: (addresses: Address[]) => Promise<void>;
   updateUserInfo: (input: {
     name?: string;
     email?: string;
@@ -206,13 +206,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   // Convenience methods
   const updateAddresses = useCallback(
-    async (addresses: ProfileAddress[]) => {
+    async (addresses: Address[]) => {
       // remove the country code from the mobile
-      const addressesWithMobile = addresses.map((address) => ({
-        ...address,
-        mobile: address.mobile?.replace(/^\+91/, "").replace(/[\s\-+]/g, ""),
-      }));
-      await updateProfile({ addresses: addressesWithMobile });
+      await updateProfile({ addresses: addresses });
     },
     [updateProfile]
   );

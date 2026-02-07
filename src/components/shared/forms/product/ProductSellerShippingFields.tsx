@@ -3,7 +3,7 @@
 import { UseFormRegister, FieldErrors, UseFormWatch } from "react-hook-form";
 import { FormInput, FormSelect } from "../FormField";
 import { Info } from "lucide-react";
-import type { ProductFormInput } from "@/components/admin/products/types";
+import type { ProductFormInput } from "@/admin/products/types";
 
 interface ProductSellerShippingFieldsProps {
   register: UseFormRegister<ProductFormInput>;

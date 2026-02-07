@@ -2,24 +2,7 @@
  * Admin Order Management Domain Types
  */
 
-export interface AdminOrder {
-  id: string;
-  code: string;
-  userId: string | null;
-  userName: string | null;
-  userEmail: string | null;
-  items: any; // CartItem[]
-  totals: any; // CartTotals
-  status: string;
-  address: any; // OrderAddress
-  notes: string | null;
-  paymentMethod: string | null;
-  paymentStatus: string | null;
-  paymentId: string | null;
-  estimatedDelivery: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Order } from "@prisma/client";
 
 export interface OrderListFilters {
   search?: string; // Search by code, customer name, email
@@ -36,7 +19,7 @@ export interface OrderListFilters {
 }
 
 export interface OrderListResult {
-  orders: AdminOrder[];
+  orders: Order[];
   total: number;
   page: number;
   limit: number;

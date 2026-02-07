@@ -22,6 +22,7 @@ export interface Product {
   reviewsCount: number;
   images: string[];
   thumbnail: string;
+  weight: number;
   stock: number;
   lowStockThreshold: number;
   options?: {

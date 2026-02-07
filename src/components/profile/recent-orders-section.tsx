@@ -41,17 +41,17 @@ export function RecentOrdersSection({ orders }: RecentOrdersSectionProps) {
                 <div className="space-y-1">
                   <p className="font-semibold">
                     {order.code} ·{" "}
-                    {new Date(order.placedAt).toLocaleDateString("en-IN", {
+                    {new Date(order.createdAt).toLocaleDateString("en-IN", {
                       day: "numeric",
                       month: "short",
                     })}
                   </p>
                   <p className="text-muted-foreground">
-                    {order.address.fullName} · {order.items.length} items
+                    {order.address.addressLine1} · {order.shipments.length} items
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <PriceDisplay price={order.totals.total} size="sm" />
+                  <PriceDisplay price={order.grandTotal} size="sm" />
                 </div>
               </Link>
             ))}

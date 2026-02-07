@@ -21,6 +21,7 @@ const mapProduct = (product: any): Product => {
     reviewsCount: product.reviewsCount,
     images: product.images,
     thumbnail: product.thumbnail,
+    weight: product.weight ?? 0,
     stock: product.stock,
     lowStockThreshold: product.lowStockThreshold,
     options: {

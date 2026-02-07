@@ -39,6 +39,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 45,
     sku: "ABY-EMR-001",
     lowStockThreshold: 10,
+    weight: 0.4, // ⭐ Clothing weight
   },
   {
     id: "prod-2",
@@ -62,6 +63,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 28,
     sku: "JIL-BLK-001",
     lowStockThreshold: 10,
+    weight: 0.35, // ⭐ Lighter fabric
   },
   {
     id: "prod-3",
@@ -87,6 +89,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 12,
     sku: "ABY-MAR-001",
     lowStockThreshold: 10,
+    weight: 0.5, // ⭐ Heavier due to embroidery
   },
 
   // ATTARS CATEGORY (3 products)
@@ -112,6 +115,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 65,
     sku: "ATT-OUD-001",
     lowStockThreshold: 15,
+    weight: 0.05, // ⭐ Small perfume bottle
   },
   {
     id: "prod-5",
@@ -134,6 +138,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 0,
     sku: "ATT-RSM-001",
     lowStockThreshold: 10,
+    weight: 0.04, // ⭐ Small perfume bottle
   },
   {
     id: "prod-6",
@@ -160,6 +165,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 38,
     sku: "ATT-SAN-001",
     lowStockThreshold: 10,
+    weight: 0.05, // ⭐ Small perfume bottle
   },
 
   // JEWELLERY CATEGORY (3 products)
@@ -187,6 +193,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 22,
     sku: "JWL-EAR-001",
     lowStockThreshold: 8,
+    weight: 0.02, // ⭐ Very light jewelry
   },
   {
     id: "prod-8",
@@ -213,6 +220,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 8,
     sku: "JWL-NCK-001",
     lowStockThreshold: 10,
+    weight: 0.08, // ⭐ Heavier with stones
   },
   {
     id: "prod-9",
@@ -235,6 +243,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 5,
     sku: "JWL-JHM-001",
     lowStockThreshold: 8,
+    weight: 0.03, // ⭐ Light jewelry set
   },
 
   // PRAYER ESSENTIALS CATEGORY (3 products)
@@ -263,6 +272,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 42,
     sku: "PRY-MAT-001",
     lowStockThreshold: 10,
+    weight: 0.6, // ⭐ Prayer mat with cushioning
   },
   {
     id: "prod-11",
@@ -285,6 +295,7 @@ export const seedProducts: SeedProduct[] = [
     stock: 78,
     sku: "PRY-TSB-001",
     lowStockThreshold: 20,
+    weight: 0.03, // ⭐ Wooden beads
   },
   {
     id: "prod-12",
@@ -307,5 +318,6 @@ export const seedProducts: SeedProduct[] = [
     stock: 33,
     sku: "PRY-QCR-001",
     lowStockThreshold: 15,
+    weight: 0.15, // ⭐ Padded fabric cover
   },
 ];

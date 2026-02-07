@@ -4,7 +4,7 @@
  */
 
 import { categoriesDAL } from "@/data-access-layer/admin/categories.dal";
-import { ProductAddContainer } from "@/components/admin/products/productAdd";
+import { ProductAddContainer } from "@/admin/products/productAdd";
 import { sellersDAL } from "@/data-access-layer/admin/sellers.dal";
 import type { SellerWithStats } from "@/domain/seller";
 import type { AdminCategory } from "@/domain/admin";

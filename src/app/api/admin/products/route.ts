@@ -10,7 +10,7 @@ import { productsService } from "@server/admin/services/products.service";
 import type {
   ProductFilters,
   ProductFormInput,
-} from "@/components/admin/products/types";
+} from "@/admin/products/types";
 import { ProductFlag } from "@/types/product";
 
 export async function GET(request: NextRequest) {

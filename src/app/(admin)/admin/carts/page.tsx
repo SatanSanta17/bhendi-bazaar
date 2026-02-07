@@ -9,7 +9,7 @@ import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useMutation } from "@/hooks/core/useMutation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { DataTable, Column } from "@/components/admin/data-table";
+import { DataTable, Column } from "@/admin/data-table";
 import { ShoppingCart, Mail, Eye, RefreshCw } from "lucide-react";
 import { adminCartService } from "@/services/admin/cartService";
 import type { AbandonedCart, AbandonedCartFilters } from "@/domain/admin";

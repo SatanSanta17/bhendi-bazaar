@@ -84,6 +84,7 @@ export interface SeedProduct {
   stock: number;
   sku?: string;
   lowStockThreshold: number;
+  weight?: number; // ⭐ Weight in kg
 }
 
 export interface SeedOrder {
@@ -91,17 +92,36 @@ export interface SeedOrder {
   code: string;
   userId: string | null;
   items: OrderItem[];
-  totals: {
-    subtotal: number;
-    discount: number;
-    total: number;
-  };
+  itemsTotal: number; // ⭐ Changed from totals.subtotal
+  shippingTotal: number; // ⭐ New field
+  discount: number; // ⭐ Changed from totals.discount
+  grandTotal: number; // ⭐ Changed from totals.total
   status: "processing" | "packed" | "shipped" | "delivered";
   address: SeedAddress;
   notes?: string;
   paymentMethod: string;
   paymentStatus: "pending" | "paid" | "failed";
   paymentId?: string;
+  estimatedDelivery?: Date;
+  createdAt: Date;
+}
+
+export interface SeedShipment {
+  id: string;
+  code: string; // "BB-1001-SH1"
+  orderId: string;
+  items: OrderItem[]; // Items in this specific shipment
+  sellerId: string;
+  fromPincode: string;
+  fromCity: string;
+  fromState: string;
+  shippingCost: number;
+  shippingProviderId?: string;
+  trackingNumber?: string;
+  courierName?: string;
+  trackingUrl?: string;
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "failed";
+  packageWeight?: number;
   estimatedDelivery?: Date;
   createdAt: Date;
 }

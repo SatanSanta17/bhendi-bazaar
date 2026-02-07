@@ -7,16 +7,10 @@
 
 import { prisma } from "@/lib/prisma";
 import type {
-  ServerOrder,
   CreateOrderInput,
   UpdateOrderInput,
-  OrderItem,
-  OrderTotals,
-  OrderAddress,
-  OrderStatus,
-  PaymentMethod,
-  PaymentStatus,
 } from "../domain/order";
+import { Order } from "@prisma/client";
 
 /**
  * Helper to generate order code
@@ -35,97 +29,46 @@ function calculateEstimatedDelivery(): string {
   return deliveryDate.toISOString();
 }
 
-/**
- * Normalize JSON fields from database
- */
-function normalizeItems(items: unknown): OrderItem[] {
-  if (!items) return [];
-  if (Array.isArray(items)) {
-    return items as OrderItem[];
-  }
-  return [];
-}
-
-function normalizeTotals(totals: unknown): OrderTotals {
-  if (totals && typeof totals === "object") {
-    return totals as OrderTotals;
-  }
-  return { subtotal: 0, discount: 0, total: 0 };
-}
-
-function normalizeAddress(address: unknown): OrderAddress {
-  if (address && typeof address === "object") {
-    return address as OrderAddress;
-  }
-  throw new Error("Invalid address data");
-}
 
 export class OrderRepository {
   /**
    * List all orders for a user
    */
-  async listByUserId(userId: string): Promise<ServerOrder[]> {
+  async listByUserId(userId: string): Promise<Order[]> {
     const orders = await prisma.order.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
 
-    return orders.map((order) => ({
-      id: order.id,
-      code: order.code,
-      userId: order.userId ?? undefined,
-      items: normalizeItems(order.items),
-      totals: normalizeTotals(order.totals),
-      status: order.status as OrderStatus,
-      address: normalizeAddress(order.address),
-      notes: order.notes ?? undefined,
-      placedAt: order.createdAt.toISOString(),
-      estimatedDelivery: order.estimatedDelivery?.toISOString(),
-      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
-      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
-      paymentId: order.paymentId ?? undefined,
-      shippingProviderId: order.shippingProviderId ?? undefined,
-      shippingCost: order.shippingCost,
-      courierName: order.courierName ?? undefined,
-      trackingNumber: order.trackingNumber ?? undefined,
-      trackingUrl: order.trackingUrl ?? undefined,
-      packageWeight: order.packageWeight ?? undefined,
-    }));
+    return orders;
   }
 
   /**
    * Find order by ID
    */
-  async findById(orderId: string): Promise<ServerOrder | null> {
+  async findById(orderId: string) {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
+      include: {
+        shipments: true,
+      },
     });
 
     if (!order) {
       return null;
     }
 
+    // Map Prisma null to undefined for userId
     return {
-      id: order.id,
-      code: order.code,
-      userId: order.userId ?? undefined,
-      items: normalizeItems(order.items),
-      totals: normalizeTotals(order.totals),
-      status: order.status as OrderStatus,
-      address: normalizeAddress(order.address),
-      notes: order.notes ?? undefined,
-      placedAt: order.createdAt.toISOString(),
-      estimatedDelivery: order.estimatedDelivery?.toISOString(),
-      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
-      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
-      paymentId: order.paymentId ?? undefined,
-    };
+      ...order,
+      userId: order.userId || undefined,
+    } as any;
   }
 
   /**
    * Find order by code (for guest lookup)
    */
-  async findByCode(code: string): Promise<ServerOrder | null> {
+  async findByCode(code: string): Promise<Order | null> {
     const order = await prisma.order.findUnique({
       where: { code },
     });
@@ -134,33 +77,17 @@ export class OrderRepository {
       return null;
     }
 
+    // Map Prisma null to undefined for userId
     return {
-      id: order.id,
-      code: order.code,
-      userId: order.userId ?? undefined,
-      items: normalizeItems(order.items),
-      totals: normalizeTotals(order.totals),
-      status: order.status as OrderStatus,
-      address: normalizeAddress(order.address),
-      notes: order.notes ?? undefined,
-      placedAt: order.createdAt.toISOString(),
-      estimatedDelivery: order.estimatedDelivery?.toISOString(),
-      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
-      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
-      paymentId: order.paymentId ?? undefined,
-      shippingProviderId: order.shippingProviderId ?? undefined,
-      shippingCost: order.shippingCost,
-      courierName: order.courierName ?? undefined,
-      trackingNumber: order.trackingNumber ?? undefined,
-      trackingUrl: order.trackingUrl ?? undefined,
-      packageWeight: order.packageWeight ?? undefined,
-    };
+      ...order,
+      userId: order.userId || undefined,
+    } as any;
   }
 
   /**
    * Create a new order with automatic stock deduction
    */
-  async create(input: CreateOrderInput): Promise<ServerOrder> {
+  async create(input: CreateOrderInput): Promise<boolean> {
     // Use Prisma transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
       // Step 1: Validate and check stock availability for all items
@@ -184,30 +111,21 @@ export class OrderRepository {
       // Step 2: Generate code
       const code = generateOrderCode();
 
-      // Step 3: Calculate estimated delivery
-      const estimatedDelivery = input.shipping?.estimatedDays
-        ? new Date(Date.now() + input.shipping.estimatedDays * 24 * 60 * 60 * 1000)
-        : calculateEstimatedDelivery();
-
       // Step 4: Create the order
       const order = await tx.order.create({
         data: {
           code,
           userId: input.userId ?? null,
-          items: input.items as any,
-          totals: input.totals as any,
+          itemsTotal: input.itemsTotal,
+          shippingTotal: input.shippingTotal,
+          discount: input.discount,
+          grandTotal: input.grandTotal,
           status: "processing",
           address: input.address as any,
           notes: input.notes ?? null,
           paymentMethod: input.paymentMethod ?? null,
           paymentStatus: input.paymentStatus ?? "pending",
           paymentId: input.paymentId ?? null,
-          estimatedDelivery,
-          // Shipping fields
-          shippingProviderId: input.shipping?.providerId ?? null,
-          shippingCost: input.shipping?.shippingCost ?? 0,
-          courierName: input.shipping?.courierName ?? null,
-          packageWeight: input.shipping?.packageWeight ?? null,
         },
       });
 
@@ -227,27 +145,7 @@ export class OrderRepository {
     });
 
     // Return normalized order
-    return {
-      id: result.id,
-      code: result.code,
-      userId: result.userId ?? undefined,
-      items: normalizeItems(result.items),
-      totals: normalizeTotals(result.totals),
-      status: result.status as OrderStatus,
-      address: normalizeAddress(result.address),
-      notes: result.notes ?? undefined,
-      placedAt: result.createdAt.toISOString(),
-      estimatedDelivery: result.estimatedDelivery?.toISOString(),
-      paymentMethod: result.paymentMethod as PaymentMethod | undefined,
-      paymentStatus: result.paymentStatus as PaymentStatus | undefined,
-      paymentId: result.paymentId ?? undefined,
-      shippingProviderId: result.shippingProviderId ?? undefined,
-      shippingCost: result.shippingCost,
-      courierName: result.courierName ?? undefined,
-      trackingNumber: result.trackingNumber ?? undefined,
-      trackingUrl: result.trackingUrl ?? undefined,
-      packageWeight: result.packageWeight ?? undefined,
-    };
+    return true;
   }
 
   /**
@@ -256,7 +154,7 @@ export class OrderRepository {
   async update(
     orderId: string,
     input: UpdateOrderInput
-  ): Promise<ServerOrder | null> {
+  ): Promise<boolean> {
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -267,90 +165,68 @@ export class OrderRepository {
       },
     });
 
-    return {
-      id: order.id,
-      code: order.code,
-      userId: order.userId ?? undefined,
-      items: normalizeItems(order.items),
-      totals: normalizeTotals(order.totals),
-      status: order.status as OrderStatus,
-      address: normalizeAddress(order.address),
-      notes: order.notes ?? undefined,
-      placedAt: order.createdAt.toISOString(),
-      estimatedDelivery: order.estimatedDelivery?.toISOString(),
-      paymentMethod: order.paymentMethod as PaymentMethod | undefined,
-      paymentStatus: order.paymentStatus as PaymentStatus | undefined,
-      paymentId: order.paymentId ?? undefined,
-      shippingProviderId: order.shippingProviderId ?? undefined,
-      shippingCost: order.shippingCost,
-      courierName: order.courierName ?? undefined,
-      trackingNumber: order.trackingNumber ?? undefined,
-      trackingUrl: order.trackingUrl ?? undefined,
-      packageWeight: order.packageWeight ?? undefined,
-    };
+    return true;
   }
 
   /**
    * Cancel an order and restore stock
    */
-  async cancel(orderId: string): Promise<ServerOrder | null> {
-    const result = await prisma.$transaction(async (tx) => {
-      // Get order to restore stock
-      const existingOrder = await tx.order.findUnique({
-        where: { id: orderId },
-      });
+  // async cancel(orderId: string): Promise<boolean> {
+  //   const result = await prisma.$transaction(async (tx) => {
+  //     // Get order to restore stock
+  //     const existingOrder = await tx.order.findUnique({
+  //       where: { id: orderId },
+  //     });
 
-      if (!existingOrder) {
-        throw new Error("Order not found");
-      }
+  //     if (!existingOrder) {
+  //       throw new Error("Order not found");
+  //     }
 
-      // Only restore stock if order is in a cancellable state
-      const cancellableStatuses = ["processing", "packed"];
-      if (!cancellableStatuses.includes(existingOrder.status)) {
-        throw new Error(
-          `Cannot cancel order with status: ${existingOrder.status}`
-        );
-      }
+  //     // Only restore stock if order is in a cancellable state
+  //     const cancellableStatuses = ["processing", "packed"];
+  //     if (!cancellableStatuses.includes(existingOrder.status)) {
+  //       throw new Error(
+  //         `Cannot cancel order with status: ${existingOrder.status}`
+  //       );
+  //     }
 
-      const items = normalizeItems(existingOrder.items);
+  //     // Update order status to cancelled
+  //     const order = await tx.order.update({
+  //       where: { id: orderId },
+  //       data: { status: "cancelled" },
+  //     });
 
-      // Update order status to cancelled
-      const order = await tx.order.update({
-        where: { id: orderId },
-        data: { status: "cancelled" },
-      });
+  //     // Restore stock for each item
+  //     for (const item of items) {
+  //       await tx.product.update({
+  //         where: { id: item.productId },
+  //         data: {
+  //           stock: {
+  //             increment: item.quantity,
+  //           },
+  //         },
+  //       });
+  //     }
 
-      // Restore stock for each item
-      for (const item of items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: {
-              increment: item.quantity,
-            },
-          },
-        });
-      }
+  //     return order;
+  //   });
 
-      return order;
-    });
-
-    return {
-      id: result.id,
-      code: result.code,
-      userId: result.userId ?? undefined,
-      items: normalizeItems(result.items),
-      totals: normalizeTotals(result.totals),
-      status: result.status as OrderStatus,
-      address: normalizeAddress(result.address),
-      notes: result.notes ?? undefined,
-      placedAt: result.createdAt.toISOString(),
-      estimatedDelivery: result.estimatedDelivery?.toISOString(),
-      paymentMethod: result.paymentMethod as PaymentMethod | undefined,
-      paymentStatus: result.paymentStatus as PaymentStatus | undefined,
-      paymentId: result.paymentId ?? undefined,
-    };
-  }
+  //   return {
+  //     id: result.id,
+  //     code: result.code,
+  //     userId: result.userId ?? undefined,
+  //     items: normalizeItems(result.items),
+  //     totals: normalizeTotals(result.totals),
+  //     status: result.status as OrderStatus,
+  //     address: normalizeAddress(result.address),
+  //     notes: result.notes ?? undefined,
+  //     placedAt: result.createdAt.toISOString(),
+  //     estimatedDelivery: result.estimatedDelivery?.toISOString(),
+  //     paymentMethod: result.paymentMethod as PaymentMethod | undefined,
+  //     paymentStatus: result.paymentStatus as PaymentStatus | undefined,
+  //     paymentId: result.paymentId ?? undefined,
+  //   };
+  // }
 
   /**
    * Delete an order (admin only)

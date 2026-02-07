@@ -3,7 +3,7 @@
 import { Control } from "react-hook-form";
 import { FormController } from "../FormField";
 import { MultiSelect } from "@/components/ui/multi-select";
-import type { ProductFormInput } from "@/components/admin/products/types";
+import type { ProductFormInput } from "@/admin/products/types";
 
 interface ProductAttributeFieldsProps {
   control: Control<ProductFormInput>;

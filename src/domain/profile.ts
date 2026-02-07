@@ -5,19 +5,26 @@
  * They mirror the API response structure and are used for type safety.
  */
 
-import { DeliveryAddress } from "@/components/checkoutContainer/types";
 
-export interface ProfileAddress extends DeliveryAddress {
+export interface Address {
   id: string;
   label?: string;
-  isDefault?: boolean;
+  isDefault: boolean;
+  addressLine1: string;
+  addressLine2?: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  metadata?: Record<string, any>;
 }
 
 export interface UserProfile {
   id: string;
   userId: string;
   profilePic: string | null;
-  addresses: ProfileAddress[];
+  addresses: Address[];
 }
 
 // User fields relevant to profile editing
@@ -43,6 +50,6 @@ export interface UpdateProfileInput {
   email?: string;
   mobile?: string;
   // Profile fields
-  addresses?: ProfileAddress[];
+  addresses?: Address[];
   profilePic?: string | null;
 }

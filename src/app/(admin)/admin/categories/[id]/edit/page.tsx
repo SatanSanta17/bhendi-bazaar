@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { CategoryForm } from "@/components/admin/category-form";
+import { CategoryForm } from "@/admin/category-form";
 import { adminCategoryService } from "@/services/admin/categoryService";
 import type { AdminCategory } from "@/domain/admin";
 

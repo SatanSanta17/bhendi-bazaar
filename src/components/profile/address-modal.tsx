@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProfileAddress } from "@/domain/profile";
+import type { Address } from "@/domain/profile";
 import { X, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormActions } from "../shared/button-groups/FormActions";
@@ -10,10 +10,10 @@ import { useForm } from "react-hook-form";
 
 interface AddressModalProps {
   mode: "view" | "edit" | "add";
-  address: ProfileAddress;
+  address: Address;
   saving: boolean;
   onClose: () => void;
-  onSave: (address: ProfileAddress) => void | Promise<void>;
+  onSave: (address: Address) => void | Promise<void>;
   onStartEdit: () => void;
   onSetDefault?: () => void;
   onDelete?: () => void;
@@ -31,7 +31,7 @@ export function AddressModal({
 }: AddressModalProps) {
   const isEditing = mode === "edit" || mode === "add";
 
-  function handleSave(data: ProfileAddress) {
+  function handleSave(data: Address) {
     void onSave({ ...address, ...data });
   }
   return (
@@ -85,7 +85,7 @@ export function AddressModal({
 }
 
 interface AddressViewModeProps {
-  address: ProfileAddress;
+  address: Address;
   saving: boolean;
   onStartEdit: () => void;
   onSetDefault?: () => void;
@@ -106,9 +106,6 @@ function AddressViewMode({
           <p className="font-semibold">{address.label}</p>
           {address.isDefault && <DefaultBadge />}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {address.fullName} · {address.mobile}
-        </p>
       </div>
 
       <div className="space-y-0.5 text-xs text-muted-foreground">
@@ -166,9 +163,9 @@ function AddressViewMode({
 }
 
 interface AddressFormProps {
-  address: ProfileAddress;
+  address: Address;
   saving: boolean;
-  onSubmit: (address: ProfileAddress) => void;
+  onSubmit: (address: Address) => void;
   onCancel: () => void;
 }
 
@@ -182,7 +179,7 @@ function AddressForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ProfileAddress>({
+  } = useForm<Address>({
     defaultValues: address,
   });
 

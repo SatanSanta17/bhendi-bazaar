@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { ProductsView } from "@/components/admin/products/ProductsView";
+import { ProductsView } from "@/admin/products/ProductsView";
 import { productsDAL } from "@/data-access-layer/admin/products.dal";
 
 async function getProduct(id: string) {

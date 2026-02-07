@@ -1,7 +1,7 @@
 // src/app/(admin)/admin/shipping/providers/page.tsx
 
 import { Metadata } from "next";
-import { ProvidersContainer } from "@/components/admin/shipping/providersContainer";
+import { ProvidersContainer } from "@/admin/shipping/providersContainer";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 
 export const metadata: Metadata = {

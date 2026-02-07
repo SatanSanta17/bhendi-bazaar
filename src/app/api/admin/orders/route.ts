@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminOrderService } from "../../../../../server/services/admin/orderService";
+import { adminOrderService } from "../../../../../server/admin/services/orders.service";
 import type { OrderListFilters } from "../../../../../server/domain/admin/order";
 
 export async function GET(request: NextRequest) {

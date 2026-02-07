@@ -1,4 +1,4 @@
-import { SellersContainer } from "@/components/admin/sellersContainer";
+import { SellersContainer } from "@/admin/sellersContainer";
 
 export default function SellersPage() {
   return <SellersContainer />;

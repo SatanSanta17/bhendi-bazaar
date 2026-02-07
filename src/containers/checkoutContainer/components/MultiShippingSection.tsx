@@ -1,0 +1,186 @@
+"use client";
+
+import { Package, Truck, MapPin, Clock } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
+import { formatDeliveryEstimate } from "@/utils/shipping";
+import { formatShippingCost } from "@/domain/shipping";
+import type { ShippingGroup, ShippingRate } from "@/domain/shipping";
+
+interface MultiShippingSectionProps {
+  groups: ShippingGroup[];
+  onRateSelect: (groupId: string, rate: ShippingRate) => void;
+  isLoading: boolean;
+}
+
+export function MultiShippingSection({
+  groups,
+  onRateSelect,
+  isLoading,
+}: MultiShippingSectionProps) {
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+  
+  if (groups.length === 0) {
+    return null;
+  }
+  
+  // Show multi-shipment notice if more than one group
+  const hasMultipleShipments = groups.length > 1;
+  
+  return (
+    <div className="space-y-4">
+      {/* Multi-shipment notice */}
+      {hasMultipleShipments && (
+        <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <Package className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-blue-900">
+                Multiple Shipments
+              </p>
+              <p className="text-blue-700 mt-1">
+                Your order will arrive in <span className="font-semibold">{groups.length} separate packages</span> as items ship from different locations.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Shipping groups */}
+      <div className="space-y-4">
+        {groups.map((group, index) => (
+          <ShippingGroupCard
+            key={group.groupId}
+            group={group}
+            groupNumber={index + 1}
+            totalGroups={groups.length}
+            onRateSelect={(rate) => onRateSelect(group.groupId, rate)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface ShippingGroupCardProps {
+  group: ShippingGroup;
+  groupNumber: number;
+  totalGroups: number;
+  onRateSelect: (rate: ShippingRate) => void;
+}
+
+function ShippingGroupCard({
+  group,
+  groupNumber,
+  totalGroups,
+  onRateSelect,
+}: ShippingGroupCardProps) {
+  const showGroupNumber = totalGroups > 1;
+  
+  return (
+    <Card className="p-4 space-y-3">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          {showGroupNumber && (
+            <p className="text-xs font-medium text-muted-foreground">
+              Shipment {groupNumber} of {totalGroups}
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              Ships from {group.fromCity}, {group.fromState}
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Seller: {group.sellerName}
+          </p>
+        </div>
+        
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">Items</p>
+          <p className="text-sm font-semibold">{group.items.length}</p>
+        </div>
+      </div>
+      
+      {/* Items preview */}
+      <div className="text-xs text-muted-foreground">
+        {group.items.slice(0, 2).map((item: any, idx: number) => (
+          <span key={item.id}>
+            {item.productName}
+            {idx < Math.min(group.items.length, 2) - 1 ? ", " : ""}
+          </span>
+        ))}
+        {group.items.length > 2 && ` and ${group.items.length - 2} more`}
+      </div>
+      
+      <Separator />
+      
+      {/* Shipping rates */}
+      {group.isLoading ? (
+        <div className="py-2">
+          <p className="text-sm text-muted-foreground">Loading shipping options...</p>
+        </div>
+      ) : group.error ? (
+        <div className="py-2 text-sm text-red-600">
+          {group.error}
+        </div>
+      ) : !group.serviceable ? (
+        <div className="py-2 text-sm text-amber-600">
+          Shipping not available to this location
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">
+            Select shipping method:
+          </p>
+          {group.rates.map((rate) => (
+            <button
+              key={`${rate.providerId}-${rate.courierCode}`}
+              type="button"
+              onClick={() => onRateSelect(rate)}
+              className={`
+                w-full p-3 rounded-lg border-2 transition-all text-left
+                ${
+                  group.selectedRate?.courierCode === rate.courierCode
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }
+              `}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-medium">{rate.courierName}</p>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDeliveryEstimate(rate.estimatedDays)}
+                    </span>
+                    {rate.mode && (
+                      <span className="px-1.5 py-0.5 rounded bg-muted">
+                        {rate.mode}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <p className="text-sm font-semibold">
+                    {formatShippingCost(rate.rate)}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}

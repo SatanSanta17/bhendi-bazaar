@@ -3,7 +3,7 @@
  * Layout wrapper for admin pages
  */
 
-import { AdminSidebar } from "@/components/admin/sidebar";
+import { AdminSidebar } from "@/admin/sidebar";
 
 export default function AdminLayout({
   children,

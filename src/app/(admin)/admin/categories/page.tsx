@@ -8,7 +8,7 @@
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useMutation } from "@/hooks/core/useMutation";
 import { useState } from "react";
-import { DataTable, Column } from "@/components/admin/data-table";
+import { DataTable, Column } from "@/admin/data-table";
 import { Search, Plus, Edit, Trash2, MoveUp, MoveDown } from "lucide-react";
 import Link from "next/link";
 import { adminCategoryService } from "@/services/admin/categoryService";

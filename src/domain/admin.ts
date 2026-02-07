@@ -17,7 +17,6 @@ export type {
 } from "../../server/domain/admin/user";
 
 export type {
-  AdminOrder,
   OrderListFilters,
   OrderListResult,
 } from "../../server/domain/admin/order";

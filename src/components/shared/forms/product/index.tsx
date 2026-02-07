@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormController } from "../FormField";
-import { ImageUpload } from "@/components/admin/image-upload";
+import { ImageUpload } from "@/admin/image-upload";
 import { ProductBasicFields } from "./ProductBasicFields";
 import { ProductPricingFields } from "./ProductPricingFields";
 import { ProductInventoryFields } from "./ProductInventoryFields";
@@ -13,7 +13,7 @@ import { ProductAttributeFields } from "./ProductAttributeFields";
 import { ProductFlagsFields } from "./ProductFlagsFields";
 import { ProductSellerShippingFields } from "./ProductSellerShippingFields";
 import { FormActions } from "../../button-groups/FormActions";
-import type { ProductFormInput, ProductDetails } from "@/components/admin/products/types";
+import type { ProductFormInput, ProductDetails } from "@/admin/products/types";
 import { useFormPersist } from "@/hooks/forms/useFormPersist";
 interface ProductFormProps {
   product?: ProductDetails;
@@ -52,6 +52,7 @@ export function ProductForm({
       flags: product?.flags || [],
       images: product?.images || [],
       thumbnail: product?.thumbnail || "",
+      weight: product?.weight || 0,
       sizes: product?.sizes || [],
       colors: product?.colors || [],
       stock: product?.stock || 0,

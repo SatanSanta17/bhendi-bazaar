@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 import { productsService } from "@server/admin/services/products.service";
-import type { ProductDetails, ProductFilters, ProductForTable, ProductStats } from "@/components/admin/products/types";
+import type { ProductDetails, ProductFilters, ProductForTable, ProductStats } from "@/admin/products/types";
 import type { Pagination } from "@/types/shared";
 import { ProductFlag } from "@/types/shared";
 
@@ -60,6 +60,7 @@ class ProductsDAL {
       sku: product.sku ?? undefined,
       stock: product.stock,
       lowStockThreshold: product.lowStockThreshold,
+      weight: product.weight ?? 0,
       images: product.images,
       thumbnail: product.thumbnail,
       sizes: product.sizes,

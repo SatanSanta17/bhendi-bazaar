@@ -2,7 +2,7 @@
 
 import { Control } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { ProductFormInput } from "@/components/admin/products/types";
+import type { ProductFormInput } from "@/admin/products/types";
 import { FormController } from "../FormField";
 import { ProductFlag, PRODUCT_FLAG_METADATA } from "@/types/product";
 

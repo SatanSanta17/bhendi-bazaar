@@ -1,38 +1,10 @@
-import type { ServerOrder } from "../../../domain/order";
+import type { Order } from "@/domain/order";
 import { baseEmailStyles } from "./styles/baseEmailStyles";
 import { formatCurrency, formatDate } from "../formatters";
 
-export function getPurchaseConfirmationEmailTemplate(order: ServerOrder): string {
+export function getPurchaseConfirmationEmailTemplate(order: Order): string {
   // Generate order items HTML
-  const orderItemsHtml = order.items
-    .map(
-      (item) => `
-        <tr>
-          <td style="padding: 15px; border-bottom: 1px solid #e5e5e5;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-              <img 
-                src="${item.thumbnail}" 
-                alt="${item.productName}" 
-                style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5e5;"
-              />
-              <div>
-                <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 4px;">
-                  ${item.productName}
-                </div>
-                ${item.selectedVariant ? `<div style="font-size: 13px; color: #666;">Variant: ${item.selectedVariant}</div>` : ""}
-                <div style="font-size: 13px; color: #666;">
-                  Quantity: ${item.quantity} × ${formatCurrency(item.price)}
-                </div>
-              </div>
-            </div>
-          </td>
-          <td style="padding: 15px; text-align: right; border-bottom: 1px solid #e5e5e5; font-weight: 600; color: #1a1a1a;">
-            ${formatCurrency(item.price * item.quantity)}
-          </td>
-        </tr>
-      `
-    )
-    .join("");
+  const orderItemsHtml = order.itemsTotal
 
   // Tracking URL
   const trackingUrl = `${process.env.NEXTAUTH_URL}/order/${order.id}`;
@@ -220,7 +192,7 @@ export function getPurchaseConfirmationEmailTemplate(order: ServerOrder): string
                 <div>
                   <div class="order-number">Order #${order.code}</div>
                 </div>
-                <div class="order-date">${formatDate(new Date(order.placedAt))}</div>
+                <div class="order-date">${formatDate(new Date(order.createdAt))}</div>
               </div>
               
               <div class="order-info-grid">
@@ -237,11 +209,11 @@ export function getPurchaseConfirmationEmailTemplate(order: ServerOrder): string
                   </div>
                 </div>
                 ${
-                  order.estimatedDelivery
+    order.shipments.length > 0
                     ? `
                 <div class="info-item">
                   <div class="info-label">Estimated Delivery</div>
-                  <div class="info-value">${formatDate(new Date(order.estimatedDelivery))}</div>
+                  <div class="info-value">${order.shipments[0].estimatedDelivery ? formatDate(new Date(order.shipments[0].estimatedDelivery)) : "N/A"}</div>
                 </div>
                 `
                     : ""
@@ -268,21 +240,21 @@ export function getPurchaseConfirmationEmailTemplate(order: ServerOrder): string
             <div class="totals-section">
               <div class="total-row">
                 <span class="total-label">Subtotal:</span>
-                <span class="total-value">${formatCurrency(order.totals.subtotal)}</span>
+                <span class="total-value">${formatCurrency(order.itemsTotal)}</span>
               </div>
               ${
-                order.totals.discount > 0
+    order.discount > 0
                   ? `
               <div class="total-row">
                 <span class="total-label">Discount:</span>
-                <span class="total-value" style="color: #22c55e;">-${formatCurrency(order.totals.discount)}</span>
+                <span class="total-value" style="color: #22c55e;">-${formatCurrency(order.discount)}</span>
               </div>
               `
                   : ""
               }
               <div class="total-row final">
                 <span>Total:</span>
-                <span>${formatCurrency(order.totals.total)}</span>
+                <span>${formatCurrency(order.grandTotal)}</span>
               </div>
             </div>
             

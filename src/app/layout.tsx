@@ -12,6 +12,9 @@ import {
   LOGO,
   OG_IMAGE,
 } from "@/lib/config";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
+import { redirect } from "next/navigation";
 
 const headingFont = Playfair_Display({
   variable: "--font-heading",
@@ -41,17 +44,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions); // ✨ Fetch on server
+
   return (
     <html lang="en">
       <body
         className={`${headingFont.variable} ${bodyFont.variable} antialiased`}
       >
-        <Providers>
+        <Providers session={session}>
           <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
           <FloatingAdminButton />
         </Providers>

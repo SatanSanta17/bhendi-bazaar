@@ -7,7 +7,7 @@
 
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { toast } from "sonner";
-import { StatsCard } from "@/components/admin/stats-card";
+import { StatsCard } from "@/admin/stats-card";
 import {
   DollarSign,
   ShoppingCart,

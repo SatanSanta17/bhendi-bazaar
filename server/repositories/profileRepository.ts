@@ -9,16 +9,15 @@ import { prisma } from "@/lib/prisma";
 import type {
   ServerProfileData,
   UpdateProfileInput,
-  ProfileAddress,
 } from "../domain/profile";
-
+import type { Address } from "../domain/profile";
 /**
  * Helper to normalize addresses from database JSON
  */
-function normalizeAddresses(addresses: unknown): ProfileAddress[] {
+function normalizeAddresses(addresses: unknown): Address[] {
   if (!addresses) return [];
   if (Array.isArray(addresses)) {
-    return addresses as ProfileAddress[];
+    return addresses as Address[];
   }
   return [];
 }

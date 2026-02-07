@@ -9,6 +9,7 @@ export * from "./sellers.seed";
 export * from "./categories.seed";
 export * from "./products.seed";
 export * from "./orders.seed";
+export * from "./shipments.seed"; // ⭐ NEW
 export * from "./reviews.seed";
 export * from "./carts.seed";
 export * from "./shipping.seed";

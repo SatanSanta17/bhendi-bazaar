@@ -2,7 +2,7 @@
 
 import { useProfileContext } from "@/context/ProfileContext";
 import { useAuth } from "@/lib/auth";
-import type { ProfileAddress } from "@/domain/profile";
+import type { Address } from "@/domain/profile";
 import { orderService } from "@/services/orderService";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { AddressesSection } from "@/components/profile/addresses-section";
@@ -45,7 +45,7 @@ export default function ProfilePage() {
   });
 
   // Handle saving an address (add or update)
-  async function handleSaveAddress(address: ProfileAddress) {
+  async function handleSaveAddress(address: Address) {
     if (!profile) return;
 
     const existing = profile.addresses ?? [];

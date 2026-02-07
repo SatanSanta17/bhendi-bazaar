@@ -3,7 +3,7 @@
  * Edit an existing product
  */
 import { productsDAL } from "@/data-access-layer/admin/products.dal";
-import { ProductEditContainer } from "@/components/admin/products/productEdit";
+import { ProductEditContainer } from "@/admin/products/productEdit";
 import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 import { Suspense } from "react";
 import { sellersDAL } from "@/data-access-layer/admin/sellers.dal";

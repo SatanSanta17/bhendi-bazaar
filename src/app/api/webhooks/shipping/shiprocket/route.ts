@@ -35,39 +35,57 @@ export async function POST(request: NextRequest) {
       payload
     );
 
-    // Find order by tracking number
-    const order = await prisma.order.findFirst({
+    // Find shipment by tracking number
+    const shipment = await prisma.shipment.findFirst({
       where: { trackingNumber: webhookEvent.trackingNumber },
+      include: { order: true },
     });
 
-    if (!order) {
-      console.warn(`Order not found for tracking number: ${webhookEvent.trackingNumber}`);
+    if (!shipment) {
+      console.warn(`Shipment not found for tracking number: ${webhookEvent.trackingNumber}`);
       // Still return 200 to acknowledge webhook
-      return NextResponse.json({ success: true, message: "Order not found" });
+      return NextResponse.json({ success: true, message: "Shipment not found" });
     }
 
-    // Update order status
+    // Update shipment status
     const updateData: any = {
-      shipmentStatus: webhookEvent.status.status,
-      lastStatusUpdate: new Date(),
+      status: webhookEvent.status.status,
+      updatedAt: new Date(),
     };
 
-    // If delivered, set deliveredAt timestamp
+    // If delivered, mark as delivered
     if (webhookEvent.status.status === "delivered") {
       updateData.deliveredAt = webhookEvent.status.timestamp;
-      updateData.status = "delivered"; // Update order status too
     }
 
-    await prisma.order.update({
-      where: { id: order.id },
+    await prisma.shipment.update({
+      where: { id: shipment.id },
       data: updateData,
     });
+
+    // Check if all shipments for this order are delivered
+    const allShipments = await prisma.shipment.findMany({
+      where: { orderId: shipment.orderId },
+    });
+
+    const allDelivered = allShipments.every(s => s.status === "delivered");
+
+    // If all shipments delivered, update order status
+    if (allDelivered) {
+      await prisma.order.update({
+        where: { id: shipment.orderId },
+        data: { status: "delivered" },
+      });
+    }
 
     // Log webhook event
     await prisma.shippingEvent.create({
       data: {
         order: {
-          connect: { id: order.id },
+          connect: { id: shipment.orderId },
+        },
+        shipment: {
+          connect: { id: shipment.id },
         },
         provider: {
           connect: { id: provider.id },
@@ -85,45 +103,29 @@ export async function POST(request: NextRequest) {
 
     // TODO: Send customer notification (email/SMS) based on status
     // if (webhookEvent.status.status === 'out_for_delivery') {
-    //   await sendOutForDeliveryNotification(order);
+    //   await sendOutForDeliveryNotification(shipment.order);
     // }
     // if (webhookEvent.status.status === 'delivered') {
-    //   await sendDeliveredNotification(order);
+    //   await sendDeliveredNotification(shipment.order);
     // }
 
-    console.log(`✓ Webhook processed for order ${order.code}`);
+    console.log(`✓ Webhook processed for shipment ${shipment.code} (order ${shipment.order.code})`);
 
     return NextResponse.json({
       success: true,
       message: "Webhook processed successfully",
-      orderCode: order.code,
+      orderCode: shipment.order.code,
+      shipmentCode: shipment.code,
       status: webhookEvent.status.status,
     });
   } catch (error) {
     console.error("Webhook processing error:", error);
 
-    // Log failed webhook
-    try {
-      const payload = await request.json();
-      await prisma.shippingEvent.create({
-        data: {
-          order: {
-            connect: { id: "unknown" },
-          },
-          provider: {
-            connect: { code: "shiprocket" },
-          },
-          eventType: "webhook_received",
-          status: "failed",
-          request: payload,
-          errorMessage: error instanceof Error ? error.message : "Unknown error",
-        },
-      }).catch(() => {
-        // Ignore if logging fails
-      });
-    } catch {
-      // Ignore
-    }
+    // Log the error to console (can't create ShippingEvent without valid shipment)
+    console.error("Failed to process webhook:", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
 
     // Always return 200 to prevent webhook retries
     return NextResponse.json(

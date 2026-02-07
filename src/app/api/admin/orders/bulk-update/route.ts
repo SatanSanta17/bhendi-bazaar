@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminOrderService } from "../../../../../../server/services/admin/orderService";
+import { adminOrderService } from "../../../../../../server/admin/services/orders.service";
 
 export async function POST(request: NextRequest) {
   const session = await verifyAdminSession();

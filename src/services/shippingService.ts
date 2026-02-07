@@ -9,7 +9,7 @@ import type {
   GetShippingRatesResponse,
 } from "@/domain/shipping";
 
-export class ShippingService {
+class ShippingService {
   private BASE_URL = "/api/shipping";
 
   /**
@@ -39,3 +39,4 @@ export class ShippingService {
   }
 }
 
+export const shippingService = new ShippingService();

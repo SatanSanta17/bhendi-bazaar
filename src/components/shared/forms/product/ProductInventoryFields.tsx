@@ -2,7 +2,7 @@
 
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 import { FormInput } from "../FormField";
-import type { ProductFormInput } from "@/components/admin/products/types";
+import type { ProductFormInput } from "@/admin/products/types";
 
 interface ProductInventoryFieldsProps {
   register: UseFormRegister<ProductFormInput>;
@@ -42,6 +42,16 @@ export function ProductInventoryFields({
           placeholder="10"
           {...register("lowStockThreshold", { valueAsNumber: true })}
           hint="Alert when stock falls below this number"
+        />
+
+        <FormInput
+          label="Weight (kg)"
+          disabled={readOnly}
+          type="number"
+          min="0"
+          placeholder="0.5"
+          {...register("weight", { valueAsNumber: true })}
+          error={errors.weight?.message}
         />
       </div>
     </div>

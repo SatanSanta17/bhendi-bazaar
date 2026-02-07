@@ -41,19 +41,19 @@ export class AdminDashboardRepository {
     ] = await Promise.all([
       prisma.order.findMany({
         where: { createdAt: { gte: startOfToday } },
-        select: { totals: true },
+        select: { grandTotal: true },
       }),
       prisma.order.findMany({
         where: { createdAt: { gte: startOfWeek } },
-        select: { totals: true },
+        select: { grandTotal: true },
       }),
       prisma.order.findMany({
         where: { createdAt: { gte: startOfMonth } },
-        select: { totals: true },
+        select: { grandTotal: true },
       }),
       prisma.order.findMany({
         where: { createdAt: { gte: startOfYear } },
-        select: { totals: true },
+        select: { grandTotal: true },
       }),
       prisma.order.count(),
       Promise.all([
@@ -86,19 +86,19 @@ export class AdminDashboardRepository {
 
     // Calculate revenues
     const revenueToday = todayOrders.reduce(
-      (sum, o) => sum + ((o.totals as any)?.total || 0),
+      (sum, o) => sum + (o.grandTotal || 0),
       0
     );
     const revenueWeek = weekOrders.reduce(
-      (sum, o) => sum + ((o.totals as any)?.total || 0),
+      (sum, o) => sum + (o.grandTotal || 0),
       0
     );
     const revenueMonth = monthOrders.reduce(
-      (sum, o) => sum + ((o.totals as any)?.total || 0),
+      (sum, o) => sum + (o.grandTotal || 0),
       0
     );
     const revenueYear = yearOrders.reduce(
-      (sum, o) => sum + ((o.totals as any)?.total || 0),
+      (sum, o) => sum + (o.grandTotal || 0),
       0
     );
 
@@ -238,7 +238,7 @@ export class AdminDashboardRepository {
       },
       select: {
         createdAt: true,
-        totals: true,
+        grandTotal: true,
       },
       orderBy: {
         createdAt: "asc",
@@ -253,7 +253,7 @@ export class AdminDashboardRepository {
       if (!chartData[date]) {
         chartData[date] = { revenue: 0, orders: 0 };
       }
-      chartData[date].revenue += (order.totals as any)?.total || 0;
+      chartData[date].revenue += order.grandTotal || 0;
       chartData[date].orders += 1;
     });
 

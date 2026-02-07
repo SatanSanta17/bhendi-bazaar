@@ -2,6 +2,7 @@
  * GET /api/orders/[id]/shipping
  * 
  * Get shipping details for a specific order
+ * Returns all shipments for the order with tracking information
  */
 
 import { NextResponse } from "next/server";
@@ -9,47 +10,50 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> } // ← Changed to Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ← Await params here
+    const { id } = await params;
 
+    // Fetch order with all its shipments
     const order = await prisma.order.findUnique({
-      where: { id }, // ← Use the awaited id
+      where: { id },
       select: {
         id: true,
         code: true,
-        shippingProviderId: true,
-        shippingProvider: {
+        status: true,
+        shippingTotal: true,
+        shipments: {
           select: {
             id: true,
             code: true,
-            name: true,
-          },
-        },
-        trackingNumber: true,
-        courierName: true,
-        trackingUrl: true,
-        shippingCost: true,
-        packageWeight: true,
-        packageDimensions: true,
-        shipmentStatus: true,
-        lastStatusUpdate: true,
-        deliveredAt: true,
-        estimatedDelivery: true,
-        shippingMeta: true,
-        shippingEvents: {
-          select: {
-            id: true,
-            eventType: true,
+            items: true,
+            sellerId: true,
+            fromPincode: true,
+            fromCity: true,
+            fromState: true,
+            shippingCost: true,
+            shippingProviderId: true,
+            shippingProvider: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+              },
+            },
+            trackingNumber: true,
+            courierName: true,
+            trackingUrl: true,
+            packageWeight: true,
             status: true,
-            metadata: true,
+            estimatedDelivery: true,
+            shippingMeta: true,
             createdAt: true,
+            updatedAt: true,
           },
           orderBy: {
-            createdAt: "desc",
+            createdAt: "asc",
           },
-          take: 20,
         },
       },
     });
@@ -64,21 +68,38 @@ export async function GET(
     return NextResponse.json({
       success: true,
       shipping: {
-        providerId: order.shippingProviderId,
-        providerName: order.shippingProvider?.name,
-        providerCode: order.shippingProvider?.code,
-        trackingNumber: order.trackingNumber,
-        courierName: order.courierName,
-        trackingUrl: order.trackingUrl,
-        shippingCost: order.shippingCost,
-        packageWeight: order.packageWeight,
-        packageDimensions: order.packageDimensions,
-        shipmentStatus: order.shipmentStatus,
-        lastStatusUpdate: order.lastStatusUpdate,
-        deliveredAt: order.deliveredAt,
-        estimatedDelivery: order.estimatedDelivery,
-        shippingMeta: order.shippingMeta,
-        events: order.shippingEvents,
+        orderId: order.id,
+        orderCode: order.code,
+        orderStatus: order.status,
+        totalShippingCost: order.shippingTotal,
+        shipments: order.shipments.map((shipment) => ({
+          id: shipment.id,
+          code: shipment.code,
+          items: shipment.items,
+          origin: {
+            sellerId: shipment.sellerId,
+            pincode: shipment.fromPincode,
+            city: shipment.fromCity,
+            state: shipment.fromState,
+          },
+          shipping: {
+            cost: shipment.shippingCost,
+            weight: shipment.packageWeight,
+            providerId: shipment.shippingProviderId,
+            providerName: shipment.shippingProvider?.name,
+            providerCode: shipment.shippingProvider?.code,
+          },
+          tracking: {
+            number: shipment.trackingNumber,
+            courier: shipment.courierName,
+            url: shipment.trackingUrl,
+            status: shipment.status,
+            estimatedDelivery: shipment.estimatedDelivery,
+          },
+          meta: shipment.shippingMeta,
+          createdAt: shipment.createdAt,
+          updatedAt: shipment.updatedAt,
+        })),
       },
     });
   } catch (error) {
