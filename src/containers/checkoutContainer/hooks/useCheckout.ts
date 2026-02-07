@@ -4,8 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCartStore } from "@/store/cartStore";
-import type { Address } from "@/domain/profile";
-import type { OrderAddress } from "@/domain/order";
+import type { DeliveryAddress } from "@/domain/profile";
 import { CartItem } from "@/domain/cart";
 
 interface UseCheckoutProps {
@@ -24,8 +23,8 @@ interface UseCheckoutReturn {
   };
   
   // Address
-  selectedAddress: Address | null;
-  setAddress: (address: Address) => void;
+  selectedAddress: DeliveryAddress | null;
+  setAddress: (address: DeliveryAddress) => void;
   
   isProcessing: boolean;
   error: string | null;
@@ -41,7 +40,7 @@ export function useCheckout({ items, isBuyNow }: UseCheckoutProps): UseCheckoutR
   const clearCart = useCartStore((state) => state.clear);
   
   // Address state
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress | null>(null);
   
   // Error state
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +68,7 @@ export function useCheckout({ items, isBuyNow }: UseCheckoutProps): UseCheckoutR
   }, [items]);
   
   // Address setter
-  const setAddress = useCallback((address: Address) => {
+  const setAddress = useCallback((address: DeliveryAddress) => {
     setSelectedAddress(address);
     setError(null);
   }, []);

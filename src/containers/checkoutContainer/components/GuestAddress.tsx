@@ -8,20 +8,19 @@ import { AddressFields } from "@/components/shared/forms/AddressFields";
 import { DeliveryAddress } from "@/domain/profile";
 
 const addressSchema = z.object({
+  id: z.string(),
   fullName: z.string().min(2, "Name required"),
   mobile: z.string().regex(/^\d{10}$/, "10 digits required"),
-  email: z.string().email("Invalid email"),
+  email: z.string().email("Invalid email").optional(),
   addressLine1: z.string().min(5, "Address required"),
-  landmark: z.string().optional(),
   addressLine2: z.string().optional(),
+  landmark: z.string().optional(),
   city: z.string().min(2, "City required"),
   state: z.string().min(2, "State required"),
   pincode: z.string().regex(/^\d{6}$/, "6 digits required"),
   country: z.string().min(2, "Country required"),
-  notes: z.string().optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
-
-type AddressFormValues = z.infer<typeof addressSchema>;
 
 export function GuestAddress({ onAddressChange }: { onAddressChange: (address: DeliveryAddress) => void }) {
 
@@ -29,7 +28,7 @@ export function GuestAddress({ onAddressChange }: { onAddressChange: (address: D
     register,
     watch,
     formState: { errors, isValid },
-  } = useForm<AddressFormValues>({
+  } = useForm<DeliveryAddress>({
     resolver: zodResolver(addressSchema),
     mode: "onChange",
     defaultValues: {
@@ -62,11 +61,6 @@ export function GuestAddress({ onAddressChange }: { onAddressChange: (address: D
   }), [fullName, mobile, email, addressLine1, addressLine2, city, state, pincode, country]);
 
   useEffect(() => {
-    console.log('🔵 GuestAddress useEffect triggered', {
-      isValid,
-      formValues,
-      pincode: formValues.pincode
-    });
 
     if (isValid) {
       console.log('✅ Calling onAddressChange with:', formValues);

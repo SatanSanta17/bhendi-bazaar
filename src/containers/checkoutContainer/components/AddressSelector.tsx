@@ -7,14 +7,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Address } from "@/domain/profile";
+import type { DeliveryAddress } from "@/domain/profile";
 
 interface AddressSelectorProps {
-  selectedAddress: Address | null;
-  addresses: Address[];
+  selectedAddress: DeliveryAddress | null;
+  addresses: DeliveryAddress[];
   isOpen: boolean;
   onToggle: () => void;
-  onSelect: (address: Address) => void;
+  onSelect: (address: DeliveryAddress) => void;
   onAddNew: () => void;
 }
 
@@ -56,8 +56,8 @@ export function AddressSelector({
           <MapPin className="mt-0.5 h-5 w-5 text-teal-600" />
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{selectedAddress.label}</span>
-              {selectedAddress.isDefault && (
+              <span className="font-semibold">{selectedAddress.fullName}</span>
+              {selectedAddress.metadata?.isDefault && (
                 <Badge variant="secondary" className="text-[0.65rem]">
                   Default
                 </Badge>
@@ -103,8 +103,8 @@ export function AddressSelector({
                   <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
                   <div className="flex-1 space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{address.label}</span>
-                      {address.isDefault && (
+                      <span className="font-medium">{address.metadata?.label}</span>
+                      {address.metadata?.isDefault && (
                         <Badge variant="secondary" className="text-[0.6rem]">
                           Default
                         </Badge>
