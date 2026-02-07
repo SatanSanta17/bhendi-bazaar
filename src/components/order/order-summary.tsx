@@ -20,6 +20,9 @@ export function OrderSummary({ order, showShare = false }: OrderSummaryProps) {
         }`
       : null;
 
+  // Flatten all items from all shipments
+  const allItems = order.shipments.flatMap((shipment) => shipment.items);
+
   return (
     <section className="space-y-3 rounded-xl border border-border/70 bg-card/80 p-4 text-sm">
       <header className="flex items-baseline justify-between gap-2">
@@ -51,9 +54,9 @@ export function OrderSummary({ order, showShare = false }: OrderSummaryProps) {
         </div>
       </header>
       <div className="space-y-1 text-xs">
-        {order.items.map((item, index) => (
+        {allItems.map((item, index) => (
           <div
-            key={`${item.productId}-${index}`} // ✅ Use productId + index for uniqueness
+            key={`${item.productId}-${index}`}
             className="flex items-baseline justify-between gap-2"
           >
             <span className="line-clamp-1 text-muted-foreground">
@@ -72,15 +75,23 @@ export function OrderSummary({ order, showShare = false }: OrderSummaryProps) {
       <div className="mt-2 space-y-1 border-t border-dashed border-border/70 pt-2 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <PriceDisplay price={order.totals.subtotal} size="sm" />
+          <PriceDisplay price={order.itemsTotal} size="sm" />
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Savings</span>
-          <PriceDisplay price={order.totals.discount} size="sm" />
-        </div>
+        {order.shippingTotal > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Shipping</span>
+            <PriceDisplay price={order.shippingTotal} size="sm" />
+          </div>
+        )}
+        {order.discount > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Savings</span>
+            <PriceDisplay price={order.discount} size="sm" />
+          </div>
+        )}
         <div className="mt-1 flex items-center justify-between text-sm font-semibold">
           <span>Total</span>
-          <PriceDisplay price={order.totals.total} size="sm" />
+          <PriceDisplay price={order.grandTotal} size="sm" />
         </div>
       </div>
     </section>

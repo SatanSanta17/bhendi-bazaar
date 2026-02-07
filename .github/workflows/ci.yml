@@ -12,7 +12,7 @@ jobs:
 
     # Add this section:
     env:
-      BHENDI_BAZAAR_DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test"
       SKIP_ENV_VALIDATION: "true"
 
     strategy:
@@ -58,7 +58,7 @@ jobs:
 
     # ADD THIS SECTION TO BUILD JOB TOO
     env:
-      BHENDI_BAZAAR_DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test"
       SKIP_ENV_VALIDATION: "true"
 
     steps:

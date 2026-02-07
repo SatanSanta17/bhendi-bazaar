@@ -29,36 +29,53 @@ model Category {
 }
 
 model Product {
-  id                String        @id @default(cuid())
-  slug              String        @unique
-  name              String
-  description       String        @db.Text
-  price             Float
-  salePrice         Float?
-  currency          String        @default("INR")
-  categoryId        String
-  category          Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  tags              String[]      // Array of tags
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String   @db.Text
+  price       Float
+  salePrice   Float?
+  currency    String   @default("INR")
+
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  tags        String[] // Array of tags
+  flags String[] @default([])
+
+  rating            Float    @default(0)
+  reviewsCount      Int      @default(0)
+  images            String[] // Array of image URLs
+  thumbnail         String // Main product image URL
+  sizes             String[] // Available sizes
+  colors            String[] // Available colors
+
+  stock             Int      @default(0)
+  sku               String?  @unique // Stock Keeping Unit
+  lowStockThreshold Int      @default(10) // Alert when stock falls below this
+
+  // ⭐ Seller Association (REQUIRED)
+  sellerId String
+  seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Restrict)
   
-  flags             String[] @default([])
+  // ⭐ Shipping Origin (OPTIONAL - overrides seller's default)
+  shippingFromPincode   String?
+  shippingFromCity      String?
+  shippingFromLocation  String? // "Warehouse 2", "Special Location"
   
-  rating            Float         @default(0)
-  reviewsCount      Int           @default(0)
-  images            String[]      // Array of image URLs
-  thumbnail         String        // Main product image URL
-  sizes             String[]      // Available sizes
-  colors            String[]      // Available colors
-  stock             Int           @default(0)
-  sku               String?       @unique // Stock Keeping Unit
-  lowStockThreshold Int           @default(10) // Alert when stock falls below this
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  // ⭐ ADD THIS:
+  weight                Float?  @default(0.5) // Weight in kg
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   reviews           Review[]
 
   @@index([slug])
   @@index([categoryId])
   @@index([createdAt])
   @@index([stock])
+  @@index([sellerId])
+  @@index([shippingFromPincode])
 }
 
 model Review {
@@ -99,7 +116,7 @@ model User {
   id              String     @id @default(cuid())
   name            String?
   email           String?    @unique
-  emailVerified   DateTime?  // Keep this for NextAuth compatibility
+  emailVerified   DateTime? // Keep this for NextAuth compatibility
   isEmailVerified Boolean    @default(false) // Our custom field
   mobile          String?    @unique
   passwordHash    String?
@@ -129,6 +146,49 @@ model Profile {
   userId     String  @unique
   addresses  Json? // address[] as JSON block
   profilePic String? // URL to avatar image
+}
+
+model Seller {
+  id   String @id @default(cuid())
+  code String @unique // "SEL-001", "SEL-002"
+  name String // "ABC Traders", "XYZ Wholesale"
+  
+  // Contact Information
+  email        String
+  phone        String?
+  contactPerson String? // "John Doe"
+  
+  // Default Shipping Location
+  defaultPincode String
+  defaultCity    String
+  defaultState   String
+  defaultAddress String? @db.Text
+  
+  // Business Details
+  businessName   String?
+  gstNumber      String?
+  panNumber      String?
+  
+  // Status
+  isActive       Boolean  @default(true)
+  isVerified     Boolean  @default(false) // KYC verification
+  
+  // Metadata
+  description String? @db.Text
+  logoUrl     String?
+  
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  products Product[]
+  shipments Shipment[] // ← ADD THIS
+  
+  @@index([email])
+  @@index([isActive])
+  @@index([code])
+  @@index([defaultPincode])
 }
 
 model Account {
@@ -168,27 +228,217 @@ model VerificationToken {
 }
 
 model Order {
-  id                String    @id @default(cuid())
-  code              String    @unique // e.g., BB-1001
-  userId            String? // null for guest orders
-  user              User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  items             Json // CartItem[]
-  totals            Json // CartTotals { subtotal, discount, total }
-  status            String    @default("processing") // processing, packed, shipped, delivered
-  address           Json // OrderAddress
-  notes             String?   @db.Text
-  paymentMethod     String? // razorpay
-  paymentStatus     String?   @default("pending") // pending, paid, failed
-  paymentId         String? // Razorpay payment ID
-  estimatedDelivery DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
+  id      String  @id @default(cuid())
+  code    String  @unique // "BB-1001"
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id])
+  
+  // Delivery address (same for all shipments)
+  address Json    // OrderAddress
+  notes   String? @db.Text
+  
+  // ✅ NEW: Order-level totals
+  itemsTotal    Float @default(0) // Sum of all item prices
+  shippingTotal Float @default(0) // Sum of all shipping costs
+  discount      Float @default(0)
+  grandTotal    Float @default(0) // itemsTotal + shippingTotal - discount
+  
+  // Payment (single for entire order)
+  paymentMethod String? // "razorpay"
+  paymentStatus String? @default("pending") // pending, paid, failed
+  paymentId     String? // Razorpay payment ID
+  
+  // Overall order status (derived from shipments)
+  status String @default("processing") // processing, partially_shipped, completed
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // ✅ NEW: Relations to shipments
+  shipments Shipment[]
+  shippingEvents ShippingEvent[] // ← ADD THIS
+  
   @@index([userId])
   @@index([code])
-  @@index([createdAt])
   @@index([status])
   @@index([paymentStatus])
+}
+
+model Shipment {
+  id      String @id @default(cuid())
+  code    String @unique // "BB-1001-SH1", "BB-1001-SH2"
+  
+  // Parent order
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // ✅ Items in THIS specific shipment
+  items   Json // ShipmentItem[] - only items from this origin
+  
+  // ✅ Origin details (where it ships from)
+  sellerId    String
+  seller      Seller @relation(fields: [sellerId], references: [id])
+  fromPincode String
+  fromCity    String
+  fromState   String
+  
+  // ✅ Shipping details (specific to this shipment)
+  shippingCost       Float
+  shippingProviderId String?
+  shippingProvider   ShippingProvider? @relation(fields: [shippingProviderId], references: [id])
+  
+  // ✅ Tracking (independent per shipment)
+  trackingNumber   String?
+  courierName      String? // "BlueDart Surface"
+  trackingUrl      String?
+  
+  // ✅ Status (independent per shipment)
+  status           String @default("processing") // processing, packed, shipped, delivered
+  shipmentStatus   String? // Provider-specific status
+  estimatedDelivery DateTime?
+  deliveredAt      DateTime?
+  
+  // Package details
+  packageWeight     Float?
+  packageDimensions Json? // {length, width, height}
+  
+  // Metadata
+  shippingMeta Json? // Provider-specific data
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  shippingEvents ShippingEvent[]
+  
+  @@index([orderId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([trackingNumber])
+}
+
+model ShippingProvider {
+  id          String  @id @default(cuid())
+  code        String  @unique // 'shiprocket', 'delhivery', 'bluedart', etc.
+  name        String // Display name: "Shiprocket", "Delhivery"
+  description String? @db.Text // Provider description
+
+  priority    Int     @default(0) // Higher number = higher priority
+
+  // Authentication & Connection Status
+  isConnected Boolean   @default(false) // Is account connected?
+  connectedAt DateTime? // When was it connected?
+  connectedBy String? // Admin user ID who connected it
+  connectionType String   @default("email_password") // [ 'email_password', 'api_key', 'oauth' ]
+  lastAuthAt  DateTime? // Last successful authentication
+  authError   String?   @db.Text // Last auth error message
+
+  // Encrypted sensitive data
+  authToken      String?   @db.Text // Encrypted JWT token
+  tokenExpiresAt DateTime? // Token expiry timestamp
+
+  // Account info (includes encrypted password)
+  accountInfo Json? // {
+  //   email: string,
+  //   password: string (encrypted),
+  //   firstName: string,
+  //   lastName: string,
+  //   companyId: number,
+  //   warehousePincode?: string
+  // }
+  
+  // Capabilities
+  paymentOptions String[] // ['prepaid', 'cod']
+  deliveryModes  String[] // ['air', 'surface']
+  features       Json? // {tracking: true, label: true, scheduling: true}
+
+  // Metadata
+  logoUrl    String? // Provider logo
+  websiteUrl String? // Provider website
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  shipments Shipment[]
+  rateCache ShippingRateCache[]
+  events    ShippingEvent[]
+
+  @@index([isConnected])
+  @@index([code])
+}
+
+// Caches shipping rates to reduce API calls and improve performance
+model ShippingRateCache {
+  id String @id @default(cuid())
+
+  // Provider reference
+  providerId String
+  provider   ShippingProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  // Rate calculation parameters
+  fromPincode String
+  toPincode   String
+  weight      Float // in kg
+  mode        String // 'prepaid', 'cod'
+
+  // Cached rate information
+  rate          Float // Shipping cost in INR
+  courierName   String // Courier service name
+  estimatedDays Int // Estimated delivery days
+
+  // Additional metadata
+  metadata Json? // Any additional provider-specific data
+
+  // Cache management
+  expiresAt DateTime // When this cache entry expires
+  createdAt DateTime @default(now())
+
+  @@unique([providerId, fromPincode, toPincode, weight, mode])
+  @@index([expiresAt])
+  @@index([fromPincode])
+  @@index([toPincode])
+}
+
+// Tracks all shipping-related events for debugging and analytics
+model ShippingEvent {
+  id String @id @default(cuid())
+
+  // Order reference
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Shipment reference
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  // Provider reference
+  providerId String
+  provider   ShippingProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  // Event details
+  eventType String // 'rate_check', 'shipment_created', 'status_update', 'cancellation'
+  status    String // 'success', 'failed', 'pending'
+
+  // Request/Response logging (for debugging)
+  request  Json? // API request payload
+  response Json? // API response
+
+  // Error tracking
+  errorMessage String? @db.Text
+  errorCode    String?
+
+  // Metadata
+  metadata Json? // Additional context
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([shipmentId])
+  @@index([providerId])
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // Admin activity logging

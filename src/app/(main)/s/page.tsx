@@ -1,51 +1,24 @@
-"use client";
 
-import { useAsyncData } from "@/hooks/core/useAsyncData";
-import { useSearchParams } from "next/navigation";
-import { productService } from "@/services/productService";
 import { CategoryProductGrid } from "@/components/category/product-grid";
 import { Package } from "lucide-react";
 import { EmptyState } from "@/components/shared/states/EmptyState";
-import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { ErrorState } from "@/components/shared/states/ErrorState";
+import { productsDAL } from "@/data-access-layer/products.dal";
+import { Suspense } from "react";
+import { ProductGridSkeleton } from "@/components/shared/states/LoadingSkeleton";
 
-export default function SearchPage() {
-  const searchParams = useSearchParams();
-  const query = searchParams.get("q") || "";
+export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q: string }> }) {
+  const { q } = await searchParams;
 
-  const {
-    data: products,
-    loading,
-    error,
-    refetch,
-  } = useAsyncData(() => productService.getProducts({ search: query }));
-
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
-
-  if (error) {
-    return <ErrorState message={error} retry={refetch} />;
-  }
-
-  if (!query) {
-    return (
-      <EmptyState
-        icon={Package}
-        title="No search results"
-        description="Try different keywords or browse categories"
-      />
-    );
-  }
+  const products = await productsDAL.getProducts({ search: q });
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <SectionHeader
         overline="Search Results"
-        title={`Search Results for "${query}"`}
+        title={`Search Results for "${q}"`}
       />
-
+      <Suspense fallback={<ProductGridSkeleton />}>
       {products && products.length > 0 ? (
         <CategoryProductGrid products={products} />
       ) : (
@@ -53,8 +26,9 @@ export default function SearchPage() {
           icon={Package}
           title="No products found"
           description="Try different keywords or browse categories"
-        />
-      )}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

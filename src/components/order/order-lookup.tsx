@@ -7,7 +7,6 @@ import { orderService } from "@/services/orderService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OrderSummary } from "./order-summary";
-import { OrderTracking } from "./order-tracking";
 import { SectionHeader } from "../shared/SectionHeader";
 
 export function OrderLookup() {
@@ -66,7 +65,6 @@ export function OrderLookup() {
       {order && (
         <div className="space-y-4">
           <OrderSummary order={order} showShare={true} />
-          <OrderTracking order={order} />
         </div>
       )}
     </div>

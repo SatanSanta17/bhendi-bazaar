@@ -3,13 +3,14 @@
 import { Control } from "react-hook-form";
 import { FormController } from "../FormField";
 import { MultiSelect } from "@/components/ui/multi-select";
-import type { CreateProductInput } from "@/domain/admin";
+import type { ProductFormInput } from "@/admin/products/types";
 
 interface ProductAttributeFieldsProps {
-  control: Control<CreateProductInput>;
+  control: Control<ProductFormInput>;
+  readOnly?: boolean;
 }
 
-export function ProductAttributeFields({ control }: ProductAttributeFieldsProps) {
+export function ProductAttributeFields({ control, readOnly = false }: ProductAttributeFieldsProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -20,7 +21,7 @@ export function ProductAttributeFields({ control }: ProductAttributeFieldsProps)
         <FormController
           name="sizes"
           control={control}
-          label="Sizes"
+          disabled={readOnly}
           render={(field) => (
             <MultiSelect
               label="Sizes"
@@ -34,7 +35,7 @@ export function ProductAttributeFields({ control }: ProductAttributeFieldsProps)
         <FormController
           name="colors"
           control={control}
-          label="Colors"
+          disabled={readOnly}
           render={(field) => (
             <MultiSelect
               label="Colors"
@@ -48,7 +49,7 @@ export function ProductAttributeFields({ control }: ProductAttributeFieldsProps)
         <FormController
           name="tags"
           control={control}
-          label="Tags"
+          disabled={readOnly}
           render={(field) => (
             <MultiSelect
               label="Tags"

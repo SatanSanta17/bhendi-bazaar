@@ -7,10 +7,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminProductService } from "@/server/services/admin/productService";
-import type { UpdateProductInput } from "@/server/domain/admin/product";
+import { productsService } from "@server/admin/services/products.service";
+import { ProductFormInput } from "@/admin/products/types";
 
-export async function GET(
+export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -19,21 +19,17 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const product = await adminProductService.getProductById(id);
+    await productsService.deleteProduct(id);
 
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(product);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to fetch product:", error);
+    console.error("Failed to delete product:", error);
     return NextResponse.json(
       {
         error:
-          error instanceof Error ? error.message : "Failed to fetch product",
+          error instanceof Error ? error.message : "Failed to delete product",
       },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
@@ -47,18 +43,8 @@ export async function PATCH(
 
   try {
     const { id } = await params;
-    const body = (await request.json()) as UpdateProductInput;
-
-    const product = await adminProductService.updateProduct(
-      id,
-      session.user.id,
-      body
-    );
-
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
-
+    const body = (await request.json()) as ProductFormInput;
+    const product = await productsService.updateProduct(id, body);
     return NextResponse.json(product);
   } catch (error) {
     console.error("Failed to update product:", error);
@@ -66,30 +52,6 @@ export async function PATCH(
       {
         error:
           error instanceof Error ? error.message : "Failed to update product",
-      },
-      { status: 400 }
-    );
-  }
-}
-
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await verifyAdminSession();
-  if (session instanceof NextResponse) return session;
-
-  try {
-    const { id } = await params;
-    await adminProductService.deleteProduct(id, session.user.id);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Failed to delete product:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to delete product",
       },
       { status: 400 }
     );

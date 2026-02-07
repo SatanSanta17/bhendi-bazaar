@@ -8,20 +8,16 @@ import { StockStatus } from "@/components/shared/StockStatus";
 import { ProductActions } from "@/components/shared/button-groups/ProductActions";
 import { useProductActions } from "@/hooks/product/useProductActions";
 
-interface ProductDetailsProps {
-  product: Product;
-}
-
-export function ProductDetails({ product }: ProductDetailsProps) {
+export function ProductDetails(product: Product) {
   const {
     handleAddToCart,
     handleBuyNow,
     isAddingToCart,
     isBuyingNow,
     isOutOfStock,
-    currentCartQty,
-    remainingStock,
+    currentCartQty
   } = useProductActions(product);
+  // console.log("ProductDetails: ", JSON.stringify(product, null, 2));
 
   return (
     <section className="space-y-4">

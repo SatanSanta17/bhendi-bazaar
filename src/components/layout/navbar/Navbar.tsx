@@ -7,21 +7,23 @@ import { usePathname } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
-import { useAuth } from "@/lib/auth";
+import { useProfileContext } from "@/context/ProfileContext";
 import { Button } from "@/components/ui/button";
 import { NavbarSearch } from "./NavbarSearch";
 import { CategoriesDropdown } from "./CategoriesDropdown";
 import { ProfileMenu } from "./ProfileMenu";
 import Image from "next/image";
 import { APP_NAME, LOGO } from "@/lib/config";
+import { useSession } from "next-auth/react";
 
 export function Navbar() {
   const pathname = usePathname();
   const items = useCartStore((state) => state.items);
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const hasCartItems = cartCount > 0;
-  const { status, user } = useAuth();
 
+  const { data: session } = useSession();
+  const user = session?.user;
   return (
     <header className="border-b border-border/60 bg-background/80 backdrop-blur z-10">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 lg:px-8">
@@ -45,25 +47,20 @@ export function Navbar() {
 
         {/* Right side: auth + cart */}
         <div className="flex items-center gap-3">
-          {status === "authenticated" && user ? (
-            <ProfileMenu user={user} />
+          {user ? (
+            <ProfileMenu />
           ) : (
             <Button
-              asChild={status !== "loading"}
-              disabled={status === "loading"}
+              asChild
               variant="outline"
               className="hidden rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] sm:inline-flex"
             >
-              {status === "loading" ? (
-                <span>Checking…</span>
-              ) : (
-                <Link href="/signin">Login</Link>
-              )}
+              <Link href="/signin">Login</Link>
             </Button>
           )}
 
           {/* Orders link for guests */}
-          {status !== "authenticated" && (
+          {!user && (
             <Link
               href="/orders"
               className={cn(

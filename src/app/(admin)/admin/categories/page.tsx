@@ -8,7 +8,7 @@
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useMutation } from "@/hooks/core/useMutation";
 import { useState } from "react";
-import { DataTable, Column } from "@/components/admin/data-table";
+import { DataTable, Column } from "@/admin/data-table";
 import { Search, Plus, Edit, Trash2, MoveUp, MoveDown } from "lucide-react";
 import Link from "next/link";
 import { adminCategoryService } from "@/services/admin/categoryService";
@@ -255,6 +255,7 @@ export default function AdminCategoriesPage() {
         columns={columns}
         totalPages={totalPages}
         currentPage={filters.page || 1}
+        totalItems={data?.total || 0}
         onPageChange={(page) => setFilters({ ...filters, page })}
         onSort={(key, order) =>
           setFilters({ ...filters, sortBy: key as any, sortOrder: order })

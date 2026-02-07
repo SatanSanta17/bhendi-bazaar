@@ -1,40 +1,14 @@
-"use client";
-
-import { useAsyncData } from "@/hooks/core/useAsyncData";
-import { orderService } from "@/services/orderService";
 import { OrderSummary } from "@/components/order/order-summary";
-import { OrderTracking } from "@/components/order/order-tracking";
-import { LoadingSpinner } from "../shared/states/LoadingSpinner";
-import { ErrorState } from "../shared/states/ErrorState";
 import { SectionHeader } from "../shared/SectionHeader";
 import { ShareButton } from "../shared/ShareButton";
+import { Order } from "@/domain/order";
 
 interface OrderClientProps {
-  orderId: string;
+  order: Order;
 }
 
-export function OrderClient({ orderId }: OrderClientProps) {
-  const {
-    data: order,
-    loading: isLoading,
-    error,
-    refetch,
-  } = useAsyncData(() => orderService.getOrderById(orderId), {
-    refetchDependencies: [orderId],
-  });
+export function OrderClient({ order }: OrderClientProps) {
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (error || !order) {
-    return (
-      <ErrorState
-        message={error || "We could not locate this order."}
-        retry={refetch}
-      />
-    );
-  }
   return (
     <div className="space-y-6">
       <header className="space-y-3">
@@ -48,8 +22,8 @@ export function OrderClient({ orderId }: OrderClientProps) {
           </div>
           <ShareButton
             url={`${
-              typeof window !== "undefined" ? window.location.origin : ""
-            }/order/${orderId}`}
+              typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL
+              }/order/${order.id}`}
             title={`Order ${order.code} - Bhendi Bazaar`}
             text={`Check out my order from Bhendi Bazaar: ${order.code}`}
             variant="outline"
@@ -60,7 +34,6 @@ export function OrderClient({ orderId }: OrderClientProps) {
       </header>
       <div className="grid gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <OrderSummary order={order} showShare={true} />
-        <OrderTracking order={order} />
       </div>
     </div>
   );

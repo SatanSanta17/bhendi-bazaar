@@ -7,7 +7,7 @@
 
 import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { toast } from "sonner";
-import { StatsCard } from "@/components/admin/stats-card";
+import { StatsCard } from "@/admin/stats-card";
 import {
   DollarSign,
   ShoppingCart,
@@ -21,6 +21,7 @@ import { adminDashboardService } from "@/services/admin/dashboardService";
 import { LoadingSkeleton } from "@/components/shared/states/LoadingSkeleton";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { formatCurrency } from "@/lib/format";
+import { useEffect } from "react";
 
 export default function AdminDashboardPage() {
   const {
@@ -40,15 +41,22 @@ export default function AdminDashboardPage() {
     refetchDependencies: [],
   });
 
-  const handleRefresh = () => {
-    toast.info("Refreshing dashboard...");
-    refetchStats().then(() =>
-      toast.success("Dashboard refreshed successfully!")
-    );
-    refetchActivities().then(() =>
-      toast.success("Activities refreshed successfully!")
-    );
+  const handleRefresh = async () => {
+    await Promise.all([refetchStats(), refetchActivities()]);
+    toast.success("Dashboard refreshed!");
   };
+
+
+  // Can also add auto-refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchStats();
+      refetchActivities();
+    }, 60000); // Refresh every minute
+
+    return () => clearInterval(interval);
+  }, [refetchStats, refetchActivities]);
+
 
   if (isLoadingStats || isLoadingActivities) {
     return (

@@ -6,11 +6,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin-auth";
-import { adminProductService } from "@/server/services/admin/productService";
+import { productsService } from "@server/admin/services/products.service";
 import type {
-  ProductListFilters,
-  CreateProductInput,
-} from "@/server/domain/admin/product";
+  ProductFilters,
+  ProductFormInput,
+} from "@/admin/products/types";
 import { ProductFlag } from "@/types/product";
 
 export async function GET(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const filters: ProductListFilters = {
+    const filters: ProductFilters = {
       search: searchParams.get("search") || undefined,
       categoryId: searchParams.get("categoryId") || undefined,
       flags: searchParams.get("flags")
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       sortOrder: (searchParams.get("sortOrder") as any) || "desc",
     };
 
-    const result = await adminProductService.getProducts(filters);
+    const result = await productsService.getProducts(filters);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch products:", error);
@@ -62,11 +62,8 @@ export async function POST(request: NextRequest) {
   if (session instanceof NextResponse) return session;
 
   try {
-    const body = (await request.json()) as CreateProductInput;
-    const product = await adminProductService.createProduct(
-      session.user.id,
-      body
-    );
+    const body = (await request.json()) as ProductFormInput;
+    const product = await productsService.createProduct(body);
 
     return NextResponse.json(product, { status: 201 });
   } catch (error) {

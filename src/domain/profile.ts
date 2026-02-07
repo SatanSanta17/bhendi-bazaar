@@ -5,11 +5,12 @@
  * They mirror the API response structure and are used for type safety.
  */
 
-export interface ProfileAddress {
+
+export interface DeliveryAddress {
   id: string;
-  label?: string;
   fullName: string;
   mobile: string;
+  email?: string;
   addressLine1: string;
   addressLine2?: string;
   landmark?: string;
@@ -17,14 +18,14 @@ export interface ProfileAddress {
   state: string;
   pincode: string;
   country: string;
-  isDefault?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface UserProfile {
   id: string;
   userId: string;
   profilePic: string | null;
-  addresses: ProfileAddress[];
+  addresses: DeliveryAddress[];
 }
 
 // User fields relevant to profile editing
@@ -50,6 +51,6 @@ export interface UpdateProfileInput {
   email?: string;
   mobile?: string;
   // Profile fields
-  addresses?: ProfileAddress[];
+  addresses?: DeliveryAddress[];
   profilePic?: string | null;
 }

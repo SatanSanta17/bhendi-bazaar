@@ -10,11 +10,7 @@ import { Button } from "@/components/ui/button";
 import { StockStatus } from "@/components/shared/StockStatus";
 import type { CartItem as CartItemType } from "@/domain/cart";
 
-interface CartItemProps {
-  item: CartItemType;
-}
-
-export function CartItem({ item }: CartItemProps) {
+export function CartItem(item: CartItemType) {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const [stock, setStock] = useState<number | null>(null);

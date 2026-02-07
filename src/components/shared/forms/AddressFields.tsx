@@ -1,11 +1,11 @@
 // components/shared/forms/AddressFields.tsx
 
 import { FormInput, FormTextarea } from "./FormField";
-import type { OrderAddress } from "@/domain/order";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
+import { DeliveryAddress } from "@/domain/profile";
 
 interface AddressFieldsProps {
-  register: UseFormRegister<any>;
+  register: UseFormRegister<DeliveryAddress>;
   errors?: FieldErrors;
   namePrefix?: string; // For nested forms like "shippingAddress."
   includeEmail?: boolean;
@@ -17,7 +17,7 @@ export function AddressFields({
   register,
   errors,
   namePrefix = "",
-  includeEmail = false,
+  includeEmail = true,
   includeNotes = false,
   includeLabel = false,
 }: AddressFieldsProps) {
@@ -52,16 +52,18 @@ export function AddressFields({
         <FormInput
           label="Label"
           placeholder="Home, Office, Other."
-          {...register(getFieldName("label"))}
+          {...register("metadata.label")}
           error={getError("label")}
         />
       )}
+
+      {/* Full Name and Mobile */}
       <div className="grid gap-3 sm:grid-cols-2">
         <FormInput
           label="Full Name"
           required
           placeholder="Your full name"
-          {...register(getFieldName("fullName"), { required: true })}
+          {...register("fullName", { required: true })}
           error={getError("fullName")}
         />
         <FormInput
@@ -69,7 +71,7 @@ export function AddressFields({
           required
           type="tel"
           placeholder="10-digit Mobile Number"
-          {...register(getFieldName("mobile"), { required: true })}
+          {...register("mobile", { required: true })}
           error={getError("mobile")}
         />
       </div>
@@ -80,7 +82,7 @@ export function AddressFields({
           label="Email"
           type="email"
           placeholder="your@email.com"
-          {...register(getFieldName("email"))}
+          {...register("email")}
           hint="Optional - for order updates"
           error={getError("email")}
         />
@@ -91,7 +93,7 @@ export function AddressFields({
         label="Address Line 1"
         required
         placeholder="Flat, house no., building"
-        {...register(getFieldName("addressLine1"), { required: true })}
+        {...register("addressLine1", { required: true })}
         error={getError("addressLine1")}
       />
 
@@ -99,7 +101,7 @@ export function AddressFields({
       <FormInput
         label="Address Line 2"
         placeholder="Area, street (optional)"
-        {...register(getFieldName("addressLine2"))}
+        {...register("addressLine2")}
         error={getError("addressLine2")}
       />
 
@@ -108,19 +110,19 @@ export function AddressFields({
         <FormInput
           label="City"
           required
-          {...register(getFieldName("city"), { required: true })}
+          {...register("city", { required: true })}
           error={getError("city")}
         />
         <FormInput
           label="State"
           required
-          {...register(getFieldName("state"), { required: true })}
+          {...register("state", { required: true })}
           error={getError("state")}
         />
         <FormInput
           label="PIN Code"
           required
-          {...register(getFieldName("pincode"), { required: true })}
+          {...register("pincode", { required: true })}
           error={getError("pincode")}
         />
       </div>
@@ -129,7 +131,7 @@ export function AddressFields({
       <FormInput
         label="Country"
         required
-        {...register(getFieldName("country"), { required: true })}
+        {...register("country", { required: true })}
         error={getError("country")}
       />
 
@@ -139,7 +141,7 @@ export function AddressFields({
           label="Notes for the Bazaar"
           rows={3}
           placeholder="Any special instructions..."
-          {...register(getFieldName("notes"))}
+          {...register("metadata.notes")}
           hint="Optional"
         />
       )}

@@ -4,7 +4,7 @@
  */
 
 const requiredEnvVars = [
-  "BHENDI_BAZAAR_DATABASE_URL",
+  "DATABASE_URL",
   "NEXTAUTH_SECRET",
   "NEXTAUTH_URL",
   "GOOGLE_CLIENT_ID",

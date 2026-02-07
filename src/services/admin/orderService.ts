@@ -4,11 +4,10 @@
  */
 
 import type {
-  AdminOrder,
   OrderListFilters,
   OrderListResult,
 } from "@/domain/admin";
-
+import type { Order } from "@/domain/order";
 class AdminOrderService {
   /**
    * Get paginated list of orders
@@ -42,7 +41,7 @@ class AdminOrderService {
   /**
    * Get single order by ID
    */
-  async getOrderById(id: string): Promise<AdminOrder> {
+  async getOrderById(id: string): Promise<Order> {
     const response = await fetch(`/api/admin/orders/${id}`);
 
     if (!response.ok) {
@@ -59,7 +58,7 @@ class AdminOrderService {
   async updateOrderStatus(
     id: string,
     data: { status?: string; notes?: string; estimatedDelivery?: string }
-  ): Promise<AdminOrder> {
+  ): Promise<Order> {
     const response = await fetch(`/api/admin/orders/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

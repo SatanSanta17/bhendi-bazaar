@@ -69,30 +69,37 @@ export function OrdersClient() {
         />
       ) : (
         <div className="space-y-3">
-          {filtered?.map((order) => (
-            <div
-              key={order.id}
-              className="flex flex-col justify-between gap-2 rounded-xl border border-border/70 bg-card/80 p-4 text-xs sm:flex-row sm:items-center"
-            >
-              <div className="space-y-1">
-                <p className="font-semibold">
-                  {order.code} ·{" "}
-                  {new Date(order.placedAt).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </p>
-                <p className="text-muted-foreground">
-                  {order.address.fullName} · {order.items.length} items
-                </p>
+            {filtered?.map((order) => {
+              const totalItems = order.shipments.reduce(
+                (sum, shipment) => sum + shipment.items.length,
+                0
+              );
+
+              return (
+                <div
+                  key={order.id}
+                  className="flex flex-col justify-between gap-2 rounded-xl border border-border/70 bg-card/80 p-4 text-xs sm:flex-row sm:items-center"
+                >
+                  <div className="space-y-1">
+                    <p className="font-semibold">
+                      {order.code} ·{" "}
+                    {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {order.address.fullName} · {totalItems} items
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="font-semibold">
+                    <PriceDisplay price={order.grandTotal} size="sm" />
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="font-semibold">
-                  <PriceDisplay price={order.totals.total} size="sm" />
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

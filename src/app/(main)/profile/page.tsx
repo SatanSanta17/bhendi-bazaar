@@ -2,9 +2,8 @@
 
 import { useProfileContext } from "@/context/ProfileContext";
 import { useAuth } from "@/lib/auth";
-import type { ProfileAddress } from "@/domain/profile";
+import type { DeliveryAddress } from "@/domain/profile";
 import { orderService } from "@/services/orderService";
-import { useProfile } from "@/hooks/useProfile";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { AddressesSection } from "@/components/profile/addresses-section";
 import { RecentOrdersSection } from "@/components/profile/recent-orders-section";
@@ -17,6 +16,7 @@ import { EmptyState } from "@/components/shared/states/EmptyState";
 import { Package } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { useAddressManager } from "@/hooks/useAddressManager";
 
 export default function ProfilePage() {
   const { status } = useAuth();
@@ -30,7 +30,6 @@ export default function ProfilePage() {
     loading,
     error,
     saving,
-    updateAddresses,
     updateUserInfo,
     updateProfilePic,
   } = useProfileContext();
@@ -45,49 +44,8 @@ export default function ProfilePage() {
     refetchDependencies: [isAuthenticated],
   });
 
-  // Handle saving an address (add or update)
-  async function handleSaveAddress(address: ProfileAddress) {
-    if (!profile) return;
-
-    const existing = profile.addresses ?? [];
-    const index = existing.findIndex((a) => a.id === address.id);
-
-    let next = [...existing];
-
-    if (index === -1) {
-      // Add new address
-      next.push(address);
-    } else {
-      // Update existing address
-      next[index] = address;
-    }
-
-    // Ensure only one default address
-    if (address.isDefault) {
-      next = next.map((a) => ({
-        ...a,
-        isDefault: a.id === address.id,
-      }));
-    }
-
-    await updateAddresses(next);
-  }
-
-  async function handleDeleteAddress(addressId: string) {
-    if (!profile) return;
-    const next = (profile.addresses ?? []).filter((a) => a.id !== addressId);
-    await updateAddresses(next);
-  }
-
-  // Handle setting an address as default
-  async function handleSetDefault(addressId: string) {
-    if (!profile) return;
-    const next = (profile.addresses ?? []).map((a) => ({
-      ...a,
-      isDefault: a.id === addressId,
-    }));
-    await updateAddresses(next);
-  }
+  // use address manager
+  const { addAddress, updateAddress, deleteAddress, selectAddress } = useAddressManager();
 
   if (loading) {
     return <LoadingSkeleton count={3} />;
@@ -150,10 +108,10 @@ export default function ProfilePage() {
           addresses={profile?.addresses ?? []}
           loading={loading}
           saving={saving}
-          onSaveAddress={handleSaveAddress}
-          onDeleteAddress={handleDeleteAddress}
-          onSetDefault={handleSetDefault}
-        />
+          onSaveAddress={addAddress}
+          onDeleteAddress={deleteAddress}
+          onSetDefault={(addressId) => updateAddress(addressId, { metadata: { isDefault: true } })}
+        /> 
       </section>
 
       {/* Section 3: Recent Orders */}

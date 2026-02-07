@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
-import { orderService } from "@/server/services/orderService";
+import { orderService } from "../../../../server/services/orderService";
 import {
   orderRateLimit,
   getClientIp,
@@ -97,14 +97,24 @@ export async function POST(request: NextRequest) {
       return serverItem;
     });
 
-    // Add userId to the order if user is authenticated
-    const orderInput = {
-      ...validation.data,
-      items: serverItems,
+    // Map validated data to CreateOrderInput format
+    const createOrderData = {
       userId,
+      items: serverItems,
+      itemsTotal: validation.data.totals.subtotal,
+      shippingTotal: validation.data.totals.shipping ?? 0,
+      discount: validation.data.totals.discount ?? 0,
+      grandTotal: validation.data.totals.total,
+      address: validation.data.address,
+      notes: validation.data.notes,
+      paymentMethod: validation.data.paymentMethod,
+      paymentStatus: validation.data.paymentStatus,
+      // Note: Simple orders don't have shipments array
+      // For multi-shipment orders, use /api/orders/create-with-shipments
+      shipments: [], // Empty array for simple orders
     };
 
-    const order = await orderService.createOrder(orderInput);
+    const order = await orderService.createOrder(createOrderData);
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
     console.error("Failed to create order:", error);

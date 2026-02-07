@@ -2,15 +2,16 @@
 
 import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
 import { FormInput, FormSelect, FormTextarea } from "../FormField";
-import type { CreateProductInput, AdminCategory } from "@/domain/admin";
+import type { ProductFormInput } from "@/admin/products/types";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface ProductBasicFieldsProps {
-  register: UseFormRegister<CreateProductInput>;
-  errors: FieldErrors<CreateProductInput>;
-  setValue: UseFormSetValue<CreateProductInput>;
-  categories: AdminCategory[];
+  register: UseFormRegister<ProductFormInput>;
+  errors: FieldErrors<ProductFormInput>;
+  setValue: UseFormSetValue<ProductFormInput>;
+  categories?: { id: string; name: string }[];
+  readOnly?: boolean;
   onSlugManualEdit?: () => void;
 }
 
@@ -18,6 +19,7 @@ export function ProductBasicFields({
   register,
   errors,
   categories,
+  readOnly = false,
   onSlugManualEdit,
 }: ProductBasicFieldsProps) {
   const router = useRouter();
@@ -35,6 +37,7 @@ export function ProductBasicFields({
           label="Product Name"
           required
           placeholder="e.g., Velvet Embroidered Kurta"
+          disabled={readOnly}
           {...register("name", { required: "Product name is required" })}
           error={errors.name?.message}
         />
@@ -42,6 +45,7 @@ export function ProductBasicFields({
         <FormInput
           label="Slug (URL)"
           required
+          disabled={readOnly}
           placeholder="e.g., velvet-embroidered-kurta"
           {...register("slug", { required: "Slug is required" })}
           error={errors.slug?.message}
@@ -55,6 +59,7 @@ export function ProductBasicFields({
           <FormTextarea
             label="Description"
             required
+            disabled={readOnly}
             placeholder="Detailed product description..."
             rows={4}
             {...register("description", { required: "Description is required" })}
@@ -66,11 +71,12 @@ export function ProductBasicFields({
           <FormSelect
             label="Category"
             required
+            disabled={readOnly}
             {...register("categoryId", { required: "Category is required" })}
             error={errors.categoryId?.message}
           >
             <option value="">Select a category</option>
-            {categories.map((cat) => (
+            {categories?.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
@@ -79,9 +85,10 @@ export function ProductBasicFields({
           
           {/* Add Category Button */}
           <button
+            disabled={readOnly}
             type="button"
             onClick={handleAddCategory}
-            className="mt-2 w-full px-3 py-2 text-sm border border-dashed border-emerald-500 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
+            className="mt-2 w-full px-3 py-2 text-sm border disabled:opacity-50 disabled:cursor-not-allowed border-dashed border-emerald-500 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add New Category
@@ -90,6 +97,7 @@ export function ProductBasicFields({
         <FormInput
           label="SKU"
           placeholder="e.g., VEK-001"
+          disabled={readOnly}
           {...register("sku")}
           hint="Optional"
         />

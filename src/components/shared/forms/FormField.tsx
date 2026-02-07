@@ -16,12 +16,13 @@ import {
 } from "react-hook-form";
 
 interface FormFieldProps {
-  label: string;
+  label?: string;
   required?: boolean;
   error?: string;
   hint?: string;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }
 
 export function FormField({
@@ -31,10 +32,11 @@ export function FormField({
   hint,
   children,
   className,
+  disabled = false,
 }: FormFieldProps) {
   return (
     <div className={cn("space-y-1", className)}>
-      <label className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+      <label className={cn("text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground", disabled && "text-gray-500")}>
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </label>
@@ -105,7 +107,7 @@ export function FormSelect({
 interface FormControllerProps<T extends FieldValues> {
   name: Path<T>;
   control: Control<T>;
-  label: string;
+  label?: string;
   required?: boolean;
   error?: string;
   hint?: string;
@@ -116,6 +118,7 @@ interface FormControllerProps<T extends FieldValues> {
     fieldState: ControllerFieldState;
     formState: UseFormStateReturn<T>;
   }) => React.ReactElement;
+  disabled?: boolean;
 }
 
 export function FormController<T extends FieldValues>({
@@ -128,6 +131,7 @@ export function FormController<T extends FieldValues>({
   className,
   rules,
   render,
+  disabled = false,
 }: FormControllerProps<T>) {
   return (
     <FormField
@@ -136,6 +140,7 @@ export function FormController<T extends FieldValues>({
       error={error}
       hint={hint}
       className={className}
+      disabled={disabled}
     >
       <Controller
         name={name}

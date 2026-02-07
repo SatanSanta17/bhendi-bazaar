@@ -9,10 +9,11 @@ import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useMutation } from "@/hooks/core/useMutation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { DataTable, Column } from "@/components/admin/data-table";
+import { DataTable, Column } from "@/admin/data-table";
 import { Search, Filter, RefreshCw } from "lucide-react";
 import { adminOrderService } from "@/services/admin/orderService";
-import type { AdminOrder, OrderListFilters } from "@/domain/admin";
+import type { Order } from "@/domain/order";
+import type { OrderListFilters } from "@/domain/admin";
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 
@@ -68,13 +69,18 @@ export default function AdminOrdersPage() {
     }).format(amount);
   };
 
-  const columns: Column<AdminOrder>[] = [
+  const columns: Column<Order>[] = [
     {
       key: "code",
       label: "Order Code",
       sortable: true,
       render: (order) => (
-        <span className="font-mono font-semibold">{order.code}</span>
+        <a
+          href={`/admin/orders/${order.id}`}
+          className="font-mono font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+        >
+          {order.code}
+        </a>
       ),
     },
     {
@@ -82,17 +88,17 @@ export default function AdminOrdersPage() {
       label: "Customer",
       render: (order) => (
         <div>
-          <p className="font-medium">{order.userName || "Guest"}</p>
-          <p className="text-sm text-gray-500">{order.userEmail}</p>
+          <p className="font-medium">{order.address?.fullName || "Guest"}</p>
+          <p className="text-sm text-gray-500">{order.address?.email}</p>
         </div>
       ),
     },
     {
-      key: "totals",
+      key: "grandTotal",
       label: "Total",
       render: (order) => (
         <span className="font-semibold">
-          {formatCurrency((order.totals as any)?.total || 0)}
+          {formatCurrency(order.grandTotal || 0)}
         </span>
       ),
     },
@@ -195,10 +201,14 @@ export default function AdminOrdersPage() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="">All Statuses</option>
+            <option value="pending_payment">Pending Payment</option>
+            <option value="confirmed">Confirmed</option>
             <option value="processing">Processing</option>
             <option value="packed">Packed</option>
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
+            <option value="partially_fulfilled">Partially Fulfilled</option>
+            <option value="fulfillment_failed">Fulfillment Failed</option>
           </select>
 
           <select
@@ -222,10 +232,11 @@ export default function AdminOrdersPage() {
 
       {/* Orders Table */}
       <DataTable
-        data={orders}
+        data={orders as unknown as Order[]}
         columns={columns}
         totalPages={totalPages}
         currentPage={filters.page || 1}
+        totalItems={data?.total || 0}
         onPageChange={(page) => setFilters({ ...filters, page })}
         onSort={(key, order) =>
           setFilters({ ...filters, sortBy: key as any, sortOrder: order })

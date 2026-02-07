@@ -1,25 +1,20 @@
-// components/layout/navbar/ProfileMenu.tsx
-
 "use client";
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import type { AuthUser } from "@/lib/auth";
 import { useProfileContext } from "@/context/ProfileContext";
 import { ShieldAlert } from "lucide-react";
 
-interface ProfileMenuProps {
-  user: AuthUser;
-}
-
-export function ProfileMenu({ user }: ProfileMenuProps) {
+export function ProfileMenu() {
   const [open, setOpen] = useState(false);
-  const { isEmailVerified } = useProfileContext();
+  const { data: session } = useSession();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const user = session?.user;
+  const { isEmailVerified } = useProfileContext(); // ✨ Only use for email verification
 
   useClickOutside(dropdownRef as React.RefObject<HTMLElement>, () =>
     setOpen(false)
@@ -43,7 +38,7 @@ export function ProfileMenu({ user }: ProfileMenuProps) {
         onClick={() => setOpen((v) => !v)}
         className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/80 text-xs font-semibold uppercase tracking-[0.15em] relative"
       >
-        {user.name?.charAt(0)?.toUpperCase() ?? "B"}
+        {user?.name?.charAt(0)?.toUpperCase() ?? "B"}
         {!isEmailVerified && (
           <span className="absolute -top-1 -right-1 h-3 w-3 bg-amber-500 rounded-full border-2 border-background" />
         )}
@@ -57,10 +52,10 @@ export function ProfileMenu({ user }: ProfileMenuProps) {
             }}
             className="mb-2 border-b border-border/70 pb-2 block rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <p className="font-semibold">{user.name}</p>
-            {user.email && (
+            <p className="font-semibold">{user?.name}</p>
+            {user?.email && (
               <p className="text-[0.7rem] text-muted-foreground">
-                {user.email}
+                {user?.email}
               </p>
             )}
             {!isEmailVerified && (

@@ -2,16 +2,18 @@
 
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 import { FormInput, FormSelect } from "../FormField";
-import type { CreateProductInput } from "@/domain/admin";
+import type { ProductFormInput } from "@/admin/products/types";
 
 interface ProductPricingFieldsProps {
-  register: UseFormRegister<CreateProductInput>;
-  errors: FieldErrors<CreateProductInput>;
+  register: UseFormRegister<ProductFormInput>;
+  errors: FieldErrors<ProductFormInput>;
+  readOnly?: boolean;
 }
 
 export function ProductPricingFields({
   register,
   errors,
+  readOnly = false,
 }: ProductPricingFieldsProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -20,6 +22,7 @@ export function ProductPricingFields({
         <FormInput
           label="Regular Price (₹)"
           required
+          disabled={readOnly}
           type="number"
           step="0.01"
           min="0"
@@ -34,6 +37,7 @@ export function ProductPricingFields({
 
         <FormInput
           label="Sale Price (₹)"
+          disabled={readOnly}
           type="number"
           step="0.01"
           min="0"
@@ -45,6 +49,7 @@ export function ProductPricingFields({
         {/* CHANGED: Now using FormSelect */}
         <FormSelect
           label="Currency"
+          disabled={readOnly}
           {...register("currency")}
         >
           <option value="INR">INR (₹)</option>

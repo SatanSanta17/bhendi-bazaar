@@ -3,7 +3,7 @@
  * Create a new category
  */
 
-import { CategoryForm } from "@/components/admin/category-form";
+import { CategoryForm } from "@/admin/category-form";
 
 export default function NewCategoryPage() {
   return (

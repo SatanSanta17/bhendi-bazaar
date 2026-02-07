@@ -9,7 +9,7 @@ import { useAsyncData } from "@/hooks/core/useAsyncData";
 import { useMutation } from "@/hooks/core/useMutation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { DataTable, Column } from "@/components/admin/data-table";
+import { DataTable, Column } from "@/admin/data-table";
 import { Search, RefreshCw } from "lucide-react";
 import { adminUserService } from "@/services/admin/userService";
 import type { AdminUser, UserListFilters } from "@/domain/admin";
@@ -237,6 +237,7 @@ export default function AdminUsersPage() {
         columns={columns}
         totalPages={totalPages}
         currentPage={filters.page || 1}
+        totalItems={data?.total || 0}
         onPageChange={(page) => setFilters({ ...filters, page })}
         onSort={(key, order) =>
           setFilters({ ...filters, sortBy: key as any, sortOrder: order })

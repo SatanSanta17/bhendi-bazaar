@@ -6,26 +6,37 @@
  */
 
 import type { Order } from "@/domain/order";
-import type {
-  OrderAddress,
-  PaymentMethod,
-  PaymentStatus,
-} from "@/domain/order";
 import type { CartItem, CartTotals } from "@/domain/cart";
+import type { ShippingGroup } from "@/domain/shipping";
+import type { DeliveryAddress } from "@/domain/profile";
 
 export interface CreateOrderInput {
   items: CartItem[];
   totals: CartTotals;
-  address: OrderAddress;
+  address: DeliveryAddress;
   notes?: string;
-  paymentMethod?: PaymentMethod;
-  paymentStatus?: PaymentStatus;
+  paymentMethod?: string;
+  paymentStatus?: string;
+}
+
+export interface CreateOrderWithShipmentsInput {
+  shippingGroups: ShippingGroup[];
+  totals: {
+    itemsTotal: number;
+    shippingTotal: number;
+    discount: number;
+    grandTotal: number;
+  };
+  address: DeliveryAddress;
+  notes?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
 }
 
 export interface UpdateOrderInput {
-  status?: "processing" | "packed" | "shipped" | "delivered";
-  paymentMethod?: PaymentMethod;
-  paymentStatus?: PaymentStatus;
+  status?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
   paymentId?: string;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
@@ -159,6 +170,66 @@ class OrderService {
     }
 
     return response.json();
+  }
+
+  /**
+   * Create a new order with multiple shipments (NEW)
+   */
+  async createOrderWithShipments(
+    input: CreateOrderWithShipmentsInput
+  ): Promise<Order> {
+    const response = await fetch("/api/orders/create-with-shipments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(input),
+    });
+
+    if (response.status === 429) {
+      const error = await response.json();
+      throw new Error(
+        error.error || "Too many requests. Please try again later."
+      );
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error || "Failed to create order. Please try again."
+      );
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Trigger automated order fulfillment (ADMIN USE ONLY)
+   * 
+   * ⚠️ NOT USED IN CURRENT CHECKOUT FLOW
+   * Current implementation uses manual fulfillment via Shiprocket website.
+   * 
+   * This method is kept for future automation or admin-triggered fulfillment.
+   * When called, it will:
+   * - Creates shipments with providers via API
+   * - Generates AWB numbers automatically
+   * - Schedules pickups automatically
+   * 
+   * @deprecated Use manual tracking updates via /api/admin/shipments/[id]/tracking
+   */
+  async fulfillOrder(orderId: string): Promise<void> {
+    const response = await fetch(`/api/orders/${orderId}/fulfill`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error || "Failed to fulfill order"
+      );
+    }
   }
 }
 
