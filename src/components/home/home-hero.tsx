@@ -21,7 +21,8 @@ export function HomeHero() {
           the lanes, minarets, and balconies of Bhendi Bazaar.
         </p>
         <div className="flex flex-wrap gap-3 pt-2">
-          <Button
+          {/* coming soon tag */}
+          {/* <Button
             asChild
             className="rounded-full bg-emerald-500 px-6 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-950 hover:bg-emerald-400"
           >
@@ -33,7 +34,7 @@ export function HomeHero() {
             className="rounded-full border-emerald-200/60 bg-transparent text-xs font-semibold uppercase tracking-[0.2em] text-emerald-50 hover:bg-emerald-950/40"
           >
             <Link href="/category/attars">Browse Attars</Link>
-          </Button>
+          </Button> */}
         </div>
       </div>
     </section>
